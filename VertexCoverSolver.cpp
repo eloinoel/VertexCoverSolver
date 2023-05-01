@@ -128,12 +128,18 @@ void printUsage()
 }
 
 int main(int argc, char* argv[]) {
-	if (argc > 2)
+	if (argc > 3)
 	{
 		printUsage();
 	}
 
 	string fileName = argv[1];
+	string outputFileName;
+	if (argc == 3)
+		outputFileName = argv[2];
+	else
+		outputFileName = "prog_out.txt";
+
 
 	try
 	{
@@ -146,7 +152,7 @@ int main(int argc, char* argv[]) {
 		//test vc solver
 		vector<string>* vc = searchTreeSolve(G);
 		//cout << "Vertex Cover with k = " << vc->size() << ": " << Graph::getVectorContentsString(vc);
-		writeSolutionToFile("prog_out.txt", vc);
+		writeSolutionToFile(outputFileName, vc);
 	}
 	catch (const exception&)
 	{
