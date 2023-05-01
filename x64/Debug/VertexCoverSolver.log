@@ -1,2 +1,6 @@
-﻿  VertexCoverSolver.cpp
+﻿  Graph.cpp
+H:\CS_Master\1.Sem\AlgEng\VertexCoverSolver\Graph.cpp(177,28): warning C4267: 'return': conversion from 'size_t' to 'int', possible loss of data
+  VertexCoverSolver.cpp
+  Generating Code...
+H:\CS_Master\1.Sem\AlgEng\VertexCoverSolver\Graph.cpp(119): warning C4172: returning address of local variable or temporary: deletedVertices
   VertexCoverSolver.vcxproj -> H:\CS_Master\1.Sem\AlgEng\VertexCoverSolver\x64\Debug\VertexCoverSolver.exe

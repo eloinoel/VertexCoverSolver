@@ -38,7 +38,9 @@ public:
 	Graph* copy();
 
 	/* generate graph from a text file */
-	static Graph* readInput(string fileName);
+	static Graph* readInputFromFile(string fileName);
+
+	static Graph* readStandardInput();
 
 private:
 	static string eraseLeadingTrailingWhitespacesFromString(string str);

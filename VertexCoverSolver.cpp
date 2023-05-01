@@ -122,28 +122,22 @@ void writeSolutionToFile(string fileName, vector<string>* vc)
 	outfile.close();
 }
 
-void printUsage()
+void writeSolutionToConsole(vector<string>* vc)
 {
-	cerr << "Usage: ./VertexCoverSolver.exe <file path>";
+	for (auto it = vc->begin(); it != vc->end(); ++it)
+	{
+		cout << *it << endl;
+	}
 }
 
+
+
 int main(int argc, char* argv[]) {
-	if (argc > 3)
-	{
-		printUsage();
-	}
 
-	string fileName = argv[1];
-	string outputFileName;
-	if (argc == 3)
-		outputFileName = argv[2];
-	else
-		outputFileName = "prog_out.txt";
-
-
+	string input;
 	try
 	{
-		Graph* G = Graph::readInput(fileName);
+		Graph* G = Graph::readStandardInput();
 		if (G == NULL)
 		{
 			cerr << "Error constructing graph from input file.";
@@ -152,12 +146,11 @@ int main(int argc, char* argv[]) {
 		//test vc solver
 		vector<string>* vc = searchTreeSolve(G);
 		//cout << "Vertex Cover with k = " << vc->size() << ": " << Graph::getVectorContentsString(vc);
-		writeSolutionToFile(outputFileName, vc);
+		writeSolutionToConsole(vc);
 	}
 	catch (const exception&)
 	{
-		cerr << "Check if provided path to file is valid.";
+		cerr << "Error launching vertex cover solver.";
 	}
-	
 }
 
