@@ -17,10 +17,9 @@ void deleteStringFromVector(vector<string>* vec, string element)
 	return;
 }
 
-vector<string>* vcBranch(Graph* G, Graph* graphCopy, int k, vector<string>* deletedVertices)
+vector<string>* vcBranch(Graph* G, Graph* graphCopy, int k)
 {
 	
-	//cout << "deleted vertices: " << Graph::getVectorContentsString(deletedVertices) << "\n"; //TODO: delete debug
 	if (k < 0)
 		return NULL;
 
@@ -29,25 +28,16 @@ vector<string>* vcBranch(Graph* G, Graph* graphCopy, int k, vector<string>* dele
 	//graph has no edges left
 	if (edge == nullptr)
 	{
-		//cout << "found vc " << Graph::getVectorContentsString(deletedVertices) << "\n"; //TODO: delete debug
 		return new vector<string>();
 	}
-			
-
-	//TODO: delete debug
-	/*cout << "Before stuffing around: size: " << graphCopy->getSize();
-	graphCopy->print();*/
-	//cout << "next edge: " << edge->first << ", " << edge->second << "\n";
 
 	//delete first vertex from graph and explore solution
 	graphCopy->deleteAdjacencyMapEntry(edge->first);
-	deletedVertices->push_back(edge->first);
-	vector<string>* S = vcBranch(G, graphCopy, k - 1, deletedVertices);
+	vector<string>* S = vcBranch(G, graphCopy, k - 1);
 	if (S != NULL)
 	{
 		//revert changes to graph
 		graphCopy->addAdjacencyMapEntry(G, edge->first); //revert changes to graph
-		deleteStringFromVector(deletedVertices, edge->first);
 		//return results
 		S->push_back(edge->first);
 		return S;
@@ -56,19 +46,16 @@ vector<string>* vcBranch(Graph* G, Graph* graphCopy, int k, vector<string>* dele
 	{
 		//revert changes to graph
 		graphCopy->addAdjacencyMapEntry(G, edge->first);
-		deleteStringFromVector(deletedVertices, edge->first);
 	}
 
 
 	//delete second vertex from graph and explore solution
 	graphCopy->deleteAdjacencyMapEntry(edge->second);
-	deletedVertices->push_back(edge->second);
-	S = vcBranch(G, graphCopy, k - 1, deletedVertices);
+	S = vcBranch(G, graphCopy, k - 1);
 	if (S != NULL)
 	{
 		//revert changes to graph
 		graphCopy->addAdjacencyMapEntry(G, edge->second);
-		deleteStringFromVector(deletedVertices, edge->second);
 		//return results
 		S->push_back(edge->second);
 		return S;
@@ -77,13 +64,7 @@ vector<string>* vcBranch(Graph* G, Graph* graphCopy, int k, vector<string>* dele
 	{
 		//revert changes to graph
 		graphCopy->addAdjacencyMapEntry(G, edge->second); 
-		deleteStringFromVector(deletedVertices, edge->second);
 	}
-
-
-	//TODO: delete debug
-	//cout << "After stuffing around: size: " << graphCopy->getSize();
-	//graphCopy->print();
 	return NULL;
 	
 	
@@ -95,20 +76,15 @@ vector<string>* searchTreeSolve(Graph* G)
 	int k = 0;
 	vector<string> *vc;
 	Graph* graphCopy = G->copy();
-	vector<string> *deletedVertices = new vector<string>();
 
 	while (true)
 	{
-		//cout << "-----------------------------------\nk = " << k << "\n"; //TODO: delete debug
-		vc = vcBranch(G, graphCopy, k, deletedVertices);
+		vc = vcBranch(G, graphCopy, k);
 		if (vc != NULL)
 		{
 			return vc;
 		}
 		k++;
-		if (k == 4) {
-			return vc;
-		}
 	}
 }
 
@@ -133,7 +109,6 @@ void writeSolutionToConsole(vector<string>* vc)
 
 
 int main(int argc, char* argv[]) {
-
 	string input;
 	try
 	{
@@ -142,10 +117,8 @@ int main(int argc, char* argv[]) {
 		{
 			cerr << "Error constructing graph from input file.";
 		}
-
 		//test vc solver
 		vector<string>* vc = searchTreeSolve(G);
-		//cout << "Vertex Cover with k = " << vc->size() << ": " << Graph::getVectorContentsString(vc);
 		writeSolutionToConsole(vc);
 	}
 	catch (const exception&)

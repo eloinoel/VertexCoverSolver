@@ -1,7 +1,6 @@
 #include <string>
 #include <iostream> //output streams
 #include <fstream>  //ifstream file opening
-//#include <sstream>
 
 #include "Graph.h"
 
@@ -314,74 +313,82 @@ Graph* Graph::readStandardInput()
 	Graph *G = new Graph();
 
 	string line;
-	//get file contents and create graph
-	while (getline(cin, line)) //streams one word into input, ignores empty lines and trailing/leading whitespaces
+	try
 	{
-		//ignore empty lines
-		if (line.empty())
+		//get file contents and create graph
+		while (getline(cin, line, '\n'))
 		{
-			continue;
+			//ignore empty lines
+			if (line.empty())
+			{
+				continue;
+			}
+
+			//delete leading and trailing whitespaces
+			line = eraseLeadingTrailingWhitespacesFromString(line); //not very fast, better to read byte by byte and ignore spaces
+
+			//extract edge
+			string vertex0 = "";
+			string vertex1 = "";
+			int i;
+			bool foundComment = false;
+			//first vertex
+			for (i = 0; i < line.size(); i++)
+			{
+				if (isVertexCharacter(line[i]))
+				{
+					vertex0 += line[i];
+				}
+				//whitespace
+				else if (line[i] == ' ')
+				{
+					i++;
+					break;
+				}
+				else if (line[i] == '#')
+				{
+					foundComment = true;
+					break;
+				}
+				else
+				{
+					cerr << "readInput: illegal character read for vertex name 1\n";
+					return NULL;
+				}
+			}
+
+			//skip remainder of line if comment found
+			if (foundComment)
+				continue;
+
+			//second vertex
+			for (i; i < line.size(); i++)
+			{
+				if (isVertexCharacter(line[i]))
+				{
+					vertex1 += line[i];
+				}
+				//break if anything else
+				else if (line[i] == '#')
+				{
+					break;
+				}
+				else
+				{
+					cerr << "readInput: illegal character read for vertex name 2\n";
+					return NULL;
+				}
+			}
+
+			//add edge to graph
+			G->addEdge(vertex0, vertex1);
 		}
-
-		//delete leading and trailing whitespaces
-		line = eraseLeadingTrailingWhitespacesFromString(line); //not very fast, better to read byte by byte and ignore spaces
-
-		//extract edge
-		string vertex0 = "";
-		string vertex1 = "";
-		int i;
-		bool foundComment = false;
-		//first vertex
-		for (i = 0; i < line.size(); i++)
-		{
-			if (isVertexCharacter(line[i]))
-			{
-				vertex0 += line[i];
-			}
-			//whitespace
-			else if (line[i] == ' ')
-			{
-				i++;
-				break;
-			}
-			else if (line[i] == '#')
-			{
-				foundComment = true;
-				break;
-			}
-			else
-			{
-				cerr << "readInput: illegal character read for vertex name 1\n";
-				return NULL;
-			}
-		}
-
-		//skip remainder of line if comment found
-		if (foundComment)
-			continue;
-
-		//second vertex
-		for (i; i < line.size(); i++)
-		{
-			if (isVertexCharacter(line[i]))
-			{
-				vertex1 += line[i];
-			}
-			//break if anything else
-			else if (line[i] == '#')
-			{
-				break;
-			}
-			else
-			{
-				cerr << "readInput: illegal character read for vertex name 2\n";
-				return NULL;
-			}
-		}
-
-		//add edge to graph
-		G->addEdge(vertex0, vertex1);
 	}
+	catch (const exception& e)
+	{
+		cout << "exception";
+	}
+	
 	return G;
 }
 

@@ -1,4 +1,0 @@
-
-/mnt/h/CS_Master/1.Sem/AlgEng/VertexCoverSolver/vc-data-students/1-random/000006_000000000036.dimacs
-
-/mnt/h/CS_Master/1.Sem/AlgEng/VertexCoverSolver/vc-data-students/1-random/000008_000000000009.dimacs
