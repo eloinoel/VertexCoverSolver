@@ -1,6 +1,6 @@
-#include <string>
 #include <iostream> //output streams
 #include <fstream>  //ifstream file opening
+
 
 #include "Graph.h"
 

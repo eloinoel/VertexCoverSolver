@@ -1,6 +1,3 @@
-// VertexCoverSolver.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
-
 #include <iostream>
 #include <unordered_map> //O(1) for insert and access instead of O(log n) for ordered maps
 #include <fstream>  //ifstream file opening

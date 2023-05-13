@@ -3,6 +3,8 @@
 
 #include <string>
 #include <unordered_map> //O(1) for insert and access instead of O(log n) for ordered maps
+#include <vector>
+#include <algorithm>
 
 using namespace std;
 

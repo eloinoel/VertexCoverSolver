@@ -1,6 +1,7 @@
 # Misc
 /logs
 
+.vscode
 
 # User-specific files
 *.rsuser
