@@ -20,14 +20,17 @@ vector<int>* searchTreeSolveBNB(ArrayGraph* G)
 
 	// stack storing the current partial solutions left for evaluation
     std::stack<std::vector<int>*> S;
+	std::vector<int>* partialVC;
 	int current;
 
-	// TODO: add k condition, rm multiple invocation of getMaxVertex // TODO: rm first TODO
 	S.push({});
 	while (!S.empty())
 	{
+		// retrieve the current partial vertex cover vertices
+		partialVC = S.top();
+		S.pop();
 		// set Graph to current partial solution
-		G->setInactiveVertices(S.top());
+		G->setInactiveVertices(partialVC);
 		// get maxDegVert of remaining active vertices
 		current = G->getMaxDegreeVertex();
 
@@ -35,23 +38,43 @@ vector<int>* searchTreeSolveBNB(ArrayGraph* G)
 		if (current == -1 || current == 0)
 		{
 			// if current solution is actually better than the current best solution: update k & vc
-			if (k > (S.top())->size()) { // TODO: remove condition later when culling earlier with BnB
-				vc = S.top();
+			if (k > partialVC->size()) { // TODO: remove condition later when culling earlier with BnB
+				vc = partialVC;
 				k = vc->size();
 			}
 			// traverse back up the search tree
-			S.pop();
 			continue;
 		}
-		else
+
+		// solve graph with maxVertDegree <= 2 in linear time
+		else if (state[current][1] <= 2)	// FIXME: state[current][1] needs to be updated on the graph side for this to be more accurate
 		{
-			// TODO: branching
+
 		}
 
-        /* if (vc->size() >= k)
-        {
-            break;
-        } */
+		// refined search tree branching for maxVertDegree >= 3
+		else if (state[current][1] >= 3)	// FIXME: state[current][1] needs to be updated on the graph side for this to be more accurate
+		{
+			// if k and current partial VC size permit adding the neighbours
+			if (k - partialVC->size() >= state[current][1])
+			{
+				// add neighbours of the current vertex to the partial VC and push the resulting partial VC for further evaluation
+				// NOTE: partial VC is copied, since we need two separate lists, one for each of the possible branching solutions
+				std::vector<int> partialVCCopy = *partialVC;
+				for(int neighbour : *(G->getNeighbours(current)))
+				{
+					partialVCCopy.push_back(neighbour);
+				}
+				S.push(&partialVCCopy);
+			}
+			// if k and current partial VC size permit adding the current vertex
+			if (k - partialVC->size() >= 1)
+			{
+				// add current vertex to the partial VC and push the resulting partial VC for further evaluation
+				partialVC->push_back(current);
+				S.push(partialVC);
+			}
+		}
 	}
 
 
