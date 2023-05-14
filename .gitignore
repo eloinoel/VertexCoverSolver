@@ -1,7 +1,9 @@
 # Misc
-/logs
+*/logs
+*/build
 
 .vscode
+.vs
 
 # User-specific files
 *.rsuser

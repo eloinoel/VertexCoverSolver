@@ -70,7 +70,7 @@ void Graph::addEdge(string first, string second)
 */
 vector<string>* Graph::deleteVertex(string v)
 {
-	vector<string> deletedVertices;
+	vector<string>* deletedVertices;
 	vector<string> edgesOfV;
 	try
 	{
@@ -103,7 +103,7 @@ vector<string>* Graph::deleteVertex(string v)
 			}
 
 			//append deleted vertices to list
-			deletedVertices.insert(deletedVertices.end(), deletedVerticesTmp.begin(), deletedVerticesTmp.end());
+			deletedVertices->insert(deletedVertices->end(), deletedVerticesTmp.begin(), deletedVerticesTmp.end());
 		}
 	}
 	catch (const exception&)
@@ -113,9 +113,9 @@ vector<string>* Graph::deleteVertex(string v)
 	}
 
 	adjacencyMap.erase(v);
-	deletedVertices.push_back(v);
+	deletedVertices->push_back(v);
 
-	return &deletedVertices;
+	return deletedVertices;
 }
 
 /* 
@@ -202,7 +202,7 @@ string Graph::getVectorContentsString(vector<string> *vec)
 	if (vec->size() > 1)
 	{
 		string s = "";
-		for (int i = 0; i < vec->size() - 1; i++)
+		for (int i = 0; i < (int) vec->size() - 1; i++)
 		{
 			s += vec->at(i) + ", ";
 		}
@@ -266,7 +266,7 @@ Graph* Graph::readInputFromFile(string fileName)
 			string vertex1 = "";
 			int i;
 			//first vertex
-			for (i = 0; i < line.size(); i++)
+			for (i = 0; i < (int) line.size(); i++)
 			{
 				if (isVertexCharacter(line[i]))
 				{
@@ -285,11 +285,11 @@ Graph* Graph::readInputFromFile(string fileName)
 				}
 			}
 			//second vertex
-			for (i; i < line.size(); i++)
+			for (int j = i; j < (int) line.size(); j++)
 			{
-				if (isVertexCharacter(line[i]))
+				if (isVertexCharacter(line[j]))
 				{
-					vertex1 += line[i];
+					vertex1 += line[j];
 				}
 				//break if anything else
 				else
@@ -333,7 +333,7 @@ Graph* Graph::readStandardInput()
 			int i;
 			bool foundComment = false;
 			//first vertex
-			for (i = 0; i < line.size(); i++)
+			for (i = 0; i < (int) line.size(); i++)
 			{
 				if (isVertexCharacter(line[i]))
 				{
@@ -362,14 +362,14 @@ Graph* Graph::readStandardInput()
 				continue;
 
 			//second vertex
-			for (i; i < line.size(); i++)
+			for (int j = i; j < (int) line.size(); j++)
 			{
-				if (isVertexCharacter(line[i]))
+				if (isVertexCharacter(line[j]))
 				{
-					vertex1 += line[i];
+					vertex1 += line[j];
 				}
 				//break if anything else
-				else if (line[i] == '#')
+				else if (line[j] == '#')
 				{
 					break;
 				}
