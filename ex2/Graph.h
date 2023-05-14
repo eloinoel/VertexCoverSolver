@@ -44,10 +44,6 @@ public:
 
 	static Graph* readStandardInput();
 
-	static Graph* readStandardInputNoGetLine();
-
-	static vector<string> extractVertices(string line);
-
 private:
 	static string eraseLeadingTrailingWhitespacesFromString(string str);
 

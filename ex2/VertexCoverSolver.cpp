@@ -1,10 +1,81 @@
 #include <iostream>
 #include <unordered_map> //O(1) for insert and access instead of O(log n) for ordered maps
 #include <fstream>  //ifstream file opening
+#include <stack>          // std::stack
 #include "Graph.h"
+#include "ArrayGraph.h"
 
 using namespace std;
 
+/*----------------------------------------------------------*/
+/*---------------   Exercise 2 Solver Code   ---------------*/
+/*----------------------------------------------------------*/
+
+vector<int>* searchTreeSolveBNB(ArrayGraph* G)
+{
+	// current best number of vertices for VC
+	int k = G->getLowerBoundVC();
+	std::vector<int> *vc;
+	std::vector<bool, int> *state = G->getState();
+
+	// stack storing the current partial solutions left for evaluation
+    std::stack<std::vector<int>*> S;
+	int current;
+
+	// TODO: add k condition, rm multiple invocation of getMaxVertex // TODO: rm first TODO
+	S.push({});
+	while (!S.empty())
+	{
+		// set Graph to current partial solution
+		G->setInactiveVertices(S.top());
+		// get maxDegVert of remaining active vertices
+		current = G->getMaxDegreeVertex();
+
+		// if no active vertex left in graph or no vertex with degree >= 1: (We found a solution)
+		if (current == -1 || current == 0)
+		{
+			// if current solution is actually better than the current best solution: update k & vc
+			if (k > (S.top())->size()) { // TODO: remove condition later when culling earlier with BnB
+				vc = S.top();
+				k = vc->size();
+			}
+			// traverse back up the search tree
+			S.pop();
+			continue;
+		}
+		else
+		{
+			// TODO: branching
+		}
+
+        /* if (vc->size() >= k)
+        {
+            break;
+        } */
+	}
+
+
+	return vc;
+}
+
+// TODO: calculate minimal number of changes in activity of vertices to switch from the origin subgraph to the destination subgraph
+/* std::vector<int, bool>* calcFlagSets(std::vector<int>* origin, std::vector<int>* dest)
+{
+	std::vector<int, bool> flagSets;
+	for(int i=0; i<dest->size(); i++)
+	{
+		if(dest.) {
+
+		} else {
+			flagSets.push_back({});
+		}
+	}
+	return &flagSets;
+} */
+
+/*----------------------------------------------------------*/
+/*---------------   Exercise 1 Solver Code   ---------------*/
+/*----------------------------------------------------------*/
 
 void deleteStringFromVector(vector<string>* vec, string element)
 {
@@ -67,7 +138,6 @@ vector<string>* vcBranch(Graph* G, Graph* graphCopy, int k)
 	
 }
 
-
 vector<string>* searchTreeSolve(Graph* G)
 {
 	int k = 0;
@@ -84,6 +154,10 @@ vector<string>* searchTreeSolve(Graph* G)
 		k++;
 	}
 }
+
+/*----------------------------------------------------------*/
+/*-----------------   Helper Functions   -------------------*/
+/*----------------------------------------------------------*/
 
 void writeSolutionToFile(string fileName, vector<string>* vc)
 {
@@ -103,7 +177,9 @@ void writeSolutionToConsole(vector<string>* vc)
 	}
 }
 
-
+/*----------------------------------------------------------*/
+/*-----------------------   Main   -------------------------*/
+/*----------------------------------------------------------*/
 
 int main(int argc, char* argv[]) {
 	string input;
