@@ -12,7 +12,6 @@ ArrayGraph* ArrayGraph::readStandardInput()
     //init
 	ArrayGraph* G = new ArrayGraph();
     int vertexIndex = 0;
-    int edgeCount = 0;
     G->originalVertexNames = std::unordered_map<std::string, std::pair<int, int>>();
     std::vector<std::pair<std::string, std::string>> edges = std::vector<std::pair<std::string, std::string>>(); //edges after reading file once, eg. edges[0] = ["a", "b"]
     
@@ -92,7 +91,7 @@ ArrayGraph* ArrayGraph::readStandardInput()
         else
         {
             //vertex not in map
-            G->originalVertexNames.insert({vertex0, std::pair<int, int>(vertexIndex, 0)});
+            G->originalVertexNames.insert({vertex0, std::pair<int, int>(vertexIndex, 1)});
             vertexIndex++;
         }
 
@@ -105,14 +104,13 @@ ArrayGraph* ArrayGraph::readStandardInput()
         else
         {
             //vertex not in map
-            G->originalVertexNames.insert({vertex1, std::pair<int, int>(vertexIndex, 0)});
+            G->originalVertexNames.insert({vertex1, std::pair<int, int>(vertexIndex, 1)});
             vertexIndex++;
         }
 
         //save edges
-        edges[edgeCount].first = vertex0;
-        edges[edgeCount].second = vertex1;
-        edgeCount++;
+        std::pair<std::string, std::string> edge_pair = std::pair<std::string, std::string>({vertex0, vertex1});
+        edges.push_back(edge_pair);
     }
 
     //-----------------------------------------------------
@@ -149,8 +147,9 @@ ArrayGraph* ArrayGraph::readStandardInput()
             //find first index to insert adjacent vertex
             for (int insertIndex = 0; insertIndex < (int) G->adjacencyList[indexFirst]->size(); insertIndex++)
             {
-                if(G->adjacencyList[indexFirst]->at(insertIndex) != 0)
+                if(G->adjacencyList[indexFirst]->at(insertIndex) == 0)
                 {
+                    //G->adjacencyList[indexFirst]->insert(G->adjacencyList[indexFirst]->begin() + insertIndex, indexSecond);
                     (*G->adjacencyList[indexFirst])[insertIndex] = indexSecond;
                     break;
                 }
@@ -162,10 +161,19 @@ ArrayGraph* ArrayGraph::readStandardInput()
             //clear
             for (int l = 0; l < (int) G->adjacencyList[indexFirst]->size(); l++)
             {
+                //G->adjacencyList[indexFirst]->insert(G->adjacencyList[indexFirst]->begin() + l, 0);
                 (*G->adjacencyList[indexFirst])[l] = 0;
             }
             //insert
-            (*G->adjacencyList[indexFirst])[0] = indexSecond;
+            if (maxDegFirst > 0)
+            {
+                (*G->adjacencyList[indexFirst])[0] = indexSecond;
+                //G->adjacencyList[indexFirst]->insert(G->adjacencyList[indexFirst]->begin(), indexSecond);
+            }
+            else
+            {
+                throw std::invalid_argument("Trying to insert edge but maxDegFirst is 0");
+            }
         }
 
         //second vertex: insert into adjacency list
@@ -174,8 +182,9 @@ ArrayGraph* ArrayGraph::readStandardInput()
             //find first index to insert adjacent vertex
             for (int insertIndex = 0; insertIndex < (int) G->adjacencyList[indexSecond]->size(); insertIndex++)
             {
-                if(G->adjacencyList[indexSecond]->at(insertIndex) != 0)
+                if(G->adjacencyList[indexSecond]->at(insertIndex) == 0)
                 {
+                    //G->adjacencyList[indexSecond]->insert(G->adjacencyList[indexSecond]->begin() + insertIndex, indexFirst);
                     (*G->adjacencyList[indexSecond])[insertIndex] = indexFirst;
                     break;
                 }
@@ -183,14 +192,23 @@ ArrayGraph* ArrayGraph::readStandardInput()
         }
         else //edges list not yet initialised
         {
-            G->adjacencyList[indexFirst] = new std::vector<int>(maxDegSecond);
+            G->adjacencyList[indexSecond] = new std::vector<int>(maxDegSecond);
             //clear
             for (int l = 0; l < (int) G->adjacencyList[indexSecond]->size(); l++)
             {
+                //G->adjacencyList[indexSecond]->insert(G->adjacencyList[indexSecond]->begin() + l, 0);
                 (*G->adjacencyList[indexSecond])[l] = 0;
             }
             //insert
-            (*G->adjacencyList[indexSecond])[0] = indexFirst;
+            if (maxDegFirst > 0)
+            {
+                //G->adjacencyList[indexSecond]->insert(G->adjacencyList[indexSecond]->begin(), indexFirst);
+                (*G->adjacencyList[indexSecond])[0] = indexFirst;
+            }
+            else
+            {
+                throw std::invalid_argument("Trying to insert edge but maxDegFirst is 0");
+            }
         }
     }
     return G;
@@ -245,6 +263,14 @@ void ArrayGraph::print()
 		}
 		std::cout << "\n";
 	}
+}
+
+void ArrayGraph::printOriginalVertexNames()
+{
+    for (auto entry : originalVertexNames)
+    {
+        std::cout << entry.first << ": index = " << entry.second.first << ", degree = " << entry.second.second << std::endl;
+    }
 }
 
 int ArrayGraph::getLowerBoundVC() {

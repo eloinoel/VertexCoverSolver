@@ -206,6 +206,7 @@ void writeSolutionToConsole(vector<string>* vc)
 
 int main(int argc, char* argv[]) {
 	string input;
+    cout << "Test\n";
 	try
 	{
 		ArrayGraph* G = ArrayGraph::readStandardInput();
@@ -218,9 +219,11 @@ int main(int argc, char* argv[]) {
 		//vector<string>* vc = searchTreeSolve(G);
 		//writeSolutionToConsole(vc);
 	}
-	catch (const exception&)
+	catch (const exception& e)
 	{
-		cerr << "Error launching vertex cover solver.";
+		cerr << "Error launching vertex cover solver.\n";
+        cerr << e.what();
 	}
+
 }
 

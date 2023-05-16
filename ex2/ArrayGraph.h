@@ -38,6 +38,8 @@ public:
 
     void print();
 
+    void printOriginalVertexNames();
+
     /* calculate lower bound for VC */
     int getLowerBoundVC();
 
