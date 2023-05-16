@@ -94,9 +94,31 @@ vector<int>* searchTreeSolveDifferentialBNB(ArrayGraph* G)
 	std::vector<int>* VC = nullptr;
 	int branchVertex;
 	// number of currently active vertices
-	int partialVCSize = 0; // TODO: update
+	int partialVCSize = 0;
 
 	//S.push({{}, false}); // TODO: different initialization
+
+	// first branching done by hand
+	// get maxDegVert of remaining active vertices (the way the algorithm branches is determined by the choice of this vertex)
+	branchVertex = G->getMaxDegreeVertex();
+	// if k and current partial VC size permit adding the neighbours
+	if (k - partialVCSize >= G->getVertexDegree(branchVertex))
+	{
+		// add neighbours of the current vertex to the child differential for evaluating the partial vertex cover where all of the branchVertex's neighbours where taken into the vertex cover
+		// TODO: is there no way to create this inline?
+		std::pair<std::vector<int>*, bool> childDifferential = {G->getNeighbours(branchVertex), false};
+		S.push(&childDifferential);
+	}
+	// if k and current partial VC size permit adding the current vertex
+	if (k - partialVCSize >= 1)
+	{
+		// TODO: is there no way to create this inline?
+		std::vector<int> bv = {branchVertex};
+		std::pair<std::vector<int>*, bool> childDifferential = {&bv, false};
+		S.push(&childDifferential);
+	}
+
+
 	while (!S.empty())
 	{
 		// retrieve the differential of the current partial vertex cover solution to its parent solution (+ expanded tag)
@@ -135,13 +157,13 @@ vector<int>* searchTreeSolveDifferentialBNB(ArrayGraph* G)
 		}
 
 		// solve graph with maxVertDegree <= 2 in linear time
-		else if (G->getVertexDegree(branchVertex) <= 2)
+		else if (G->getVertexDegree(branchVertex) <= 2 && false) // TODO: rm false
 		{
 
 		}
 
 		// refined search tree branching for maxVertDegree >= 3
-		else if (G->getVertexDegree(branchVertex) >= 3)
+		else if (G->getVertexDegree(branchVertex) >= 1 /*3*/) // TODO: readd 3
 		{
 			// if k and current partial VC size permit adding the neighbours
 			if (k - partialVCSize >= G->getVertexDegree(branchVertex))
@@ -277,7 +299,7 @@ void writeSolutionToFile(string fileName, vector<string>* vc)
 	outfile.close();
 }
 
-void writeSolutionToConsole(vector<string>* vc)
+void writeSolutionToConsole(vector<int>* vc)
 {
 	for (auto it = vc->begin(); it != vc->end(); ++it)
 	{
@@ -303,12 +325,13 @@ int main(int argc, char* argv[]) {
 		//test vc solver
 		//vector<string>* vc = searchTreeSolve(G);
 		//writeSolutionToConsole(vc);
+		std::vector<int>* vc = searchTreeSolveDifferentialBNB(G);
+		writeSolutionToConsole(vc);
 	}
 	catch (const exception& e)
 	{
 		cerr << "Error launching vertex cover solver.\n";
         cerr << e.what();
 	}
-
 }
 

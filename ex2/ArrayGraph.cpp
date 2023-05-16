@@ -268,7 +268,6 @@ void ArrayGraph::print()
 	}
 }
 
-<<<<<<< Updated upstream
 void ArrayGraph::printOriginalVertexNames()
 {
     for (auto entry : originalVertexNames)
@@ -277,9 +276,7 @@ void ArrayGraph::printOriginalVertexNames()
     }
 }
 
-=======
 //TODO: implement cycle and clique bound
->>>>>>> Stashed changes
 int ArrayGraph::getLowerBoundVC() {
     return 0;
 }
