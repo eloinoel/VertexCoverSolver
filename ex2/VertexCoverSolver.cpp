@@ -2,14 +2,25 @@
 #include <unordered_map> //O(1) for insert and access instead of O(log n) for ordered maps
 #include <fstream>  //ifstream file opening
 #include <stack>          // std::stack
+#include <math.h>          // INFINITY
 #include "Graph.h"
 #include "ArrayGraph.h"
+#include "ColorPrint.h"
 
 using namespace std;
 
 /*----------------------------------------------------------*/
 /*---------------   Exercise 2 Solver Code   ---------------*/
 /*----------------------------------------------------------*/
+
+string tileStr(string toTile, int n) {
+	string tiling = "";
+	for (int i=0; i<n; i++)
+	{
+		tiling += toTile;
+	}
+	return tiling;
+}
 
 /* vector<int>* vcVertexBranchingRecursive(ArrayGraph* G, int k)
 {
@@ -80,7 +91,6 @@ using namespace std;
 
 vector<int>* searchTreeSolveDifferentialBNB(ArrayGraph* G, int k, std::vector<int>* vc)
 {
-	std::cout << "setting up BnB data structures\n";
 	// stack storing the differentials of partial solutions, currently under evaluation and whether a partial solution was already expanded
     std::stack<std::pair<std::vector<int>*, bool>*> S;
 	std::pair<std::vector<int>*, bool>* current;
@@ -88,64 +98,78 @@ vector<int>* searchTreeSolveDifferentialBNB(ArrayGraph* G, int k, std::vector<in
 	// number of currently active vertices
 	int partialVCSize = 0;
 	
-	// TODO: different initialization
-	// first branching done by hand
-	// get maxDegVert of remaining active vertices (the way the algorithm branches is determined by the choice of this vertex)
-	/* branchVertex = G->getMaxDegreeVertex();
-	// if k and current partial VC size permit adding the neighbours
-	if (k - partialVCSize >= G->getVertexDegree(branchVertex))
-	{
-		// add neighbours of the current vertex to the child differential for evaluating the partial vertex cover where all of the branchVertex's neighbours where taken into the vertex cover
-		// TODO: is there no way to create this inline?
-		std::pair<std::vector<int>*, bool> childDifferential = {G->getNeighbours(branchVertex), false};
-		S.push(&childDifferential);
-	}
-	// if k and current partial VC size permit adding the current vertex
-	if (k - partialVCSize >= 1)
-	{
-		// TODO: is there no way to create this inline?
-		std::vector<int> bv = {branchVertex};
-		std::pair<std::vector<int>*, bool> childDifferential = {&bv, false};
-		S.push(&childDifferential);
-	} */
+	// initialize stack
 	std::vector<int> bv = {};
 	std::pair<std::vector<int>*, bool> childDifferential = {&bv, false};
 	S.push(&childDifferential);
-	std::cout << "started BnB with stack size: " << S.size() << "\n";
+	std::cout << paint('g', "started") << " BnB with stack size: " << S.size() << " and k=" << k << "\n";
 
 	while (!S.empty())
 	{
 		// retrieve the differential of the current partial vertex cover solution to its parent solution (+ expanded tag)
 		current = S.top();
 
-		// if current solution has already been expanded, revert its deletion of vertices and traverse back up to the next partial solution
 		if (current->second)
 		{
+			std::cout << tileStr("--", partialVCSize) << "- " << paint('y', "Traversing") << " back up a previously expanded search tree node\n";
+			std::cout << tileStr("--", partialVCSize) << "- " << paint('p', "Restoring") << " vertices: {";
+			if (current->first->size() > 0) std::cout << current->first->at(0);
+			for (int i=1; i < (int) current->first->size(); i++)
+			{
+				std::cout << ", " << current->first->at(i);
+			}
+			std::cout << "}\n";
+
 			G->setActive(current->first);
 			partialVCSize -= current->first->size();
 			S.pop();
 			continue;
 		}
-		std::cout << "element was: " << S.size() << "\n";
 
 		// otherwise delete the vertices (defined by the differential calculated in the expansion of the parent search tree node)
 		G->setInactive(current->first);
 		partialVCSize += current->first->size();
+
+		std::cout << tileStr("--", partialVCSize) << "- " << paint('y', "peeking") << " stack of size: " << S.size() << "\n";
+
+		std::cout << tileStr("--", partialVCSize) << "- " << paint('p', "Deleting") << " vertices: {";
+		if (current->first->size() > 0) std::cout << current->first->at(0);
+		for (int i=1; i< (int) current->first->size(); i++)
+		{
+			std::cout << ", " << current->first->at(i);
+		}
+		std::cout << "}\n";
+		std::cout << tileStr("--", partialVCSize) << "- " << paint('y', "checking") << " partial solution:\n";
+		std::cout << tileStr("--", partialVCSize) << "- " << "best=" << k << ", partialVCSize: " << partialVCSize << "\n";
+
 		// get maxDegVert of remaining active vertices (the way the algorithm branches is determined by the choice of this vertex)
 		branchVertex = G->getMaxDegreeVertex();
-		// mark this partial solution as expanded and expand subsequently
-		current->second = true;
+
+		std::cout << tileStr("--", partialVCSize) << "> " << paint('b', "selected") << " branchVertex: " << branchVertex << " with degree " << G->getVertexDegree(branchVertex) << "\n";
 
 		// if no active vertex left in graph or no vertex with degree >= 0: (We found a solution)
 		if (branchVertex == -1 || G->getVertexDegree(branchVertex) == 0)
 		{
-			// if no 
-			// or if current solution is actually better than the current best solution: update k & vc
-			if (vc == nullptr || k > partialVCSize) { // TODO: remove condition later when culling earlier with BnB
+			// if current solution is actually better than the current best solution: update k & vc
+			if (k > partialVCSize || (vc == nullptr && k == partialVCSize)) { // TODO: remove condition later when culling earlier with BnB
 				vc = G->getInactiveVertices();
-				std::cout << "calculated vc of size: " << vc->size() << "\n";
 				k = partialVCSize;
+
+				std::cout << tileStr("--", partialVCSize) << "> " << paint('g', "found") << " VC: {";
+				if (vc->size() > 0) std::cout << vc->at(0);
+				for (int i=1; i < (int) vc->size(); i++)
+				{
+					std::cout << ", " << vc->at(i);
+				}
+				std::cout << "} of size: " << partialVCSize << "\n";
 			}
+			std::cout << tileStr("--", partialVCSize) << "- " << paint('p', "Restoring") << " vertices: {";
+			if (current->first->size() > 0) std::cout << current->first->at(0);
+			for (int i=1; i < (int) current->first->size(); i++)
+			{
+				std::cout << ", " << current->first->at(i);
+			}
+			std::cout << "}\n";
 			// traverse back up the search tree
 			G->setActive(current->first);
 			partialVCSize -= current->first->size();
@@ -153,8 +177,30 @@ vector<int>* searchTreeSolveDifferentialBNB(ArrayGraph* G, int k, std::vector<in
 			continue;
 		}
 
+		// if maximum search depth k is reached
+		// or if the current solution has already been expanded, revert its deletion of vertices and traverse back up to the next partial solution
+		if (k <= partialVCSize)
+		{
+			std::cout << tileStr("--", partialVCSize) << "> " << paint('c', "reached") << " search tree depth k=" << k << "\n";
+			std::cout << tileStr("--", partialVCSize) << "- " << paint('p', "Restoring") << " vertices: {";
+			if (current->first->size() > 0) std::cout << current->first->at(0);
+			for (int i=1; i < (int) current->first->size(); i++)
+			{
+				std::cout << ", " << current->first->at(i);
+			}
+			std::cout << "}\n";
+
+			G->setActive(current->first);
+			partialVCSize -= current->first->size();
+			S.pop();
+			continue;
+		}
+
+		// mark this partial solution as expanded and expand subsequently
+		current->second = true;
+
 		// solve graph with maxVertDegree <= 2 in linear time
-		else if (G->getVertexDegree(branchVertex) <= 2 && false) // TODO: rm false
+		if (G->getVertexDegree(branchVertex) <= 2 && false) // TODO: rm false
 		{
 
 		}
@@ -165,6 +211,13 @@ vector<int>* searchTreeSolveDifferentialBNB(ArrayGraph* G, int k, std::vector<in
 			// if k and current partial VC size permit adding the neighbours
 			if (k - partialVCSize >= G->getVertexDegree(branchVertex))
 			{
+				std::cout << tileStr("--", partialVCSize) << "> " << paint('p', "pushing") << " maxDegreeVertex neighbourhood deletion: {";
+				if (G->getNeighbours(branchVertex)->size() > 0) std::cout << G->getNeighbours(branchVertex)->at(0);
+				for (int i=1; i<(int) G->getNeighbours(branchVertex)->size(); i++)
+				{
+					std::cout << ", " << G->getNeighbours(branchVertex)->at(i);
+				}
+				std::cout << "}\n";
 				// add neighbours of the current vertex to the child differential for evaluating the partial vertex cover where all of the branchVertex's neighbours where taken into the vertex cover
 				// TODO: is there no way to create this inline?
 				std::pair<std::vector<int>*, bool> childDifferential = {G->getNeighbours(branchVertex), false};
@@ -173,9 +226,11 @@ vector<int>* searchTreeSolveDifferentialBNB(ArrayGraph* G, int k, std::vector<in
 			// if k and current partial VC size permit adding the current vertex
 			if (k - partialVCSize >= 1)
 			{
+				std::cout << tileStr("--", partialVCSize) << "> " << paint('p', "pushing") << " maxDegreeVertex deletion: {" << branchVertex << "}\n";
 				// TODO: is there no way to create this inline?
-				std::vector<int> bv = {branchVertex};
-				std::pair<std::vector<int>*, bool> childDifferential = {&bv, false};
+				std::vector<int>* bv = new std::vector<int>();
+				bv->push_back(branchVertex);
+				std::pair<std::vector<int>*, bool> childDifferential = {bv, false};
 				S.push(&childDifferential);
 			}
 		}
@@ -187,13 +242,18 @@ vector<int>* searchTreeSolveDifferentialBNB(ArrayGraph* G, int k, std::vector<in
 vector<int>* vertexBranchingSolverIterative(ArrayGraph* G)
 {
 	int k = G->getVCLowerBound();
-	vector<int>* vc = new vector<int>();
+	int u = (int) INFINITY;
+	vector<int>* vc = nullptr;
 
 	while (true)
 	{
-		searchTreeSolveDifferentialBNB(G, k, vc);
-		if(vc->size() == 0) { std::cout << "Did not find solution for k=" << k << "\n"; }
-		if (vc->size() > 0)
+		if(k > u) {
+			std::cout << "Did not find solution within upper bound u=" << u << "\n";
+			return vc;
+		}
+		vc = searchTreeSolveDifferentialBNB(G, k, vc);
+		if(vc == nullptr) { std::cout << "Did not find solution for k=" << k << "\n\n"; }
+		if (vc != nullptr)
 		{
 			return vc;
 		}
@@ -327,7 +387,7 @@ int main(int argc, char* argv[]) {
 	}
 	catch (const exception& e)
 	{
-		cerr << "Error launching vertex cover solver.\n";
+		cerr << "Error while running vertex cover solver.\n";
         cerr << e.what();
 	}
 }

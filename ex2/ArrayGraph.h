@@ -57,7 +57,7 @@ public:
     void setActive(std::vector<int>* vertexIndices);
 
     /* set vertices with the passed vertex indices to inactive and update degrees for their neighbours: */
-    void setInactive(int vertexIndex) { graphState->at(vertexIndex).first = false; };
+    inline void setInactive(int vertexIndex) { graphState->at(vertexIndex).first = false; };
     void setInactive(std::vector<int>* vertexIndices);
 
     /* get the indices of all vertices that are inactive */
@@ -77,7 +77,7 @@ public:
         int degree = 0;
         for (int i = 0; i<(int) adjacencyList[vertexIndex]->size(); i++)
         {
-            if(graphState->at(i).second)
+            if(graphState->at(i).first)
             {
                 degree++;
             }

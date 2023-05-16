@@ -75,8 +75,14 @@ ArrayGraph* ArrayGraph::readStandardInput()
             {
                 break;
             }
+            // fix for OS-side CRLF end of lines
+            else if (line[j] == (char) 13)
+            {
+                continue;
+            }
             else
             {
+                std::cout << (int) line[j];
                 std::cerr << "readInput: illegal character read for vertex name 2\n";
                 return NULL;
             }
@@ -293,10 +299,10 @@ void ArrayGraph::initGraphState()
 
 std::vector<int>* ArrayGraph::getInactiveVertices()
 {
-    std::vector<int>* inactive;
-    for(int i = 0; i < (int) (*graphState).size(); i++)
+    std::vector<int>* inactive = new std::vector<int>();
+    for(int i = 0; i < (int) graphState->size(); i++)
     {
-        if (!(*graphState)[i].first)
+        if (!(graphState->at(i).first))
         {
             inactive->push_back(i);
         }
@@ -309,24 +315,29 @@ std::vector<int>* ArrayGraph::getInactiveVertices()
 int ArrayGraph::getMaxDegreeVertex()
 {
     int max = -1;
-    for (auto entry : *graphState)
+    int maxIndex;
+    for (int i = 0; i<(int) graphState->size(); i++)
     {
-        if(max < entry.second) 
-        {
-            max = entry.second;
+        if(graphState->at(i).first && max < graphState->at(i).second)
+        {   
+            max = graphState->at(i).second;
+            maxIndex = i;
         }
     }
-    return max;
+    return maxIndex;
 }
 
 // TODO: maybe provide an array that the neighbours are written into
 // Then in cases, where there is no need to allocate a new array, that time can be saved
 std::vector<int>* ArrayGraph::getNeighbours(int vertexIndex)
 {
-    std::vector<int>* neighbours;
-    for (int neighbour : *adjacencyList[vertexIndex])
+    std::vector<int>* neighbours = new std::vector<int>();
+    for (int i = 0; i < (int) adjacencyList[vertexIndex]->size(); i++)
     {
-        neighbours->push_back(neighbour);
+        if (graphState->at(adjacencyList[vertexIndex]->at(i)).first)
+        {
+            neighbours->push_back(adjacencyList[vertexIndex]->at(i));
+        }
     }
     return neighbours;
 }
