@@ -88,6 +88,8 @@ public:
     /* get indices of a vertices neighbours: */
     std::vector<int>* getNeighbours(int vertexIndex);
 
+    int getFirstActiveVertex();
+
 };
 
 #endif
