@@ -11,74 +11,83 @@ using namespace std;
 /*---------------   Exercise 2 Solver Code   ---------------*/
 /*----------------------------------------------------------*/
 
-/* vector<int>* vcVertexBranchingRecursive(ArrayGraph* G, int k)
+vector<int>* vcVertexBranchingRecursive(ArrayGraph* G, int k)
 {
 	
 	if (k < 0)
 		return nullptr;
 
-	pair<string, string>* edge = graphCopy->getFirstValidEdge();
+	int vertex = G->getFirstActiveVertex(); //TODO:get max degree vertex
+    int vertexDeg = G->getVertexDegree(vertex);
 
 	//graph has no edges left
-	if (edge == nullptr)
+	if (vertexDeg == 0)
 	{
-		return new vector<string>();
+		return new vector<int>();
 	}
 
 	//delete first vertex from graph and explore solution
-	graphCopy->deleteAdjacencyMapEntry(edge->first);
-	vector<string>* S = vcBranch(G, graphCopy, k - 1);
-	if (S != NULL)
+    G->setInactive(vertex);
+	vector<int>* S = vcVertexBranchingRecursive(G, k - 1);
+	if (S != nullptr)
 	{
 		//revert changes to graph
-		graphCopy->addAdjacencyMapEntry(G, edge->first); //revert changes to graph
+		G->setActive(vertex); //TODO: not necessary????
 		//return results
-		S->push_back(edge->first);
+		S->push_back(vertex);
 		return S;
 	}
 	else
 	{
 		//revert changes to graph
-		graphCopy->addAdjacencyMapEntry(G, edge->first);
+		G->setActive(vertex);
 	}
 
 
-	//delete second vertex from graph and explore solution
-	graphCopy->deleteAdjacencyMapEntry(edge->second);
-	S = vcBranch(G, graphCopy, k - 1);
-	if (S != NULL)
+	//cannot fully explore neighbours
+    if (vertexDeg > k) 
+    {
+        return nullptr;
+    }
+    vector<int>* neighbours = G->getNeighbours(vertex);
+    G->setInactive(neighbours);
+	S = vcVertexBranchingRecursive(G, k - 1);
+	if (S != nullptr)
 	{
 		//revert changes to graph
-		graphCopy->addAdjacencyMapEntry(G, edge->second);
+		G->setActive(neighbours); //TODO: not necessary????
 		//return results
-		S->push_back(edge->second);
+        for (int i = 0; i < (int) neighbours->size(); i++)
+        {
+            S->push_back(neighbours->at(i));
+        }
 		return S;
 	}
 	else
 	{
 		//revert changes to graph
-		graphCopy->addAdjacencyMapEntry(G, edge->second); 
+		G->setInactive(neighbours);
 	}
 	return nullptr;
-} */
+}
 
-/* vector<int>* vertexBranchingSolverRecursive(ArrayGraph* G)
+vector<int>* vertexBranchingSolverRecursive(ArrayGraph* G)
 {
 	int k = G->getVCLowerBound();
 	vector<int> *vc;
 
 	while (true)
 	{
-		vc = vcBranch(G, k);
+		vc = vcVertexBranchingRecursive(G, k);
 		if (vc != nullptr)
 		{
 			return vc;
 		}
 		k++;
 	}
-} */
+}
 
-vector<int>* searchTreeSolveDifferentialBNB(ArrayGraph* G, int k, std::vector<int>* vc)
+vector<int>* vcVertexBranchingIterative(ArrayGraph* G, int k, std::vector<int>* vc)
 {
 	std::cout << "setting up BnB data structures\n";
 	// stack storing the differentials of partial solutions, currently under evaluation and whether a partial solution was already expanded
@@ -191,7 +200,7 @@ vector<int>* vertexBranchingSolverIterative(ArrayGraph* G)
 
 	while (true)
 	{
-		searchTreeSolveDifferentialBNB(G, k, vc);
+		vcVertexBranchingIterative(G, k, vc);
 		if(vc->size() == 0) { std::cout << "Did not find solution for k=" << k << "\n"; }
 		if (vc->size() > 0)
 		{
@@ -313,7 +322,7 @@ int main(int argc, char* argv[]) {
 	try
 	{
 		ArrayGraph* G = ArrayGraph::readStandardInput();
-		if (G == NULL)
+		if (G == nullptr)
 		{
 			cerr << "Error constructing graph from input file.";
 		}
@@ -321,7 +330,7 @@ int main(int argc, char* argv[]) {
 		//test vc solver
 		//vector<string>* vc = searchTreeSolve(G);
 		//writeSolutionToConsole(vc);
-		std::vector<int>* vc = vertexBranchingSolverIterative(G);
+		std::vector<int>* vc = vertexBranchingSolverRecursive(G);
         cout << vc->size() << std::endl;
 		//writeSolutionToConsole(vc);
 	}

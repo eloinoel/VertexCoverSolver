@@ -319,6 +319,17 @@ int ArrayGraph::getMaxDegreeVertex()
     return max;
 }
 
+int ArrayGraph::getFirstActiveVertex()
+{
+    for (int i = 0; i < (int) graphState->size(); i++)
+    {
+        if(graphState->at(i).first)
+        {
+            return i;
+        }
+    }
+}
+
 // TODO: maybe provide an array that the neighbours are written into
 // Then in cases, where there is no need to allocate a new array, that time can be saved
 std::vector<int>* ArrayGraph::getNeighbours(int vertexIndex)
