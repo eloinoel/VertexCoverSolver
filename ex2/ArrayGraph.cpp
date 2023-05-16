@@ -336,6 +336,7 @@ int ArrayGraph::getFirstActiveVertex()
             return i;
         }
     }
+    return -1; // TODO: -1 is dummy return
 }
 
 // TODO: maybe provide an array that the neighbours are written into

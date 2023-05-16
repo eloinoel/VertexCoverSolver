@@ -392,6 +392,7 @@ int main(int argc, char* argv[]) {
 		//vector<string>* vc = searchTreeSolve(G);
 		//writeSolutionToConsole(vc);
 		std::vector<int>* vc = vertexBranchingSolverRecursive(G);
+		//std::vector<int>* vc = vertexBranchingSolverIterative(G);
         cout << vc->size() << std::endl;
 		//writeSolutionToConsole(vc);
 	}
