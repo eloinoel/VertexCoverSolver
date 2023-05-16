@@ -1,7 +1,7 @@
 #include <iostream> //output streams
 #include <fstream>  //ifstream file opening
 
-#include "ArrayGraph.h";
+#include "ArrayGraph.h"
 
 /**
  * reads an standard input and creates a graph out of received data
@@ -13,12 +13,12 @@ ArrayGraph* ArrayGraph::readStandardInput()
 	ArrayGraph* G = new ArrayGraph();
     int vertexIndex = 0;
     int edgeCount = 0;
-    G->originalVertexNames = unordered_map<string, pair<int, int>>();
-    vector<string[2]> edges = vector<string[2]>(); //edges after reading file once, eg. edges[0] = ["a", "b"]
+    G->originalVertexNames = std::unordered_map<std::string, std::pair<int, int>>();
+    std::vector<std::pair<std::string, std::string>> edges = std::vector<std::pair<std::string, std::string>>(); //edges after reading file once, eg. edges[0] = ["a", "b"]
     
     //iterate through file, map string name to unique index id and degree of vertex
-    string line;
-    while (getline(cin, line, '\n'))
+    std::string line;
+    while (getline(std::cin, line, '\n'))
     {
         //ignore empty lines
         if (line.empty())
@@ -30,8 +30,8 @@ ArrayGraph* ArrayGraph::readStandardInput()
         line = eraseLeadingTrailingWhitespacesFromString(line); //not very fast, better to read byte by byte and ignore spaces
 
         //extract edge
-        string vertex0 = "";
-        string vertex1 = "";
+        std::string vertex0 = "";
+        std::string vertex1 = "";
         int i;
         bool foundComment = false;
         //first vertex
@@ -54,7 +54,7 @@ ArrayGraph* ArrayGraph::readStandardInput()
             }
             else
             {
-                cerr << "readInput: illegal character read for vertex name 1\n";
+                std::cerr << "readInput: illegal character read for vertex name 1\n";
                 return NULL;
             }
         }
@@ -77,7 +77,7 @@ ArrayGraph* ArrayGraph::readStandardInput()
             }
             else
             {
-                cerr << "readInput: illegal character read for vertex name 2\n";
+                std::cerr << "readInput: illegal character read for vertex name 2\n";
                 return NULL;
             }
         }
@@ -92,7 +92,7 @@ ArrayGraph* ArrayGraph::readStandardInput()
         else
         {
             //vertex not in map
-            G->originalVertexNames.insert({vertex0, pair<int, int>(vertexIndex, 0)});
+            G->originalVertexNames.insert({vertex0, std::pair<int, int>(vertexIndex, 0)});
             vertexIndex++;
         }
 
@@ -105,13 +105,13 @@ ArrayGraph* ArrayGraph::readStandardInput()
         else
         {
             //vertex not in map
-            G->originalVertexNames.insert({vertex1, pair<int, int>(vertexIndex, 0)});
+            G->originalVertexNames.insert({vertex1, std::pair<int, int>(vertexIndex, 0)});
             vertexIndex++;
         }
 
         //save edges
-        edges[edgeCount][0] = vertex0;
-        edges[edgeCount][1] = vertex1;
+        edges[edgeCount].first = vertex0;
+        edges[edgeCount].second = vertex1;
         edgeCount++;
     }
 
@@ -119,22 +119,22 @@ ArrayGraph* ArrayGraph::readStandardInput()
     //generate adjacency list of fixed size, and add edges
     //-----------------------------------------------------
 
-    G->adjacencyList = vector<vector<int>*>(G->originalVertexNames.size());
+    G->adjacencyList = std::vector<std::vector<int>*>(G->originalVertexNames.size());
     //clear first
-    for (int k = 0; k < G->adjacencyList.size(); k++)
+    for (int k = 0; k < (int) G->adjacencyList.size(); k++)
     {
         G->adjacencyList[k] = nullptr;
     }
     //add edges
-    for (int k = 0; k < edges.size(); k++)
+    for (int k = 0; k < (int) edges.size(); k++)
     {
         //get vertices
-        auto firstVertexEntry = G->originalVertexNames.find(edges[k][0]);
-        auto secondVertexEntry = G->originalVertexNames.find(edges[k][1]);
+        auto firstVertexEntry = G->originalVertexNames.find(edges[k].first);
+        auto secondVertexEntry = G->originalVertexNames.find(edges[k].second);
 
         if (firstVertexEntry == G->originalVertexNames.end() || secondVertexEntry == G->originalVertexNames.end())
         {
-            throw invalid_argument("readStandardInput: inconsistency: map of original names returned nothing");
+            throw std::invalid_argument("readStandardInput: inconsistency: map of original names returned nothing");
         }
 
 
@@ -147,7 +147,7 @@ ArrayGraph* ArrayGraph::readStandardInput()
         if (G->adjacencyList[indexFirst] != nullptr) //edges list initialised
         {
             //find first index to insert adjacent vertex
-            for (int insertIndex = 0; insertIndex < G->adjacencyList[indexFirst]->size(); insertIndex++)
+            for (int insertIndex = 0; insertIndex < (int) G->adjacencyList[indexFirst]->size(); insertIndex++)
             {
                 if(G->adjacencyList[indexFirst]->at(insertIndex) != 0)
                 {
@@ -158,9 +158,9 @@ ArrayGraph* ArrayGraph::readStandardInput()
         }
         else //edges list not yet initialised
         {
-            G->adjacencyList[indexFirst] = new vector<int>(maxDegFirst);
+            G->adjacencyList[indexFirst] = new std::vector<int>(maxDegFirst);
             //clear
-            for (int l = 0; l < G->adjacencyList[indexFirst]->size(); l++)
+            for (int l = 0; l < (int) G->adjacencyList[indexFirst]->size(); l++)
             {
                 (*G->adjacencyList[indexFirst])[l] = 0;
             }
@@ -172,7 +172,7 @@ ArrayGraph* ArrayGraph::readStandardInput()
         if (G->adjacencyList[indexSecond] != nullptr) //edges list initialised
         {
             //find first index to insert adjacent vertex
-            for (int insertIndex = 0; insertIndex < G->adjacencyList[indexSecond]->size(); insertIndex++)
+            for (int insertIndex = 0; insertIndex < (int) G->adjacencyList[indexSecond]->size(); insertIndex++)
             {
                 if(G->adjacencyList[indexSecond]->at(insertIndex) != 0)
                 {
@@ -183,9 +183,9 @@ ArrayGraph* ArrayGraph::readStandardInput()
         }
         else //edges list not yet initialised
         {
-            G->adjacencyList[indexFirst] = new vector<int>(maxDegSecond);
+            G->adjacencyList[indexFirst] = new std::vector<int>(maxDegSecond);
             //clear
-            for (int l = 0; l < G->adjacencyList[indexSecond]->size(); l++)
+            for (int l = 0; l < (int) G->adjacencyList[indexSecond]->size(); l++)
             {
                 (*G->adjacencyList[indexSecond])[l] = 0;
             }
@@ -196,11 +196,11 @@ ArrayGraph* ArrayGraph::readStandardInput()
     return G;
 }
 
-string ArrayGraph::eraseLeadingTrailingWhitespacesFromString(string str)
+std::string ArrayGraph::eraseLeadingTrailingWhitespacesFromString(std::string str)
 {
-	string whitespace = " \t";
+	std::string whitespace = " \t";
 	const auto strBegin = str.find_first_not_of(whitespace);	//filter leading spaces and tabs
-	if (strBegin == string::npos) //no content
+	if (strBegin == std::string::npos) //no content
 	{
 		return "";
 	}
@@ -216,4 +216,57 @@ bool ArrayGraph::isVertexCharacter(char c)
 		return true;
 	}
 	return false;
+}
+
+void ArrayGraph::print()
+{
+    if (adjacencyList.size() > 0)
+	{
+		std::cout << "\n";
+		for (int i = 0; i < (int) adjacencyList.size(); i++)
+		{	
+			if (adjacencyList[i] != nullptr)
+            {
+                std::cout << i << ": ";
+                for (int j = 0; j < (int) adjacencyList[i]->size() - 1; j++)
+                {
+                    std::cout << adjacencyList[i]->at(j) << ", ";
+                }
+                if (adjacencyList[i]->size() > 0)
+                {
+                    std::cout << adjacencyList[i]->at(adjacencyList[i]->size() - 1);
+                }
+            }
+            else
+            {
+                std::cout << "Index " << i << " is nullptr";
+            }
+			std::cout << "\n";
+		}
+		std::cout << "\n";
+	}
+}
+
+int ArrayGraph::getLowerBoundVC() {
+    return 0;
+}
+
+std::vector<std::pair<bool, int>>* ArrayGraph::getState()
+{
+    return new std::vector<std::pair<bool, int>>();
+}
+
+void ArrayGraph::setInactiveVertices(std::vector<int>* vertices)
+{
+
+}
+
+int ArrayGraph::getMaxDegreeVertex()
+{
+    return 0;
+}
+
+std::vector<int>* ArrayGraph::getNeighbours(int vertexIndex)
+{
+    return new std::vector<int>();
 }

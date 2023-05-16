@@ -15,8 +15,8 @@ vector<int>* searchTreeSolveBNB(ArrayGraph* G)
 {
 	// current best number of vertices for VC
 	int k = G->getLowerBoundVC();
-	std::vector<int> *vc;
-	std::vector<bool, int> *state = G->getState();
+	std::vector<int>* vc;
+	std::vector<std::pair<bool, int>>* state = G->getState();
 
 	// stack storing the current partial solutions left for evaluation
     std::stack<std::vector<int>*> S;
@@ -38,7 +38,7 @@ vector<int>* searchTreeSolveBNB(ArrayGraph* G)
 		if (current == -1 || current == 0)
 		{
 			// if current solution is actually better than the current best solution: update k & vc
-			if (k > partialVC->size()) { // TODO: remove condition later when culling earlier with BnB
+			if (k > (int) partialVC->size()) { // TODO: remove condition later when culling earlier with BnB
 				vc = partialVC;
 				k = vc->size();
 			}
@@ -47,16 +47,16 @@ vector<int>* searchTreeSolveBNB(ArrayGraph* G)
 		}
 
 		// solve graph with maxVertDegree <= 2 in linear time
-		else if (state[current][1] <= 2)	// FIXME: state[current][1] needs to be updated on the graph side for this to be more accurate
+		else if (state->at(current).second <= 2)	// FIXME: state[current][1] needs to be updated on the graph side for this to be more accurate
 		{
 
 		}
 
 		// refined search tree branching for maxVertDegree >= 3
-		else if (state[current][1] >= 3)	// FIXME: state[current][1] needs to be updated on the graph side for this to be more accurate
+		else if (state->at(current).second >= 3)	// FIXME: state[current][1] needs to be updated on the graph side for this to be more accurate
 		{
 			// if k and current partial VC size permit adding the neighbours
-			if (k - partialVC->size() >= state[current][1])
+			if (k - (int) partialVC->size() >= state->at(current).second)
 			{
 				// add neighbours of the current vertex to the partial VC and push the resulting partial VC for further evaluation
 				// NOTE: partial VC is copied, since we need two separate lists, one for each of the possible branching solutions
@@ -208,14 +208,15 @@ int main(int argc, char* argv[]) {
 	string input;
 	try
 	{
-		Graph* G = Graph::readStandardInput();
+		ArrayGraph* G = ArrayGraph::readStandardInput();
 		if (G == NULL)
 		{
 			cerr << "Error constructing graph from input file.";
 		}
+        G->print();
 		//test vc solver
-		vector<string>* vc = searchTreeSolve(G);
-		writeSolutionToConsole(vc);
+		//vector<string>* vc = searchTreeSolve(G);
+		//writeSolutionToConsole(vc);
 	}
 	catch (const exception&)
 	{
