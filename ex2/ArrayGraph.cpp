@@ -3,6 +3,7 @@
 
 #include "ArrayGraph.h"
 
+// TODO: make more efficent, employ less copies
 /**
  * reads an standard input and creates a graph out of received data
  * assumes that no duplicate edges are present in the read data
@@ -112,6 +113,8 @@ ArrayGraph* ArrayGraph::readStandardInput()
         std::pair<std::string, std::string> edge_pair = std::pair<std::string, std::string>({vertex0, vertex1});
         edges.push_back(edge_pair);
     }
+
+    G->initGraphState();
 
     //-----------------------------------------------------
     //generate adjacency list of fixed size, and add edges
@@ -265,6 +268,7 @@ void ArrayGraph::print()
 	}
 }
 
+<<<<<<< Updated upstream
 void ArrayGraph::printOriginalVertexNames()
 {
     for (auto entry : originalVertexNames)
@@ -273,26 +277,64 @@ void ArrayGraph::printOriginalVertexNames()
     }
 }
 
+=======
+//TODO: implement cycle and clique bound
+>>>>>>> Stashed changes
 int ArrayGraph::getLowerBoundVC() {
     return 0;
 }
 
+void ArrayGraph::initGraphState()
+{
+    unsigned int vertexCount = originalVertexNames.size();
+    graphState = new std::vector<std::pair<bool, int>>(vertexCount);
+    for (auto entry : originalVertexNames)
+    {
+        (*graphState)[entry.second.first] = std::make_pair(true, entry.second.second);
+    }
+}
+
 std::vector<std::pair<bool, int>>* ArrayGraph::getState()
 {
-    return new std::vector<std::pair<bool, int>>();
+    return graphState;
 }
 
-void ArrayGraph::setInactiveVertices(std::vector<int>* vertices)
+std::vector<int>* ArrayGraph::getInactiveVertices()
 {
-
+    std::vector<int> inactive;
+    for(int i = 0; i < (*graphState).size(); i++)
+    {
+        if (!(*graphState)[i].first)
+        {
+            inactive.push_back(i);
+        }
+    }
+    return &inactive;
 }
 
+// TODO: naive implementation
+// given an upper bound for the vertex degree (i.e. a pre-calculated max-degree), we can abort as soon as a vertex with a highest possible degree is found
 int ArrayGraph::getMaxDegreeVertex()
 {
-    return 0;
+    int max = -INFINITY;
+    for (auto entry : *graphState)
+    {
+        if(max < entry.second) 
+        {
+            max = entry.second;
+        }
+    }
+    return max;
 }
 
+// TODO: maybe provide an array that the neighbours are written into
+// Then in cases, where there is no need to allocate a new array, that time can be saved
 std::vector<int>* ArrayGraph::getNeighbours(int vertexIndex)
 {
-    return new std::vector<int>();
+    std::vector<int> neighbours;
+    for (int neighbour : *adjacencyList[vertexIndex])
+    {
+        neighbours.push_back(neighbour);
+    }
+    return &neighbours;
 }

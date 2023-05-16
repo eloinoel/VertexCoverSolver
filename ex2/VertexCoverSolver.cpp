@@ -11,7 +11,7 @@ using namespace std;
 /*---------------   Exercise 2 Solver Code   ---------------*/
 /*----------------------------------------------------------*/
 
-vector<int>* searchTreeSolveBNB(ArrayGraph* G)
+/* vector<int>* searchTreeSolveBNB(ArrayGraph* G)
 {
 	// current best number of vertices for VC
 	int k = G->getLowerBoundVC();
@@ -75,6 +75,91 @@ vector<int>* searchTreeSolveBNB(ArrayGraph* G)
 				S.push(partialVC);
 			}
 		}
+	}
+
+
+	return vc;
+} */
+
+vector<int>* searchTreeSolveDifferentialBNB(ArrayGraph* G)
+{
+	// current best number of vertices for VC
+	int k = G->getLowerBoundVC();
+	std::vector<int>* vc;
+	std::vector<std::pair<bool, int>>* state = G->getState();
+
+	// stack storing the differentials of partial solutions, currently under evaluation and whether a partial solution was already expanded
+    std::stack<std::pair<std::vector<int>*, bool>*> S;
+	std::pair<std::vector<int>*, bool>* current;
+	std::vector<int>* VC = nullptr;
+	int branchVertex;
+	// number of currently active vertices
+	int partialVCSize = 0; // TODO: update
+
+	//S.push({{}, false}); // TODO: different initialization
+	while (!S.empty())
+	{
+		// retrieve the differential of the current partial vertex cover solution to its parent solution (+ expanded tag)
+		current = S.top();
+
+		// if current solution has already been expanded, revert its deletion of vertices and traverse back up to the next partial solution
+		if (current->second)
+		{
+			G->setActive(current->first);
+			partialVCSize -= current->first->size();
+			S.pop();
+			continue;
+		}
+
+		// otherwise delete the vertices (defined by the differential calculated in the expansion of the parent search tree node)
+		G->setInactive(current->first);
+		// get maxDegVert of remaining active vertices (the way the algorithm branches is determined by the choice of this vertex)
+		branchVertex = G->getMaxDegreeVertex();
+		// mark this partial solution as expanded and expand subsequently
+		current->second = true;
+
+		// if no active vertex left in graph or no vertex with degree >= 0: (We found a solution)
+		if (branchVertex == -1 || G->getVertexDegree(branchVertex) == 0)
+		{
+			// if no 
+			// or if current solution is actually better than the current best solution: update k & vc
+			if (vc != nullptr || k > partialVCSize) { // TODO: remove condition later when culling earlier with BnB
+				vc = G->getInactiveVertices();
+				k = partialVCSize;
+			}
+			// traverse back up the search tree
+			G->setActive(current->first);
+			partialVCSize -= current->first->size();
+			S.pop();
+			continue;
+		}
+
+		// solve graph with maxVertDegree <= 2 in linear time
+		else if (G->getVertexDegree(branchVertex) <= 2)
+		{
+
+		}
+
+		// refined search tree branching for maxVertDegree >= 3
+		else if (G->getVertexDegree(branchVertex) >= 3)
+		{
+			// if k and current partial VC size permit adding the neighbours
+			if (k - partialVCSize >= G->getVertexDegree(branchVertex))
+			{
+				// add neighbours of the current vertex to the child differential for evaluating the partial vertex cover where all of the branchVertex's neighbours where taken into the vertex cover
+				// TODO: is there no way to create this inline?
+				std::pair<std::vector<int>*, bool> childDifferential = {G->getNeighbours(branchVertex), false};
+				S.push(&childDifferential);
+			}
+			// if k and current partial VC size permit adding the current vertex
+			if (k - partialVCSize >= 1)
+			{
+				// TODO: is there no way to create this inline?
+				std::vector<int> bv = {branchVertex};
+				std::pair<std::vector<int>*, bool> childDifferential = {&bv, false};
+				S.push(&childDifferential);
+			}
+		} 
 	}
 
 
