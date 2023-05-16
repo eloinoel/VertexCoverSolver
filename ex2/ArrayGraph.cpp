@@ -277,7 +277,7 @@ void ArrayGraph::printOriginalVertexNames()
 }
 
 //TODO: implement cycle and clique bound
-int ArrayGraph::getLowerBoundVC() {
+int ArrayGraph::getVCLowerBound() {
     return 0;
 }
 
@@ -291,29 +291,24 @@ void ArrayGraph::initGraphState()
     }
 }
 
-std::vector<std::pair<bool, int>>* ArrayGraph::getState()
-{
-    return graphState;
-}
-
 std::vector<int>* ArrayGraph::getInactiveVertices()
 {
-    std::vector<int> inactive;
-    for(int i = 0; i < (*graphState).size(); i++)
+    std::vector<int>* inactive;
+    for(int i = 0; i < (int) (*graphState).size(); i++)
     {
         if (!(*graphState)[i].first)
         {
-            inactive.push_back(i);
+            inactive->push_back(i);
         }
     }
-    return &inactive;
+    return inactive;
 }
 
 // TODO: naive implementation
 // given an upper bound for the vertex degree (i.e. a pre-calculated max-degree), we can abort as soon as a vertex with a highest possible degree is found
 int ArrayGraph::getMaxDegreeVertex()
 {
-    int max = -INFINITY;
+    int max = -1;
     for (auto entry : *graphState)
     {
         if(max < entry.second) 
@@ -328,10 +323,26 @@ int ArrayGraph::getMaxDegreeVertex()
 // Then in cases, where there is no need to allocate a new array, that time can be saved
 std::vector<int>* ArrayGraph::getNeighbours(int vertexIndex)
 {
-    std::vector<int> neighbours;
+    std::vector<int>* neighbours;
     for (int neighbour : *adjacencyList[vertexIndex])
     {
-        neighbours.push_back(neighbour);
+        neighbours->push_back(neighbour);
     }
-    return &neighbours;
+    return neighbours;
+}
+
+void ArrayGraph::setInactive(std::vector<int>* vertexIndices)
+{
+    for (int i = 0; i < (int) vertexIndices->size(); i++)
+    {
+        setInactive(vertexIndices->at(i));
+    }
+}
+
+void ArrayGraph::setActive(std::vector<int>* vertexIndices)
+{
+    for (int i = 0; i < (int) vertexIndices->size(); i++)
+    {
+        setActive(vertexIndices->at(i));
+    }
 }

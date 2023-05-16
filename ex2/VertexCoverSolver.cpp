@@ -11,96 +11,87 @@ using namespace std;
 /*---------------   Exercise 2 Solver Code   ---------------*/
 /*----------------------------------------------------------*/
 
-/* vector<int>* searchTreeSolveBNB(ArrayGraph* G)
+/* vector<int>* vcVertexBranchingRecursive(ArrayGraph* G, int k)
 {
-	// current best number of vertices for VC
-	int k = G->getLowerBoundVC();
-	std::vector<int>* vc;
-	std::vector<std::pair<bool, int>>* state = G->getState();
+	
+	if (k < 0)
+		return nullptr;
 
-	// stack storing the current partial solutions left for evaluation
-    std::stack<std::vector<int>*> S;
-	std::vector<int>* partialVC;
-	int current;
+	pair<string, string>* edge = graphCopy->getFirstValidEdge();
 
-	S.push({});
-	while (!S.empty())
+	//graph has no edges left
+	if (edge == nullptr)
 	{
-		// retrieve the current partial vertex cover vertices
-		partialVC = S.top();
-		S.pop();
-		// set Graph to current partial solution
-		G->setInactiveVertices(partialVC);
-		// get maxDegVert of remaining active vertices
-		current = G->getMaxDegreeVertex();
+		return new vector<string>();
+	}
 
-		// if no active vertex left in graph or no vertex with degree >= 1: (We found a solution)
-		if (current == -1 || current == 0)
-		{
-			// if current solution is actually better than the current best solution: update k & vc
-			if (k > (int) partialVC->size()) { // TODO: remove condition later when culling earlier with BnB
-				vc = partialVC;
-				k = vc->size();
-			}
-			// traverse back up the search tree
-			continue;
-		}
-
-		// solve graph with maxVertDegree <= 2 in linear time
-		else if (state->at(current).second <= 2)	// FIXME: state[current][1] needs to be updated on the graph side for this to be more accurate
-		{
-
-		}
-
-		// refined search tree branching for maxVertDegree >= 3
-		else if (state->at(current).second >= 3)	// FIXME: state[current][1] needs to be updated on the graph side for this to be more accurate
-		{
-			// if k and current partial VC size permit adding the neighbours
-			if (k - (int) partialVC->size() >= state->at(current).second)
-			{
-				// add neighbours of the current vertex to the partial VC and push the resulting partial VC for further evaluation
-				// NOTE: partial VC is copied, since we need two separate lists, one for each of the possible branching solutions
-				std::vector<int> partialVCCopy = *partialVC;
-				for(int neighbour : *(G->getNeighbours(current)))
-				{
-					partialVCCopy.push_back(neighbour);
-				}
-				S.push(&partialVCCopy);
-			}
-			// if k and current partial VC size permit adding the current vertex
-			if (k - partialVC->size() >= 1)
-			{
-				// add current vertex to the partial VC and push the resulting partial VC for further evaluation
-				partialVC->push_back(current);
-				S.push(partialVC);
-			}
-		}
+	//delete first vertex from graph and explore solution
+	graphCopy->deleteAdjacencyMapEntry(edge->first);
+	vector<string>* S = vcBranch(G, graphCopy, k - 1);
+	if (S != NULL)
+	{
+		//revert changes to graph
+		graphCopy->addAdjacencyMapEntry(G, edge->first); //revert changes to graph
+		//return results
+		S->push_back(edge->first);
+		return S;
+	}
+	else
+	{
+		//revert changes to graph
+		graphCopy->addAdjacencyMapEntry(G, edge->first);
 	}
 
 
-	return vc;
+	//delete second vertex from graph and explore solution
+	graphCopy->deleteAdjacencyMapEntry(edge->second);
+	S = vcBranch(G, graphCopy, k - 1);
+	if (S != NULL)
+	{
+		//revert changes to graph
+		graphCopy->addAdjacencyMapEntry(G, edge->second);
+		//return results
+		S->push_back(edge->second);
+		return S;
+	}
+	else
+	{
+		//revert changes to graph
+		graphCopy->addAdjacencyMapEntry(G, edge->second); 
+	}
+	return nullptr;
 } */
 
-vector<int>* searchTreeSolveDifferentialBNB(ArrayGraph* G)
+/* vector<int>* vertexBranchingSolverRecursive(ArrayGraph* G)
 {
-	// current best number of vertices for VC
-	int k = G->getLowerBoundVC();
-	std::vector<int>* vc;
-	std::vector<std::pair<bool, int>>* state = G->getState();
+	int k = G->getVCLowerBound();
+	vector<int> *vc;
 
+	while (true)
+	{
+		vc = vcBranch(G, k);
+		if (vc != nullptr)
+		{
+			return vc;
+		}
+		k++;
+	}
+} */
+
+vector<int>* searchTreeSolveDifferentialBNB(ArrayGraph* G, int k, std::vector<int>* vc)
+{
+	std::cout << "setting up BnB data structures\n";
 	// stack storing the differentials of partial solutions, currently under evaluation and whether a partial solution was already expanded
     std::stack<std::pair<std::vector<int>*, bool>*> S;
 	std::pair<std::vector<int>*, bool>* current;
-	std::vector<int>* VC = nullptr;
 	int branchVertex;
 	// number of currently active vertices
 	int partialVCSize = 0;
-
-	//S.push({{}, false}); // TODO: different initialization
-
+	
+	// TODO: different initialization
 	// first branching done by hand
 	// get maxDegVert of remaining active vertices (the way the algorithm branches is determined by the choice of this vertex)
-	branchVertex = G->getMaxDegreeVertex();
+	/* branchVertex = G->getMaxDegreeVertex();
 	// if k and current partial VC size permit adding the neighbours
 	if (k - partialVCSize >= G->getVertexDegree(branchVertex))
 	{
@@ -116,8 +107,11 @@ vector<int>* searchTreeSolveDifferentialBNB(ArrayGraph* G)
 		std::vector<int> bv = {branchVertex};
 		std::pair<std::vector<int>*, bool> childDifferential = {&bv, false};
 		S.push(&childDifferential);
-	}
-
+	} */
+	std::vector<int> bv = {};
+	std::pair<std::vector<int>*, bool> childDifferential = {&bv, false};
+	S.push(&childDifferential);
+	std::cout << "started BnB with stack size: " << S.size() << "\n";
 
 	while (!S.empty())
 	{
@@ -132,9 +126,11 @@ vector<int>* searchTreeSolveDifferentialBNB(ArrayGraph* G)
 			S.pop();
 			continue;
 		}
+		std::cout << "element was: " << S.size() << "\n";
 
 		// otherwise delete the vertices (defined by the differential calculated in the expansion of the parent search tree node)
 		G->setInactive(current->first);
+		partialVCSize += current->first->size();
 		// get maxDegVert of remaining active vertices (the way the algorithm branches is determined by the choice of this vertex)
 		branchVertex = G->getMaxDegreeVertex();
 		// mark this partial solution as expanded and expand subsequently
@@ -145,8 +141,9 @@ vector<int>* searchTreeSolveDifferentialBNB(ArrayGraph* G)
 		{
 			// if no 
 			// or if current solution is actually better than the current best solution: update k & vc
-			if (vc != nullptr || k > partialVCSize) { // TODO: remove condition later when culling earlier with BnB
+			if (vc == nullptr || k > partialVCSize) { // TODO: remove condition later when culling earlier with BnB
 				vc = G->getInactiveVertices();
+				std::cout << "calculated vc of size: " << vc->size() << "\n";
 				k = partialVCSize;
 			}
 			// traverse back up the search tree
@@ -181,27 +178,28 @@ vector<int>* searchTreeSolveDifferentialBNB(ArrayGraph* G)
 				std::pair<std::vector<int>*, bool> childDifferential = {&bv, false};
 				S.push(&childDifferential);
 			}
-		} 
+		}
 	}
-
 
 	return vc;
 }
 
-// TODO: calculate minimal number of changes in activity of vertices to switch from the origin subgraph to the destination subgraph
-/* std::vector<int, bool>* calcFlagSets(std::vector<int>* origin, std::vector<int>* dest)
+vector<int>* vertexBranchingSolverIterative(ArrayGraph* G)
 {
-	std::vector<int, bool> flagSets;
-	for(int i=0; i<dest->size(); i++)
-	{
-		if(dest.) {
+	int k = G->getVCLowerBound();
+	vector<int>* vc = new vector<int>();
 
-		} else {
-			flagSets.push_back({});
+	while (true)
+	{
+		searchTreeSolveDifferentialBNB(G, k, vc);
+		if(vc->size() == 0) { std::cout << "Did not find solution for k=" << k << "\n"; }
+		if (vc->size() > 0)
+		{
+			return vc;
 		}
+		k++;
 	}
-	return &flagSets;
-} */
+}
 
 /*----------------------------------------------------------*/
 /*---------------   Exercise 1 Solver Code   ---------------*/
@@ -264,8 +262,6 @@ vector<string>* vcBranch(Graph* G, Graph* graphCopy, int k)
 		graphCopy->addAdjacencyMapEntry(G, edge->second); 
 	}
 	return NULL;
-	
-	
 }
 
 vector<string>* searchTreeSolve(Graph* G)
@@ -325,8 +321,9 @@ int main(int argc, char* argv[]) {
 		//test vc solver
 		//vector<string>* vc = searchTreeSolve(G);
 		//writeSolutionToConsole(vc);
-		std::vector<int>* vc = searchTreeSolveDifferentialBNB(G);
-		writeSolutionToConsole(vc);
+		std::vector<int>* vc = vertexBranchingSolverIterative(G);
+        cout << vc->size() << std::endl;
+		//writeSolutionToConsole(vc);
 	}
 	catch (const exception& e)
 	{
