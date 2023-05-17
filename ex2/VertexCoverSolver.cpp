@@ -377,11 +377,11 @@ vector<int>* vertexBranchingSolverIterative(ArrayGraph* G)
 	while (true)
 	{
 		if(k > u) {
-			std::cout << "Did not find solution within upper bound u=" << u << "\n";
+			//std::cout << "Did not find solution within upper bound u=" << u << "\n";
 			return vc;
 		}
 		vc = VCVertexBranchingIterative(G, k, vc);
-		if(vc == nullptr) { std::cout << "Did not find solution for k=" << k << "\n\n"; }
+		//if(vc == nullptr) { std::cout << "Did not find solution for k=" << k << "\n\n"; }
 		if (vc != nullptr)
 		{
 			return vc;
@@ -484,7 +484,7 @@ void writeSolutionToFile(string fileName, vector<string>* vc)
 	outfile.close();
 }
 
-void writeSolutionToConsole(vector<int>* vc)
+void writeSolutionToConsole(vector<string>* vc)
 {
 	for (auto it = vc->begin(); it != vc->end(); ++it)
 	{
@@ -498,7 +498,7 @@ void writeSolutionToConsole(vector<int>* vc)
 
 int main(int argc, char* argv[]) {
 	string input;
-    cout << "Test\n";
+    //cout << "Test\n";
 	try
 	{
 		ArrayGraph* G = ArrayGraph::readStandardInput();
@@ -506,14 +506,16 @@ int main(int argc, char* argv[]) {
 		{
 			cerr << "Error constructing graph from input file.";
 		}
-        G->print();
+        //G->print();
 		//test vc solver
 		//vector<string>* vc = searchTreeSolve(G);
 		//writeSolutionToConsole(vc);
 		//std::vector<int>* vc = vertexBranchingSolverRecursive(G);
 		std::vector<int>* vc = vertexBranchingSolverIterative(G);
-        cout << vc->size() << std::endl;
-		//writeSolutionToConsole(vc);
+        std::vector<std::string>* vc_strings = G->getStringsFromVertexIndices(vc);
+
+        //cout << vc->size() << std::endl;
+		writeSolutionToConsole(vc_strings);
 	}
 	catch (const exception& e)
 	{

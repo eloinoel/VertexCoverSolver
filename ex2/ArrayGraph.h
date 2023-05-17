@@ -112,6 +112,8 @@ public:
 
     int getFirstActiveVertex();
 
+    std::vector<std::string>* getStringsFromVertexIndices(std::vector<int>* vertices);
+
 };
 
 #endif

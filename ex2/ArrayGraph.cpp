@@ -465,3 +465,19 @@ void ArrayGraph::printCycles()
         std::cout << std::endl;
     }
 }
+
+std::vector<std::string>* ArrayGraph::getStringsFromVertexIndices(std::vector<int>* vertices)
+{
+    std::vector<std::string>* solution = new std::vector<std::string>();
+    for (int i = 0; i < (int) vertices->size(); i++)
+    {
+        for (auto entry : originalVertexNames)
+        {
+            if(entry.second.first == vertices->at(i))
+            {
+                solution->push_back(entry.first);
+            }
+        }
+    }
+    return solution;
+}
