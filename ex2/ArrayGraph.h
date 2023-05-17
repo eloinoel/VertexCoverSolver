@@ -99,7 +99,7 @@ public:
         int degree = 0;
         for (int i = 0; i<(int) adjacencyList[vertexIndex]->size(); i++)
         {
-            if(graphState->at(i).first)
+            if(graphState->at(adjacencyList[vertexIndex]->at(i)).first)
             {
                 degree++;
             }

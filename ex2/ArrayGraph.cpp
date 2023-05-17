@@ -321,14 +321,25 @@ int ArrayGraph::getMaxDegreeVertex()
 {
     int max = -1;
     int maxIndex;
-    for (int i = 0; i<(int) graphState->size(); i++)
+
+    for (int i = 0; i < (int) graphState->size(); i++)
+    {
+        int deg = getVertexDegree(i);
+        if(graphState->at(i).first && max < deg)
+        {
+            max = deg;
+            maxIndex = i;
+        }
+    }
+    // TODO: version for graphState degree being kept up to date
+    /* for (int i = 0; i < (int) graphState->size(); i++)
     {
         if(graphState->at(i).first && max < graphState->at(i).second)
         {
             max = graphState->at(i).second;
             maxIndex = i;
         }
-    }
+    } */
     return maxIndex;
 }
 
