@@ -510,17 +510,17 @@ int main(int argc, char* argv[]) {
 		{
 			cerr << "Error constructing graph from input file.";
 		}
-        G->print();
+        //G->print();
 		//test vc solver
 		//vector<string>* vc = searchTreeSolve(G);
 		//writeSolutionToConsole(vc);
 		//std::vector<int>* vc = vertexBranchingSolverRecursive(G);
 		std::vector<int>* vc = vertexBranchingSolverIterative(G);
-        //std::vector<std::string>* vc_strings = G->getStringsFromVertexIndices(vc);
-
-        G->printMappings(vc);
+        std::vector<std::string>* vc_strings = G->getStringsFromVertexIndices(vc);
+        writeSolutionToConsole(vc_strings);
+        //G->printMappings(vc);
         //cout << vc->size() << std::endl;
-		//writeSolutionToConsole(vc_strings);
+
 	}
 	catch (const exception& e)
 	{
