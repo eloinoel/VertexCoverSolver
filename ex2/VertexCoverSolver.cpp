@@ -103,13 +103,10 @@ vector<int>* vertexBranchingSolverRecursive(ArrayGraph* G)
 	}
 }
 
-vector<int>* VCVertexBranchingIterativeDebug(ArrayGraph* G, int k, std::vector<int>* vc, bool debug)
+vector<int>* VCVertexBranchingIterative(ArrayGraph* G, int k, std::vector<int>* vc, bool debug)
 {
 	// stack storing the differentials of partial solutions, currently under evaluation and whether a partial solution was already expanded
-    if(debug)
-	{
-		std::stack<std::pair<std::vector<int>, bool>> S = std::stack<std::pair<std::vector<int>, bool>>();
-	}
+    std::stack<std::pair<std::vector<int>, bool>> S = std::stack<std::pair<std::vector<int>, bool>>();
 	std::pair<std::vector<int>, bool> current;
 	int branchVertex;
 	int branchVertexDegree;
@@ -317,7 +314,7 @@ vector<int>* vertexBranchingSolverIterative(ArrayGraph* G)
 			//std::cout << "Did not find solution within upper bound u=" << u << "\n";
 			return vc;
 		}
-		vc = VCVertexBranchingIterativeDebug(G, k, vc, true);
+		vc = VCVertexBranchingIterative(G, k, vc, true);
 		//if(vc == nullptr) { std::cout << "Did not find solution for k=" << k << "\n\n"; }
 		if (vc != nullptr)
 		{
