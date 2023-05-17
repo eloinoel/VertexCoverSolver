@@ -75,8 +75,14 @@ ArrayGraph* ArrayGraph::readStandardInput()
             {
                 break;
             }
+            // fix for OS-side CRLF end of lines
+            else if (line[j] == (char) 13)
+            {
+                continue;
+            }
             else
             {
+                std::cout << (int) line[j];
                 std::cerr << "readInput: illegal character read for vertex name 2\n";
                 return NULL;
             }
@@ -295,49 +301,77 @@ void ArrayGraph::initGraphState()
     }
 }
 
-std::vector<std::pair<bool, int>>* ArrayGraph::getState()
-{
-    return graphState;
-}
-
 std::vector<int>* ArrayGraph::getInactiveVertices()
 {
-    std::vector<int> inactive;
-    for(int i = 0; i < (*graphState).size(); i++)
+    std::vector<int>* inactive = new std::vector<int>();
+    for(int i = 0; i < (int) graphState->size(); i++)
     {
-        if (!(*graphState)[i].first)
+        if (!(graphState->at(i).first))
         {
-            inactive.push_back(i);
+            inactive->push_back(i);
         }
     }
-    return &inactive;
+    return inactive;
 }
 
 // TODO: naive implementation
 // given an upper bound for the vertex degree (i.e. a pre-calculated max-degree), we can abort as soon as a vertex with a highest possible degree is found
 int ArrayGraph::getMaxDegreeVertex()
 {
-    int max = -INFINITY;
-    for (auto entry : *graphState)
+    int max = -1;
+    int maxIndex;
+    for (int i = 0; i<(int) graphState->size(); i++)
     {
-        if(max < entry.second) 
+        if(graphState->at(i).first && max < graphState->at(i).second)
         {
-            max = entry.second;
+            max = graphState->at(i).second;
+            maxIndex = i;
         }
     }
-    return max;
+    return maxIndex;
+}
+
+int ArrayGraph::getFirstActiveVertex()
+{
+    for (int i = 0; i < (int) graphState->size(); i++)
+    {
+        if(graphState->at(i).first)
+        {
+            return i;
+        }
+    }
+    return -1; // TODO: -1 is dummy return
 }
 
 // TODO: maybe provide an array that the neighbours are written into
 // Then in cases, where there is no need to allocate a new array, that time can be saved
 std::vector<int>* ArrayGraph::getNeighbours(int vertexIndex)
 {
-    std::vector<int> neighbours;
-    for (int neighbour : *adjacencyList[vertexIndex])
+    std::vector<int>* neighbours = new std::vector<int>();
+    for (int i = 0; i < (int) adjacencyList[vertexIndex]->size(); i++)
     {
-        neighbours.push_back(neighbour);
+        if (graphState->at(adjacencyList[vertexIndex]->at(i)).first)
+        {
+            neighbours->push_back(adjacencyList[vertexIndex]->at(i));
+        }
     }
-    return &neighbours;
+    return neighbours;
+}
+
+void ArrayGraph::setInactive(std::vector<int>* vertexIndices)
+{
+    for (int i = 0; i < (int) vertexIndices->size(); i++)
+    {
+        setInactive(vertexIndices->at(i));
+    }
+}
+
+void ArrayGraph::setActive(std::vector<int>* vertexIndices)
+{
+    for (int i = 0; i < (int) vertexIndices->size(); i++)
+    {
+        setActive(vertexIndices->at(i));
+    }
 }
 
 

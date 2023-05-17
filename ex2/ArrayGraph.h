@@ -69,24 +69,24 @@ public:
     void printOriginalVertexNames();
 
     /* calculate lower bound for VC */
-    int getLowerBoundVC();
+    int getVCLowerBound();
 
     /* get flag array for vertices being active: */
     //std::vector<bool>* getActive();
 
     /* set vertices with the passed vertex indices to active and update degrees for those vertices and their neighbours: */
-    void setActive(int vertexIndex);
+    inline void setActive(int vertexIndex) { graphState->at(vertexIndex).first = true; };
     void setActive(std::vector<int>* vertexIndices);
 
     /* set vertices with the passed vertex indices to inactive and update degrees for their neighbours: */
-    void setInactive(int vertexIndex);
+    inline void setInactive(int vertexIndex) { graphState->at(vertexIndex).first = false; };
     void setInactive(std::vector<int>* vertexIndices);
 
     /* get the indices of all vertices that are inactive */
     std::vector<int>* getInactiveVertices();
 
     /* get graph state array: */
-    inline std::vector<std::pair<bool, int>>* getState();
+    inline std::vector<std::pair<bool, int>>* getState() { return graphState; };
 
     /* get vertex with highest degree among active vertices:
     * returns -1 if no vertex in graph
@@ -94,10 +94,23 @@ public:
     int getMaxDegreeVertex();
 
     /* get degree of the vertex with passed vertex index: */
-    inline int getVertexDegree(int vertexIndex);
+    //inline int getVertexDegree(int vertexIndex) { return graphState->at(vertexIndex).second; };
+    int getVertexDegree(int vertexIndex) { // TODO: this is a preliminary implementation until degrees are updated on the fly
+        int degree = 0;
+        for (int i = 0; i<(int) adjacencyList[vertexIndex]->size(); i++)
+        {
+            if(graphState->at(i).first)
+            {
+                degree++;
+            }
+        }
+        return degree;
+    };
     
     /* get indices of a vertices neighbours: */
     std::vector<int>* getNeighbours(int vertexIndex);
+
+    int getFirstActiveVertex();
 
 };
 
