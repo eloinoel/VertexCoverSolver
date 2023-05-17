@@ -98,8 +98,8 @@ public:
     int getMaxDegreeVertex();
 
     /* get degree of the vertex with passed vertex index: */
-    //inline int getVertexDegree(int vertexIndex) { return graphState->at(vertexIndex).second; };
-    int getVertexDegree(int vertexIndex) { // TODO: this is a preliminary implementation until degrees are updated on the fly
+    inline int getVertexDegree(int vertexIndex) { return graphState->at(vertexIndex).second; };
+    /* int getVertexDegree(int vertexIndex) { // TODO: this is a preliminary implementation until degrees are updated on the fly
         int degree = 0;
         for (int i = 0; i < (int) adjacencyList[vertexIndex]->size(); i++)
         {
@@ -109,7 +109,7 @@ public:
             }
         }
         return degree;
-    };
+    }; */
     
     /* get indices of a vertices neighbours: */
     std::vector<int>* getNeighbours(int vertexIndex);

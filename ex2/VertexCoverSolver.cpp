@@ -193,20 +193,18 @@ vector<int>* VCVertexBranchingIterative(ArrayGraph* G, int k, std::vector<int>* 
 		if (branchVertex == -1 || branchVertexDegree == 0)
 		{
 			// if current solution is actually better than the current best solution: update k & vc
-			if (k > partialVCSize || (vc == nullptr && k == partialVCSize)) { // TODO: remove condition later when culling earlier with BnB
-				vc = G->getInactiveVertices();
-				k = partialVCSize;
+			vc = G->getInactiveVertices();
+			k = partialVCSize;
 
-				if(debug)
+			if(debug)
+			{
+				std::cout << tileStr("--", partialVCSize) << "> " << dye("found", 'g') << " VC: {";
+				if (vc->size() > 0) std::cout << vc->at(0);
+				for (int i=1; i < (int) vc->size(); i++)
 				{
-					std::cout << tileStr("--", partialVCSize) << "> " << dye("found", 'g') << " VC: {";
-					if (vc->size() > 0) std::cout << vc->at(0);
-					for (int i=1; i < (int) vc->size(); i++)
-					{
-						std::cout << ", " << vc->at(i);
-					}
-					std::cout << "} of size: " << partialVCSize << "\n";
+					std::cout << ", " << vc->at(i);
 				}
+				std::cout << "} of size: " << partialVCSize << "\n";
 			}
 			if(debug)
 			{
@@ -218,11 +216,7 @@ vector<int>* VCVertexBranchingIterative(ArrayGraph* G, int k, std::vector<int>* 
 				}
 				std::cout << "}\n";
 			}
-			// traverse back up the search tree
-			/* G->setActive(&current.first);
-			partialVCSize -= current.first.size();
-			S.pop();
-			continue; */
+			// return vertex cover
 			return vc;
 		}
 

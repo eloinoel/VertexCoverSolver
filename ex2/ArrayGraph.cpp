@@ -120,8 +120,6 @@ ArrayGraph* ArrayGraph::readStandardInput()
         std::pair<std::string, std::string> edge_pair = std::pair<std::string, std::string>({vertex0, vertex1});
         edges.push_back(edge_pair);
     }
-
-    G->initGraphState();
     
     //-----------------------------------------------------
     //generate adjacency list of fixed size, and add edges
@@ -222,6 +220,8 @@ ArrayGraph* ArrayGraph::readStandardInput()
             }
         }
     }
+
+    G->initGraphState();
     return G;
 }
 
@@ -299,7 +299,7 @@ void ArrayGraph::initGraphState()
     graphState = new std::vector<std::pair<bool, int>>(vertexCount);
     for (auto entry : originalVertexNames)
     {
-        (*graphState)[entry.second.first] = std::make_pair(true, entry.second.second);
+        graphState->at(entry.second.first) = std::make_pair(true, entry.second.second);
     }
 }
 
@@ -326,7 +326,7 @@ int ArrayGraph::getMaxDegreeVertex()
     for (int i = 0; i < (int) adjacencyList.size(); i++)
     {
 
-        if (graphState->at(i).first )
+        if (graphState->at(i).first)
         {
             int degree = getVertexDegree(i);
             if (max < degree)
@@ -381,6 +381,10 @@ void ArrayGraph::setInactive(std::vector<int>* vertexIndices)
     for (int i = 0; i < (int) vertexIndices->size(); i++)
     {
         setInactive(vertexIndices->at(i));
+        for(int j=0; j<adjacencyList[vertexIndices->at(i)]->size(); j++)
+        {
+            graphState->at(adjacencyList[vertexIndices->at(i)]->at(j)).second -= 1;
+        }
     }
 }
 
@@ -389,6 +393,10 @@ void ArrayGraph::setActive(std::vector<int>* vertexIndices)
     for (int i = 0; i < (int) vertexIndices->size(); i++)
     {
         setActive(vertexIndices->at(i));
+        for(int j=0; j<adjacencyList[vertexIndices->at(i)]->size(); j++)
+        {
+            graphState->at(adjacencyList[vertexIndices->at(i)]->at(j)).second += 1;
+        }
     }
 }
 
