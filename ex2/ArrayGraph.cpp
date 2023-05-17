@@ -336,8 +336,8 @@ int ArrayGraph::getMaxDegreeVertex()
         }
     }
 
-    //TODO: use this if updating degrees is implemented
-    /* for (int i = 0; i<(int) graphState->size(); i++)
+    // TODO: version for graphState degree being kept up to date
+    /* for (int i = 0; i < (int) graphState->size(); i++)
     {
         if(graphState->at(i).first && max < graphState->at(i).second)
         {

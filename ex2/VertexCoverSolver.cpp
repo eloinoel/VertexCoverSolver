@@ -510,7 +510,7 @@ int main(int argc, char* argv[]) {
 		{
 			cerr << "Error constructing graph from input file.";
 		}
-        //G->print();
+        G->print();
 		//test vc solver
 		//vector<string>* vc = searchTreeSolve(G);
 		//writeSolutionToConsole(vc);
