@@ -82,6 +82,8 @@ public:
     inline void setInactive(int vertexIndex) { graphState->at(vertexIndex).first = false; };
     void setInactive(std::vector<int>* vertexIndices);
 
+    inline bool isActive(int vertexIndex) { return graphState->at(vertexIndex).first; };
+
     /* get the indices of all vertices that are inactive */
     std::vector<int>* getInactiveVertices();
 
@@ -97,7 +99,7 @@ public:
     //inline int getVertexDegree(int vertexIndex) { return graphState->at(vertexIndex).second; };
     int getVertexDegree(int vertexIndex) { // TODO: this is a preliminary implementation until degrees are updated on the fly
         int degree = 0;
-        for (int i = 0; i<(int) adjacencyList[vertexIndex]->size(); i++)
+        for (int i = 0; i < (int) adjacencyList[vertexIndex]->size(); i++)
         {
             if(graphState->at(i).first)
             {

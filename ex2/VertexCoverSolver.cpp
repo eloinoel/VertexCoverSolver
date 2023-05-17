@@ -25,13 +25,17 @@ string tileStr(string toTile, int n) {
 
 vector<int>* vcVertexBranchingRecursive(ArrayGraph* G, int k)
 {
-	
 	if (k < 0)
 		return nullptr;
 
-	int vertex = G->getFirstActiveVertex(); //TODO:get max degree vertex
-    int vertexDeg = G->getVertexDegree(vertex);
+	int vertex = G->getMaxDegreeVertex();
+    //no vertices left
+    if (vertex == -1)
+    {
+        return new vector<int>();
+    }
 
+    int vertexDeg = G->getVertexDegree(vertex); //TODO: maybe duplicate degree calculation
 	//graph has no edges left
 	if (vertexDeg == 0)
 	{

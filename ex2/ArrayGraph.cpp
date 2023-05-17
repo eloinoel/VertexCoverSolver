@@ -321,14 +321,30 @@ int ArrayGraph::getMaxDegreeVertex()
 {
     int max = -1;
     int maxIndex;
-    for (int i = 0; i<(int) graphState->size(); i++)
+
+    for (int i = 0; i < (int) adjacencyList.size(); i++)
+    {
+
+        if (graphState->at(i).first )
+        {
+            int degree = getVertexDegree(i);
+            if (max < degree)
+            {
+                max = degree;
+                maxIndex = i;
+            }
+        }
+    }
+
+    //TODO: use this if updating degrees is implemented
+    /* for (int i = 0; i<(int) graphState->size(); i++)
     {
         if(graphState->at(i).first && max < graphState->at(i).second)
         {
             max = graphState->at(i).second;
             maxIndex = i;
         }
-    }
+    } */
     return maxIndex;
 }
 
