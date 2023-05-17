@@ -102,7 +102,7 @@ vector<int>* vertexBranchingSolverRecursive(ArrayGraph* G)
 vector<int>* VCVertexBranchingIterative(ArrayGraph* G, int k, std::vector<int>* vc)
 {
 	// stack storing the differentials of partial solutions, currently under evaluation and whether a partial solution was already expanded
-    std::stack<std::pair<std::vector<int>*, bool>*> S;
+    std::stack<std::pair<std::vector<int>*, bool>*> S = std::stack<std::pair<std::vector<int>*, bool>*>();
 	std::pair<std::vector<int>*, bool>* current;
 	int branchVertex;
 	// number of currently active vertices
@@ -140,7 +140,22 @@ vector<int>* VCVertexBranchingIterative(ArrayGraph* G, int k, std::vector<int>* 
 		G->setInactive(current->first);
 		partialVCSize += current->first->size();
 
-		std::cout << tileStr("--", partialVCSize) << "- " << paint('y', "peeking") << " stack of size: " << S.size() << "\n";
+		auto SP = S;
+		std::cout << tileStr("--", partialVCSize) << "- " << paint('y', "peeking") << " stack: {";
+		while (!SP.empty())
+		{
+			auto ccurrent = SP.top();
+			SP.pop();
+			std::cout << "{";
+			if (ccurrent->first->size() > 0) std::cout << ccurrent->first->at(0);
+			for (int i=1; i< (int) ccurrent->first->size(); i++)
+			{
+				std::cout << ", " << ccurrent->first->at(i);
+			}
+			std::cout << "}";
+			if(!SP.empty()) std::cout << ", ";
+		}
+		std::cout << "} of size: " << S.size() << "\n";	
 
 		std::cout << tileStr("--", partialVCSize) << "- " << paint('p', "Deleting") << " vertices: {";
 		if (current->first->size() > 0) std::cout << current->first->at(0);
@@ -173,6 +188,7 @@ vector<int>* VCVertexBranchingIterative(ArrayGraph* G, int k, std::vector<int>* 
 				}
 				std::cout << "} of size: " << partialVCSize << "\n";
 			}
+
 			std::cout << tileStr("--", partialVCSize) << "- " << paint('p', "Restoring") << " vertices: {";
 			if (current->first->size() > 0) std::cout << current->first->at(0);
 			for (int i=1; i < (int) current->first->size(); i++)
@@ -230,19 +246,22 @@ vector<int>* VCVertexBranchingIterative(ArrayGraph* G, int k, std::vector<int>* 
 				std::cout << "}\n";
 				// add neighbours of the current vertex to the child differential for evaluating the partial vertex cover where all of the branchVertex's neighbours where taken into the vertex cover
 				// TODO: is there no way to create this inline?
-				std::pair<std::vector<int>*, bool> childDifferential = {G->getNeighbours(branchVertex), false};
-				S.push(&childDifferential);
+				std::pair<std::vector<int>*, bool> childDifferentialN({G->getNeighbours(branchVertex), false});
+				S.push(&childDifferentialN);
+				std::cout << S.top()->first->at(0) << "\n";
 			}
 			// if k and current partial VC size permit adding the current vertex
 			if (k - partialVCSize >= 1)
 			{
+				//std::cout << S.top()->first->at(0) << "\n";
 				std::cout << tileStr("--", partialVCSize) << "> " << paint('p', "pushing") << " maxDegreeVertex deletion: {" << branchVertex << "}\n";
 				// TODO: is there no way to create this inline?
 				std::vector<int>* bv = new std::vector<int>();
 				bv->push_back(branchVertex);
-				std::pair<std::vector<int>*, bool> childDifferential = {bv, false};
-				S.push(&childDifferential);
+				std::pair<std::vector<int>*, bool> childDifferentialV({bv, false});
+				S.push(&childDifferentialV);
 			}
+
 		}
 	}
 
@@ -391,8 +410,8 @@ int main(int argc, char* argv[]) {
 		//test vc solver
 		//vector<string>* vc = searchTreeSolve(G);
 		//writeSolutionToConsole(vc);
-		std::vector<int>* vc = vertexBranchingSolverRecursive(G);
-		//std::vector<int>* vc = vertexBranchingSolverIterative(G);
+		//std::vector<int>* vc = vertexBranchingSolverRecursive(G);
+		std::vector<int>* vc = vertexBranchingSolverIterative(G);
         cout << vc->size() << std::endl;
 		//writeSolutionToConsole(vc);
 	}
