@@ -219,10 +219,11 @@ vector<int>* VCVertexBranchingIterative(ArrayGraph* G, int k, std::vector<int>* 
 				std::cout << "}\n";
 			}
 			// traverse back up the search tree
-			G->setActive(&current.first);
+			/* G->setActive(&current.first);
 			partialVCSize -= current.first.size();
 			S.pop();
-			continue;
+			continue; */
+			return vc;
 		}
 
 		// if maximum search depth k is reached
@@ -442,32 +443,32 @@ void chooseImplementationAndOutput(int version = 0, bool printGraph = false, boo
     switch(version)
     {
         case 0:
-            ArrayGraph* G = ArrayGraph::readStandardInput();
-            if (G == nullptr)
+            ArrayGraph* G0 = ArrayGraph::readStandardInput();
+            if (G0 == nullptr)
                 throw invalid_argument("Error constructing graph from input file.");
             if (printGraph)
-                G->print();
+                G0->print();
 
-            vc = vertexBranchingSolverIterative(G, printDebug);
-            writeSolutionToConsole(G->getStringsFromVertexIndices(vc));
+            vc = vertexBranchingSolverIterative(G0, printDebug);
+            writeSolutionToConsole(G0->getStringsFromVertexIndices(vc));
 
             if (printMappings)
-                G->printMappings(vc);
+                G0->printMappings(vc);
             if (showVCSize)
                 cout << vc->size() << endl;
             break;
         case 1:
-            ArrayGraph* G = ArrayGraph::readStandardInput();
-            if (G == nullptr)
+            ArrayGraph* G1 = ArrayGraph::readStandardInput();
+            if (G1 == nullptr)
                 throw invalid_argument("Error constructing graph from input file.");
             if (printGraph)
-                G->print();
+                G1->print();
 
-            vc = vertexBranchingSolverRecursive(G);
-            writeSolutionToConsole(G->getStringsFromVertexIndices(vc));
+            vc = vertexBranchingSolverRecursive(G1);
+            writeSolutionToConsole(G1->getStringsFromVertexIndices(vc));
 
             if (printMappings)
-                G->printMappings(vc);
+                G1->printMappings(vc);
             if (showVCSize)
                 cout << vc->size() << endl;
             break;
