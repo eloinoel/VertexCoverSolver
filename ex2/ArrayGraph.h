@@ -114,6 +114,8 @@ public:
 
     std::vector<std::string>* getStringsFromVertexIndices(std::vector<int>* vertices);
 
+    void printMappings(std::vector<int>* vertices);
+
 };
 
 #endif
