@@ -5,6 +5,7 @@
 - Development tools (compiler, dependencies, ...)
     - Ubuntu/Debian:
       ```bash
+      sudo apt update
       sudo apt install build-essential
       ```
     - Windows: Install [Visual Studio 2022](https://visualstudio.microsoft.com/de/thank-you-downloading-visual-studio/?sku=Community&channel=Release&version=VS2022&source=VSLandingPage&cid=2030&passive=false) with C++ desktop workload (Community edition is free)
