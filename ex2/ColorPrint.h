@@ -78,7 +78,7 @@ const std::string CYAN_BACKGROUND_BRIGHT = "\033[0;106m";  // CYAN
 const std::string WHITE_BACKGROUND_BRIGHT = "\033[0;107m";   // WHITE
 
 
-std::string paint(char col, std::string toPaint) {
+std::string dye(std::string toPaint, char col) {
     switch(col) {
         case 'r':
             return RED + toPaint + RESET;
