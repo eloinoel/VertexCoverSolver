@@ -492,3 +492,18 @@ std::vector<std::string>* ArrayGraph::getStringsFromVertexIndices(std::vector<in
     }
     return solution;
 }
+
+void ArrayGraph::printMappings(std::vector<int>* vertices)
+{
+    std::cout << "Mapping string --> index:" << std::endl;
+    for (int i = 0; i < (int) vertices->size(); i++)
+    {
+        for (auto entry : originalVertexNames)
+        {
+            if(entry.second.first == vertices->at(i))
+            {
+                std::cout << entry.first << " --> " << vertices->at(i) << std::endl;
+            }
+        }
+    }
+}

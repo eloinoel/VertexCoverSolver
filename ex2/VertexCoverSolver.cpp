@@ -512,10 +512,11 @@ int main(int argc, char* argv[]) {
 		//writeSolutionToConsole(vc);
 		//std::vector<int>* vc = vertexBranchingSolverRecursive(G);
 		std::vector<int>* vc = vertexBranchingSolverIterative(G);
-        std::vector<std::string>* vc_strings = G->getStringsFromVertexIndices(vc);
+        //std::vector<std::string>* vc_strings = G->getStringsFromVertexIndices(vc);
 
+        G->printMappings(vc);
         //cout << vc->size() << std::endl;
-		writeSolutionToConsole(vc_strings);
+		//writeSolutionToConsole(vc_strings);
 	}
 	catch (const exception& e)
 	{
