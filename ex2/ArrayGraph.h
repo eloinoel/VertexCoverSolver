@@ -64,6 +64,8 @@ public:
     // TODO: make more efficent, employ less copies
     static ArrayGraph* readStandardInput();
 
+    inline int getVertexCount() { return adjacencyList.size(); }
+
     void print();
 
     void printOriginalVertexNames();

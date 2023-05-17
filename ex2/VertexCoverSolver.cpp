@@ -302,19 +302,20 @@ vector<int>* VCVertexBranchingIterative(ArrayGraph* G, int k, std::vector<int>* 
 }
 
 
-vector<int>* vertexBranchingSolverIterative(ArrayGraph* G)
+vector<int>* vertexBranchingSolverIterative(ArrayGraph* G, bool debug)
 {
 	int k = G->getLowerBoundVC();
 	int u = (int) INFINITY;
 	vector<int>* vc = nullptr;
 
+	if(G->getVertexCount() == 0) return new vector<int>();
 	while (true)
 	{
 		if(k > u) {
 			//std::cout << "Did not find solution within upper bound u=" << u << "\n";
 			return vc;
 		}
-		vc = VCVertexBranchingIterative(G, k, vc, true);
+		vc = VCVertexBranchingIterative(G, k, vc, debug);
 		//if(vc == nullptr) { std::cout << "Did not find solution for k=" << k << "\n\n"; }
 		if (vc != nullptr)
 		{
@@ -445,7 +446,7 @@ int main(int argc, char* argv[]) {
 		//vector<string>* vc = searchTreeSolve(G);
 		//writeSolutionToConsole(vc);
 		//std::vector<int>* vc = vertexBranchingSolverRecursive(G);
-		std::vector<int>* vc = vertexBranchingSolverIterative(G);
+		std::vector<int>* vc = vertexBranchingSolverIterative(G, false);
         std::vector<std::string>* vc_strings = G->getStringsFromVertexIndices(vc);
         writeSolutionToConsole(vc_strings);
         //G->printMappings(vc);
