@@ -25,6 +25,18 @@ private:
     /* TODO: maximum vertex degree, when all vertices are active */
     unsigned int maxDegree;
 
+    //================================================================
+    // For Cycle Bound
+    int cycleNumber = 0;
+
+    int numberOfVertices;
+
+    vector<vector<int>>* cycles;
+
+    vector<int>* color;
+    vector<int>* par;
+    //================================================================
+
 //functions
 private:
     inline ArrayGraph() {};
@@ -36,6 +48,16 @@ private:
 
     /* initially sets up activity flags & node degree data structure */
     void initGraphState();
+
+    //================================================================
+    // For Cycle Bound
+    int getCycleBound();
+
+    void dfs_cycle(int u, int p);
+
+    void printCycles();
+    //================================================================
+
 
 public:
 

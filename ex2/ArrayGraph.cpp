@@ -278,12 +278,16 @@ void ArrayGraph::printOriginalVertexNames()
 
 //TODO: implement cycle and clique bound
 int ArrayGraph::getLowerBoundVC() {
-    return 0;
+
+    int cycleBound = getCycleBound();
+
+    return cycleBound;
 }
 
 void ArrayGraph::initGraphState()
 {
     unsigned int vertexCount = originalVertexNames.size();
+    numberOfVertices = vertexCount;
     graphState = new std::vector<std::pair<bool, int>>(vertexCount);
     for (auto entry : originalVertexNames)
     {
@@ -334,4 +338,95 @@ std::vector<int>* ArrayGraph::getNeighbours(int vertexIndex)
         neighbours.push_back(neighbour);
     }
     return &neighbours;
+}
+
+
+int ArrayGraph::getCycleBound()
+{
+    cycleNumber = 0;
+
+    // TODO: Find a better spot to allocate/clear/delete these vectors
+    // for now at every bound check => inefficient!
+    cycles = new std::vector<std::vector<int>>;
+
+    color = new std::vector<int>(numberOfVertices, -1);
+    par = new std::vector<int>(numberOfVertices, -1);
+
+    // TODO: Check with which indice to start, maybe there's a more efficient way
+    dfs_cycle(0, -1);
+
+    printCycles();
+
+    int lowerBound = 0;
+    for (int i = 0; i < cycleNumber; i++) {
+        int cycleSize = (*cycles)[i].size();
+        if(cycleSize > 2)
+            lowerBound += (int)ceil(cycleSize/2.f);
+    }
+
+    return lowerBound;
+}
+
+
+
+// Function to mark the vertex with
+// different colors for different cycles
+void ArrayGraph::dfs_cycle(int u, int p)
+{
+
+    // already (completely) visited vertex.
+    if ((*color)[u] == 2) {
+        return;
+    }
+
+    // seen vertex, but was not completely visited -> cycle detected.
+    // backtrack based on parents to find the complete cycle.
+    if ((*color)[u] == 1) {
+        vector<int> v;
+        cyclenumber++;
+
+        int cur = p;
+        v.push_back(cur);
+
+        // backtrack the vertex which are
+        // in the current cycle thats found
+        while (cur != u) {
+            cur = (*par)[cur];
+            v.push_back(cur);
+        }
+        (*cycles).push_back(v);
+        return;
+    }
+    (*par)[u] = p;
+
+    // partially visited.
+    (*color)[u] = 1;
+
+    // simple dfs on graph
+    vector<int> neighbours = *getNeighbours(u);
+    for (int v : neighbours) {
+
+        // if it has not been visited previously
+        if (v == par[u]) {
+            continue;
+        }
+        dfs_cycle(v, u);
+    }
+
+    // completely visited.
+    (*color)[u] = 2;
+}
+
+// Function to print the cycles
+void ArrayGraph::printCycles()
+{
+
+    // print all the vertex with same cycle
+    for (int i = 0; i < cycleNumber; i++) {
+        // Print the i-th cycle
+        cout << "Cycle Number " << i + 1 << ": ";
+        for (int x : (*cycles)[i])
+            cout << x << " ";
+        cout << endl;
+    }
 }
