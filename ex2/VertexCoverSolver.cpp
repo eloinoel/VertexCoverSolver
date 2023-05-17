@@ -109,7 +109,8 @@ vector<int>* VCVertexBranchingIterative(ArrayGraph* G, int k, std::vector<int>* 
     std::stack<std::pair<std::vector<int>, bool>> S = std::stack<std::pair<std::vector<int>, bool>>();
 	std::pair<std::vector<int>, bool> current;
 	int branchVertex;
-	// number of currently active vertices
+	int branchVertexDegree;
+	// number of currently inactive vertices
 	int partialVCSize = 0;
 	
 	// initialize stack
@@ -136,9 +137,10 @@ vector<int>* VCVertexBranchingIterative(ArrayGraph* G, int k, std::vector<int>* 
 
 		// get maxDegVert of remaining active vertices (the way the algorithm branches is determined by the choice of this vertex)
 		branchVertex = G->getMaxDegreeVertex();
+		branchVertexDegree = G->getVertexDegree(branchVertex);
 
 		// if no active vertex left in graph or no vertex with degree >= 0: (We found a solution)
-		if (branchVertex == -1 || G->getVertexDegree(branchVertex) == 0)
+		if (branchVertex == -1 || branchVertexDegree == 0)
 		{
 			// if current solution is actually better than the current best solution: update k & vc
 			if (k > partialVCSize || (vc == nullptr && k == partialVCSize)) { // TODO: remove condition later when culling earlier with BnB
@@ -168,21 +170,22 @@ vector<int>* VCVertexBranchingIterative(ArrayGraph* G, int k, std::vector<int>* 
 		S.push(current);
 
 		// solve graph with maxVertDegree <= 2 in linear time
-		if (G->getVertexDegree(branchVertex) <= 2 && false) // TODO: rm false
+		if (branchVertexDegree <= 2 && false) // TODO: rm false
 		{
 
 		}
 
 		// refined search tree branching for maxVertDegree >= 3
-		else if (G->getVertexDegree(branchVertex) >= 1 /*3*/) // TODO: readd 3
+		else if (branchVertexDegree >= 1 /*3*/) // TODO: readd 3
 		{
 			// if k and current partial VC size permit adding the neighbours
-			if (k - partialVCSize >= G->getVertexDegree(branchVertex))
+			if (k - partialVCSize >= branchVertexDegree)
 			{
 				// add neighbours of the current vertex to the child differential for evaluating the partial vertex cover where all of the branchVertex's neighbours where taken into the vertex cover
 				// TODO: is there no way to create this inline?
 				std::pair<std::vector<int>, bool> childDifferentialN({*(G->getNeighbours(branchVertex)), false});
 				S.push(childDifferentialN);
+				//std::cout << S.top()->first->at(0) << "\n";
 			}
 			// if k and current partial VC size permit adding the current vertex
 			if (k - partialVCSize >= 1)
@@ -206,6 +209,7 @@ vector<int>* VCVertexBranchingIterativeDebug(ArrayGraph* G, int k, std::vector<i
     std::stack<std::pair<std::vector<int>, bool>> S = std::stack<std::pair<std::vector<int>, bool>>();
 	std::pair<std::vector<int>, bool> current;
 	int branchVertex;
+	int branchVertexDegree;
 	// number of currently active vertices
 	int partialVCSize = 0;
 	
@@ -270,11 +274,12 @@ vector<int>* VCVertexBranchingIterativeDebug(ArrayGraph* G, int k, std::vector<i
 
 		// get maxDegVert of remaining active vertices (the way the algorithm branches is determined by the choice of this vertex)
 		branchVertex = G->getMaxDegreeVertex();
+		branchVertexDegree = G->getVertexDegree(branchVertex);
 
-		std::cout << tileStr("--", partialVCSize) << "> " << dye("selected", 'b') << " branchVertex: " << branchVertex << " with degree " << G->getVertexDegree(branchVertex) << "\n";
+		std::cout << tileStr("--", partialVCSize) << "> " << dye("selected", 'b') << " branchVertex: " << branchVertex << " with degree " << branchVertexDegree << "\n";
 
 		// if no active vertex left in graph or no vertex with degree >= 0: (We found a solution)
-		if (branchVertex == -1 || G->getVertexDegree(branchVertex) == 0)
+		if (branchVertex == -1 || branchVertexDegree == 0)
 		{
 			// if current solution is actually better than the current best solution: update k & vc
 			if (k > partialVCSize || (vc == nullptr && k == partialVCSize)) { // TODO: remove condition later when culling earlier with BnB
@@ -329,16 +334,16 @@ vector<int>* VCVertexBranchingIterativeDebug(ArrayGraph* G, int k, std::vector<i
 		S.push(current);
 
 		// solve graph with maxVertDegree <= 2 in linear time
-		if (G->getVertexDegree(branchVertex) <= 2 && false) // TODO: rm false
+		if (branchVertexDegree <= 2 && false) // TODO: rm false
 		{
 
 		}
 
 		// refined search tree branching for maxVertDegree >= 3
-		else if (G->getVertexDegree(branchVertex) >= 1 /*3*/) // TODO: readd 3
+		else if (branchVertexDegree >= 1 /*3*/) // TODO: readd 3
 		{
 			// if k and current partial VC size permit adding the neighbours
-			if (k - partialVCSize >= G->getVertexDegree(branchVertex))
+			if (k - partialVCSize >= branchVertexDegree)
 			{
 				std::cout << tileStr("--", partialVCSize) << "> " << dye("pushing", 'p') << " maxDegreeVertex neighbourhood deletion: {";
 				if (G->getNeighbours(branchVertex)->size() > 0) std::cout << G->getNeighbours(branchVertex)->at(0);
@@ -384,7 +389,7 @@ vector<int>* vertexBranchingSolverIterative(ArrayGraph* G)
 			//std::cout << "Did not find solution within upper bound u=" << u << "\n";
 			return vc;
 		}
-		vc = VCVertexBranchingIterative(G, k, vc);
+		vc = VCVertexBranchingIterativeDebug(G, k, vc);
 		//if(vc == nullptr) { std::cout << "Did not find solution for k=" << k << "\n\n"; }
 		if (vc != nullptr)
 		{
@@ -505,6 +510,7 @@ int main(int argc, char* argv[]) {
     //cout << "Test\n";
 	try
 	{
+		//cout << "Reading input.\n";
 		ArrayGraph* G = ArrayGraph::readStandardInput();
 		if (G == nullptr)
 		{
@@ -517,10 +523,17 @@ int main(int argc, char* argv[]) {
 		//std::vector<int>* vc = vertexBranchingSolverRecursive(G);
 		std::vector<int>* vc = vertexBranchingSolverIterative(G);
         std::vector<std::string>* vc_strings = G->getStringsFromVertexIndices(vc);
+<<<<<<< Updated upstream
         writeSolutionToConsole(vc_strings);
         //G->printMappings(vc);
         //cout << vc->size() << std::endl;
 
+=======
+
+        //G->printMappings(vc);
+        //cout << vc->size() << std::endl;
+		writeSolutionToConsole(vc_strings);
+>>>>>>> Stashed changes
 	}
 	catch (const exception& e)
 	{
@@ -528,4 +541,3 @@ int main(int argc, char* argv[]) {
         cerr << e.what();
 	}
 }
-
