@@ -440,47 +440,38 @@ void writeSolutionToConsole(vector<string>* vc)
 void chooseImplementationAndOutput(int version = 0, bool printGraph = false, bool printMappings = false, bool printDebug = false, bool showVCSize = false)
 {
     std::vector<int>* vc;
-    switch(version)
+    if(version == 0)
     {
-        case 0:
-            ArrayGraph* G0 = ArrayGraph::readStandardInput();
-            if (G0 == nullptr)
+        ArrayGraph* G = ArrayGraph::readStandardInput();
+            if (G == nullptr)
                 throw invalid_argument("Error constructing graph from input file.");
             if (printGraph)
-                G0->print();
+                G->print();
 
-            vc = vertexBranchingSolverIterative(G0, printDebug);
-            writeSolutionToConsole(G0->getStringsFromVertexIndices(vc));
-
-            if (printMappings)
-                G0->printMappings(vc);
-            if (showVCSize)
-                cout << vc->size() << endl;
-            break;
-        case 1:
-            ArrayGraph* G1 = ArrayGraph::readStandardInput();
-            if (G1 == nullptr)
-                throw invalid_argument("Error constructing graph from input file.");
-            if (printGraph)
-                G1->print();
-
-            vc = vertexBranchingSolverRecursive(G1);
-            writeSolutionToConsole(G1->getStringsFromVertexIndices(vc));
+            vc = vertexBranchingSolverIterative(G, printDebug);
+            writeSolutionToConsole(G->getStringsFromVertexIndices(vc));
 
             if (printMappings)
-                G1->printMappings(vc);
+                G->printMappings(vc);
             if (showVCSize)
                 cout << vc->size() << endl;
-            break;
-        case 2:
-            break;
-        case 3:
-            break;
-        case 4:
-            break;
-        default:
     }
+    else if(version == 1)
+    {
+        ArrayGraph* G = ArrayGraph::readStandardInput();
+        if (G == nullptr)
+            throw invalid_argument("Error constructing graph from input file.");
+        if (printGraph)
+            G->print();
 
+        vc = vertexBranchingSolverRecursive(G);
+        writeSolutionToConsole(G->getStringsFromVertexIndices(vc));
+
+        if (printMappings)
+            G->printMappings(vc);
+        if (showVCSize)
+            cout << vc->size() << endl;
+    }
 }
 
 /*----------------------------------------------------------*/
