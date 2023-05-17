@@ -103,110 +103,13 @@ vector<int>* vertexBranchingSolverRecursive(ArrayGraph* G)
 	}
 }
 
-vector<int>* VCVertexBranchingIterative(ArrayGraph* G, int k, std::vector<int>* vc)
+vector<int>* VCVertexBranchingIterativeDebug(ArrayGraph* G, int k, std::vector<int>* vc, bool debug)
 {
 	// stack storing the differentials of partial solutions, currently under evaluation and whether a partial solution was already expanded
-    std::stack<std::pair<std::vector<int>, bool>> S = std::stack<std::pair<std::vector<int>, bool>>();
-	std::pair<std::vector<int>, bool> current;
-	int branchVertex;
-	int branchVertexDegree;
-	// number of currently inactive vertices
-	int partialVCSize = 0;
-	
-	// initialize stack
-	std::vector<int> bv = {};
-	std::pair<std::vector<int>, bool> childDifferential = {bv, false};
-	S.push(childDifferential);
-
-	while (!S.empty())
+    if(debug)
 	{
-		// retrieve the differential of the current partial vertex cover solution to its parent solution (+ expanded tag)
-		current = S.top();
-
-		if (current.second)
-		{
-			G->setActive(&current.first);
-			partialVCSize -= current.first.size();
-			S.pop();
-			continue;
-		}
-
-		// otherwise delete the vertices (defined by the differential calculated in the expansion of the parent search tree node)
-		G->setInactive(&current.first);
-		partialVCSize += current.first.size();
-
-		// get maxDegVert of remaining active vertices (the way the algorithm branches is determined by the choice of this vertex)
-		branchVertex = G->getMaxDegreeVertex();
-		branchVertexDegree = G->getVertexDegree(branchVertex);
-
-		// if no active vertex left in graph or no vertex with degree >= 0: (We found a solution)
-		if (branchVertex == -1 || branchVertexDegree == 0)
-		{
-			// if current solution is actually better than the current best solution: update k & vc
-			if (k > partialVCSize || (vc == nullptr && k == partialVCSize)) { // TODO: remove condition later when culling earlier with BnB
-				vc = G->getInactiveVertices();
-				k = partialVCSize;
-			}
-			// traverse back up the search tree
-			G->setActive(&current.first);
-			partialVCSize -= current.first.size();
-			S.pop();
-			continue;
-		}
-
-		// if maximum search depth k is reached
-		// or if the current solution has already been expanded, revert its deletion of vertices and traverse back up to the next partial solution
-		if (k <= partialVCSize)
-		{
-			G->setActive(&current.first);
-			partialVCSize -= current.first.size();
-			S.pop();
-			continue;
-		}
-
-		// mark this partial solution as expanded and expand subsequently
-		current.second = true;
-		S.pop();
-		S.push(current);
-
-		// solve graph with maxVertDegree <= 2 in linear time
-		if (branchVertexDegree <= 2 && false) // TODO: rm false
-		{
-
-		}
-
-		// refined search tree branching for maxVertDegree >= 3
-		else if (branchVertexDegree >= 1 /*3*/) // TODO: readd 3
-		{
-			// if k and current partial VC size permit adding the neighbours
-			if (k - partialVCSize >= branchVertexDegree)
-			{
-				// add neighbours of the current vertex to the child differential for evaluating the partial vertex cover where all of the branchVertex's neighbours where taken into the vertex cover
-				// TODO: is there no way to create this inline?
-				std::pair<std::vector<int>, bool> childDifferentialN({*(G->getNeighbours(branchVertex)), false});
-				S.push(childDifferentialN);
-				//std::cout << S.top()->first->at(0) << "\n";
-			}
-			// if k and current partial VC size permit adding the current vertex
-			if (k - partialVCSize >= 1)
-			{
-				// TODO: is there no way to create this inline?
-				std::vector<int> bv = std::vector<int>();
-				bv.push_back(branchVertex);
-				std::pair<std::vector<int>, bool> childDifferentialV({bv, false});
-				S.push(childDifferentialV);
-			}
-
-		}
+		std::stack<std::pair<std::vector<int>, bool>> S = std::stack<std::pair<std::vector<int>, bool>>();
 	}
-
-	return vc;
-}
-
-vector<int>* VCVertexBranchingIterativeDebug(ArrayGraph* G, int k, std::vector<int>* vc)
-{
-	// stack storing the differentials of partial solutions, currently under evaluation and whether a partial solution was already expanded
-    std::stack<std::pair<std::vector<int>, bool>> S = std::stack<std::pair<std::vector<int>, bool>>();
 	std::pair<std::vector<int>, bool> current;
 	int branchVertex;
 	int branchVertexDegree;
@@ -217,7 +120,10 @@ vector<int>* VCVertexBranchingIterativeDebug(ArrayGraph* G, int k, std::vector<i
 	std::vector<int> bv = {};
 	std::pair<std::vector<int>, bool> childDifferential = {bv, false};
 	S.push(childDifferential);
-	std::cout << dye("started", 'g') << " BnB with stack size: " << S.size() << " and k=" << k << "\n";
+	if(debug)
+	{
+		std::cout << dye("started", 'g') << " BnB with stack size: " << S.size() << " and k=" << k << "\n";
+	}
 
 	while (!S.empty())
 	{
@@ -226,15 +132,17 @@ vector<int>* VCVertexBranchingIterativeDebug(ArrayGraph* G, int k, std::vector<i
 
 		if (current.second)
 		{
-			std::cout << tileStr("--", partialVCSize) << "- " << dye("Traversing", 'y') << " back up a previously expanded search tree node\n";
-			std::cout << tileStr("--", partialVCSize) << "- " << dye("Restoring", 'p') << " vertices: {";
-			if (current.first.size() > 0) std::cout << current.first.at(0);
-			for (int i=1; i < (int) current.first.size(); i++)
+			if(debug)
 			{
-				std::cout << ", " << current.first.at(i);
+				std::cout << tileStr("--", partialVCSize) << "- " << dye("Traversing", 'y') << " back up a previously expanded search tree node\n";
+				std::cout << tileStr("--", partialVCSize) << "- " << dye("Restoring", 'p') << " vertices: {";
+				if (current.first.size() > 0) std::cout << current.first.at(0);
+				for (int i=1; i < (int) current.first.size(); i++)
+				{
+					std::cout << ", " << current.first.at(i);
+				}
+				std::cout << "}\n";
 			}
-			std::cout << "}\n";
-
 			G->setActive(&current.first);
 			partialVCSize -= current.first.size();
 			S.pop();
@@ -245,38 +153,44 @@ vector<int>* VCVertexBranchingIterativeDebug(ArrayGraph* G, int k, std::vector<i
 		G->setInactive(&current.first);
 		partialVCSize += current.first.size();
 
-		auto SP = S;
-		std::cout << tileStr("--", partialVCSize) << "- " << dye("peeking", 'y') << " stack: {";
-		while (!SP.empty())
+		if(debug)
 		{
-			auto ccurrent = SP.top();
-			SP.pop();
-			std::cout << "{";
-			if (ccurrent.first.size() > 0) std::cout << ccurrent.first.at(0);
-			for (int i=1; i< (int) ccurrent.first.size(); i++)
+			auto SP = S;
+			std::cout << tileStr("--", partialVCSize) << "- " << dye("peeking", 'y') << " stack: {";
+			while (!SP.empty())
 			{
-				std::cout << ", " << ccurrent.first.at(i);
+				auto ccurrent = SP.top();
+				SP.pop();
+				std::cout << "{";
+				if (ccurrent.first.size() > 0) std::cout << ccurrent.first.at(0);
+				for (int i=1; i< (int) ccurrent.first.size(); i++)
+				{
+					std::cout << ", " << ccurrent.first.at(i);
+				}
+				std::cout << "}";
+				if(!SP.empty()) std::cout << ", ";
 			}
-			std::cout << "}";
-			if(!SP.empty()) std::cout << ", ";
-		}
-		std::cout << "} of size: " << S.size() << "\n";	
+			std::cout << "} of size: " << S.size() << "\n";	
 
-		std::cout << tileStr("--", partialVCSize) << "- " << dye("Deleting", 'p') << " vertices: {";
-		if (current.first.size() > 0) std::cout << current.first.at(0);
-		for (int i=1; i< (int) current.first.size(); i++)
-		{
-			std::cout << ", " << current.first.at(i);
+			std::cout << tileStr("--", partialVCSize) << "- " << dye("Deleting", 'p') << " vertices: {";
+			if (current.first.size() > 0) std::cout << current.first.at(0);
+			for (int i=1; i< (int) current.first.size(); i++)
+			{
+				std::cout << ", " << current.first.at(i);
+			}
+			std::cout << "}\n";
+			std::cout << tileStr("--", partialVCSize) << "- " << dye("checking", 'y') << " partial solution:\n";
+			std::cout << tileStr("--", partialVCSize) << "- " << "best=" << k << ", partialVCSize: " << partialVCSize << "\n";
 		}
-		std::cout << "}\n";
-		std::cout << tileStr("--", partialVCSize) << "- " << dye("checking", 'y') << " partial solution:\n";
-		std::cout << tileStr("--", partialVCSize) << "- " << "best=" << k << ", partialVCSize: " << partialVCSize << "\n";
 
 		// get maxDegVert of remaining active vertices (the way the algorithm branches is determined by the choice of this vertex)
 		branchVertex = G->getMaxDegreeVertex();
 		branchVertexDegree = G->getVertexDegree(branchVertex);
 
-		std::cout << tileStr("--", partialVCSize) << "> " << dye("selected", 'b') << " branchVertex: " << branchVertex << " with degree " << branchVertexDegree << "\n";
+		if(debug)
+		{
+			std::cout << tileStr("--", partialVCSize) << "> " << dye("selected", 'b') << " branchVertex: " << branchVertex << " with degree " << branchVertexDegree << "\n";
+		}
 
 		// if no active vertex left in graph or no vertex with degree >= 0: (We found a solution)
 		if (branchVertex == -1 || branchVertexDegree == 0)
@@ -286,22 +200,27 @@ vector<int>* VCVertexBranchingIterativeDebug(ArrayGraph* G, int k, std::vector<i
 				vc = G->getInactiveVertices();
 				k = partialVCSize;
 
-				std::cout << tileStr("--", partialVCSize) << "> " << dye("found", 'g') << " VC: {";
-				if (vc->size() > 0) std::cout << vc->at(0);
-				for (int i=1; i < (int) vc->size(); i++)
+				if(debug)
 				{
-					std::cout << ", " << vc->at(i);
+					std::cout << tileStr("--", partialVCSize) << "> " << dye("found", 'g') << " VC: {";
+					if (vc->size() > 0) std::cout << vc->at(0);
+					for (int i=1; i < (int) vc->size(); i++)
+					{
+						std::cout << ", " << vc->at(i);
+					}
+					std::cout << "} of size: " << partialVCSize << "\n";
 				}
-				std::cout << "} of size: " << partialVCSize << "\n";
 			}
-
-			std::cout << tileStr("--", partialVCSize) << "- " << dye("Restoring", 'p') << " vertices: {";
-			if (current.first.size() > 0) std::cout << current.first.at(0);
-			for (int i=1; i < (int) current.first.size(); i++)
+			if(debug)
 			{
-				std::cout << ", " << current.first.at(i);
+				std::cout << tileStr("--", partialVCSize) << "- " << dye("Restoring", 'p') << " vertices: {";
+				if (current.first.size() > 0) std::cout << current.first.at(0);
+				for (int i=1; i < (int) current.first.size(); i++)
+				{
+					std::cout << ", " << current.first.at(i);
+				}
+				std::cout << "}\n";
 			}
-			std::cout << "}\n";
 			// traverse back up the search tree
 			G->setActive(&current.first);
 			partialVCSize -= current.first.size();
@@ -313,14 +232,17 @@ vector<int>* VCVertexBranchingIterativeDebug(ArrayGraph* G, int k, std::vector<i
 		// or if the current solution has already been expanded, revert its deletion of vertices and traverse back up to the next partial solution
 		if (k <= partialVCSize)
 		{
-			std::cout << tileStr("--", partialVCSize) << "> " << dye("reached", 'c') << " search tree depth k=" << k << "\n";
-			std::cout << tileStr("--", partialVCSize) << "- " << dye("Restoring", 'p') << " vertices: {";
-			if (current.first.size() > 0) std::cout << current.first.at(0);
-			for (int i=1; i < (int) current.first.size(); i++)
+			if(debug)
 			{
-				std::cout << ", " << current.first.at(i);
+				std::cout << tileStr("--", partialVCSize) << "> " << dye("reached", 'c') << " search tree depth k=" << k << "\n";
+				std::cout << tileStr("--", partialVCSize) << "- " << dye("Restoring", 'p') << " vertices: {";
+				if (current.first.size() > 0) std::cout << current.first.at(0);
+				for (int i=1; i < (int) current.first.size(); i++)
+				{
+					std::cout << ", " << current.first.at(i);
+				}
+				std::cout << "}\n";
 			}
-			std::cout << "}\n";
 
 			G->setActive(&current.first);
 			partialVCSize -= current.first.size();
@@ -345,24 +267,30 @@ vector<int>* VCVertexBranchingIterativeDebug(ArrayGraph* G, int k, std::vector<i
 			// if k and current partial VC size permit adding the neighbours
 			if (k - partialVCSize >= branchVertexDegree)
 			{
-				std::cout << tileStr("--", partialVCSize) << "> " << dye("pushing", 'p') << " maxDegreeVertex neighbourhood deletion: {";
-				if (G->getNeighbours(branchVertex)->size() > 0) std::cout << G->getNeighbours(branchVertex)->at(0);
-				for (int i=1; i<(int) G->getNeighbours(branchVertex)->size(); i++)
+				if(debug)
 				{
-					std::cout << ", " << G->getNeighbours(branchVertex)->at(i);
+					std::cout << tileStr("--", partialVCSize) << "> " << dye("pushing", 'p') << " maxDegreeVertex neighbourhood deletion: {";
+					if (G->getNeighbours(branchVertex)->size() > 0) std::cout << G->getNeighbours(branchVertex)->at(0);
+					for (int i=1; i<(int) G->getNeighbours(branchVertex)->size(); i++)
+					{
+						std::cout << ", " << G->getNeighbours(branchVertex)->at(i);
+					}
+					std::cout << "}\n";
 				}
-				std::cout << "}\n";
+
 				// add neighbours of the current vertex to the child differential for evaluating the partial vertex cover where all of the branchVertex's neighbours where taken into the vertex cover
 				// TODO: is there no way to create this inline?
 				std::pair<std::vector<int>, bool> childDifferentialN({*(G->getNeighbours(branchVertex)), false});
 				S.push(childDifferentialN);
-				//std::cout << S.top()->first->at(0) << "\n";
 			}
 			// if k and current partial VC size permit adding the current vertex
 			if (k - partialVCSize >= 1)
 			{
-				//std::cout << S.top()->first->at(0) << "\n";
-				std::cout << tileStr("--", partialVCSize) << "> " << dye("pushing", 'p') << " maxDegreeVertex deletion: {" << branchVertex << "}\n";
+				if(debug)
+				{
+					std::cout << tileStr("--", partialVCSize) << "> " << dye("pushing", 'p') << " maxDegreeVertex deletion: {" << branchVertex << "}\n";
+				}
+
 				// TODO: is there no way to create this inline?
 				std::vector<int> bv = std::vector<int>();
 				bv.push_back(branchVertex);
@@ -389,7 +317,7 @@ vector<int>* vertexBranchingSolverIterative(ArrayGraph* G)
 			//std::cout << "Did not find solution within upper bound u=" << u << "\n";
 			return vc;
 		}
-		vc = VCVertexBranchingIterativeDebug(G, k, vc);
+		vc = VCVertexBranchingIterativeDebug(G, k, vc, true);
 		//if(vc == nullptr) { std::cout << "Did not find solution for k=" << k << "\n\n"; }
 		if (vc != nullptr)
 		{
@@ -510,7 +438,6 @@ int main(int argc, char* argv[]) {
     //cout << "Test\n";
 	try
 	{
-		//cout << "Reading input.\n";
 		ArrayGraph* G = ArrayGraph::readStandardInput();
 		if (G == nullptr)
 		{
