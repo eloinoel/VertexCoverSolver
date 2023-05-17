@@ -85,7 +85,7 @@ vector<int>* vcVertexBranchingRecursive(ArrayGraph* G, int k)
 
 vector<int>* vertexBranchingSolverRecursive(ArrayGraph* G)
 {
-	int k = G->getVCLowerBound();
+	int k = G->getLowerBoundVC();
 	vector<int> *vc;
 
 	while (true)
@@ -251,7 +251,7 @@ vector<int>* VCVertexBranchingIterative(ArrayGraph* G, int k, std::vector<int>* 
 
 vector<int>* vertexBranchingSolverIterative(ArrayGraph* G)
 {
-	int k = G->getVCLowerBound();
+	int k = G->getLowerBoundVC();
 	int u = (int) INFINITY;
 	vector<int>* vc = nullptr;
 

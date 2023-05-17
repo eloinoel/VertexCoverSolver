@@ -1,5 +1,6 @@
 #include <iostream> //output streams
 #include <fstream>  //ifstream file opening
+#include <cmath> //ceil 
 
 #include "ArrayGraph.h"
 
@@ -386,7 +387,7 @@ int ArrayGraph::getCycleBound()
     color = new std::vector<int>(numberOfVertices, -1);
     par = new std::vector<int>(numberOfVertices, -1);
 
-    // TODO: Check with which indice to start, maybe there's a more efficient way
+    // TODO: Check with which index to start, maybe there's a more efficient way
     dfs_cycle(0, -1);
 
     printCycles();
@@ -395,7 +396,7 @@ int ArrayGraph::getCycleBound()
     for (int i = 0; i < cycleNumber; i++) {
         int cycleSize = (*cycles)[i].size();
         if(cycleSize > 2)
-            lowerBound += (int)ceil(cycleSize/2.f);
+            lowerBound += (int) std::ceil(cycleSize/2.f);
     }
 
     return lowerBound;
@@ -416,8 +417,8 @@ void ArrayGraph::dfs_cycle(int u, int p)
     // seen vertex, but was not completely visited -> cycle detected.
     // backtrack based on parents to find the complete cycle.
     if ((*color)[u] == 1) {
-        vector<int> v;
-        cyclenumber++;
+        std::vector<int> v;
+        cycleNumber++;
 
         int cur = p;
         v.push_back(cur);
@@ -437,11 +438,11 @@ void ArrayGraph::dfs_cycle(int u, int p)
     (*color)[u] = 1;
 
     // simple dfs on graph
-    vector<int> neighbours = *getNeighbours(u);
+    std::vector<int> neighbours = *getNeighbours(u);
     for (int v : neighbours) {
 
         // if it has not been visited previously
-        if (v == par[u]) {
+        if (v == par->at(u)) {
             continue;
         }
         dfs_cycle(v, u);
@@ -458,9 +459,9 @@ void ArrayGraph::printCycles()
     // print all the vertex with same cycle
     for (int i = 0; i < cycleNumber; i++) {
         // Print the i-th cycle
-        cout << "Cycle Number " << i + 1 << ": ";
+        std::cout << "Cycle Number " << i + 1 << ": ";
         for (int x : (*cycles)[i])
-            cout << x << " ";
-        cout << endl;
+            std::cout << x << " ";
+        std::cout << std::endl;
     }
 }

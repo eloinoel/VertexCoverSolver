@@ -31,10 +31,10 @@ private:
 
     int numberOfVertices;
 
-    vector<vector<int>>* cycles;
+    std::vector<std::vector<int>>* cycles;
 
-    vector<int>* color;
-    vector<int>* par;
+    std::vector<int>* color;
+    std::vector<int>* par;
     //================================================================
 
 //functions
@@ -69,7 +69,7 @@ public:
     void printOriginalVertexNames();
 
     /* calculate lower bound for VC */
-    int getVCLowerBound();
+    int getLowerBoundVC();
 
     /* get flag array for vertices being active: */
     //std::vector<bool>* getActive();
