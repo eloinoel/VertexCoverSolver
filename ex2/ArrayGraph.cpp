@@ -122,7 +122,7 @@ ArrayGraph* ArrayGraph::readStandardInput()
     }
 
     G->initGraphState();
-
+    
     //-----------------------------------------------------
     //generate adjacency list of fixed size, and add edges
     //-----------------------------------------------------
@@ -133,6 +133,7 @@ ArrayGraph* ArrayGraph::readStandardInput()
     {
         G->adjacencyList[k] = nullptr;
     }
+    
     //add edges
     for (int k = 0; k < (int) edges.size(); k++)
     {
@@ -511,4 +512,5 @@ void ArrayGraph::printMappings(std::vector<int>* vertices)
             }
         }
     }
+    std::cout << std::endl;
 }

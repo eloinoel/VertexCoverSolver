@@ -427,31 +427,70 @@ void writeSolutionToConsole(vector<string>* vc)
 	}
 }
 
+/** Execute specific version of program with optional arguments for more prints
+ * version
+ * 0: ArrayGraph, iterative
+ * 1: ArrayGraph, recursive
+ * 2: Exercise 1 Solution TODO:
+ * ....
+ *  with Cycle Bound
+ *  with Clique Bound
+*/
+void chooseImplementationAndOutput(int version = 0, bool printGraph = false, bool printMappings = false, bool printDebug = false, bool showVCSize = false)
+{
+    std::vector<int>* vc;
+    switch(version)
+    {
+        case 0:
+            ArrayGraph* G = ArrayGraph::readStandardInput();
+            if (G == nullptr)
+                throw invalid_argument("Error constructing graph from input file.");
+            if (printGraph)
+                G->print();
+
+            vc = vertexBranchingSolverIterative(G, printDebug);
+            writeSolutionToConsole(G->getStringsFromVertexIndices(vc));
+
+            if (printMappings)
+                G->printMappings(vc);
+            if (showVCSize)
+                cout << vc->size() << endl;
+            break;
+        case 1:
+            ArrayGraph* G = ArrayGraph::readStandardInput();
+            if (G == nullptr)
+                throw invalid_argument("Error constructing graph from input file.");
+            if (printGraph)
+                G->print();
+
+            vc = vertexBranchingSolverRecursive(G);
+            writeSolutionToConsole(G->getStringsFromVertexIndices(vc));
+
+            if (printMappings)
+                G->printMappings(vc);
+            if (showVCSize)
+                cout << vc->size() << endl;
+            break;
+        case 2:
+            break;
+        case 3:
+            break;
+        case 4:
+            break;
+        default:
+    }
+
+}
+
 /*----------------------------------------------------------*/
 /*-----------------------   Main   -------------------------*/
 /*----------------------------------------------------------*/
 
 int main(int argc, char* argv[]) {
-	string input;
-    //cout << "Test\n";
+
 	try
 	{
-		ArrayGraph* G = ArrayGraph::readStandardInput();
-		if (G == nullptr)
-		{
-			cerr << "Error constructing graph from input file.";
-		}
-        //G->print();
-		//test vc solver
-		//vector<string>* vc = searchTreeSolve(G);
-		//writeSolutionToConsole(vc);
-		//std::vector<int>* vc = vertexBranchingSolverRecursive(G);
-		std::vector<int>* vc = vertexBranchingSolverIterative(G, false);
-        std::vector<std::string>* vc_strings = G->getStringsFromVertexIndices(vc);
-        writeSolutionToConsole(vc_strings);
-        //G->printMappings(vc);
-        //cout << vc->size() << std::endl;
-
+        chooseImplementationAndOutput(0);
 	}
 	catch (const exception& e)
 	{
