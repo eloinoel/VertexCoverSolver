@@ -325,7 +325,6 @@ int ArrayGraph::getMaxDegreeVertex()
 
     for (int i = 0; i < (int) adjacencyList.size(); i++)
     {
-
         if (graphState->at(i).first)
         {
             int degree = getVertexDegree(i);
@@ -336,16 +335,6 @@ int ArrayGraph::getMaxDegreeVertex()
             }
         }
     }
-
-    // TODO: version for graphState degree being kept up to date
-    /* for (int i = 0; i < (int) graphState->size(); i++)
-    {
-        if(graphState->at(i).first && max < graphState->at(i).second)
-        {
-            max = graphState->at(i).second;
-            maxIndex = i;
-        }
-    } */
     return maxIndex;
 }
 
