@@ -287,9 +287,9 @@ void ArrayGraph::printOriginalVertexNames()
 //TODO: implement cycle and clique bound
 int ArrayGraph::getLowerBoundVC() {
 
-    int cycleBound = getCycleBound();
-    return cycleBound;
-//    return 0;
+    //int cycleBound = getCycleBound();
+    //return cycleBound;
+    return 0;
 }
 
 void ArrayGraph::initGraphState()
@@ -414,7 +414,7 @@ int ArrayGraph::getCycleBound()
             lowerBound += (int) std::ceil(cycleSize/2.f);
     }
 
-    std::cout << "Lower Cycle Bound is "<< lowerBound << "." <<  std::endl;
+//    std::cout << "Lower Cycle Bound is "<< lowerBound << "." <<  std::endl;
 
     return lowerBound;
 }
