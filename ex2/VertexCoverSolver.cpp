@@ -103,7 +103,7 @@ vector<int>* vertexBranchingSolverRecursive(ArrayGraph* G)
 	}
 }
 
-vector<int>* VCVertexBranchingIterative(ArrayGraph* G, int k, std::vector<int>* vc, bool debug)
+vector<int>* VCVertexBranchingIterative(ArrayGraph* G, int k, std::vector<int>* vc, bool useDegLEQ2Alg, bool debug)
 {
 	// stack storing the differentials of partial solutions, currently under evaluation and whether a partial solution was already expanded
     std::stack<std::pair<std::vector<int>, bool>> S = std::stack<std::pair<std::vector<int>, bool>>();
@@ -248,13 +248,139 @@ vector<int>* VCVertexBranchingIterative(ArrayGraph* G, int k, std::vector<int>* 
 		S.push(current);
 
 		// solve graph with maxVertDegree <= 2 in linear time
-		if (branchVertexDegree <= 2 && false) // TODO: rm false
+		if (useDegLEQ2Alg && branchVertexDegree <= 2)
 		{
+			// determine partial 2 VC for each connected component
+			std::vector<int> deleted;
+			std::vector<int> A;
+			std::vector<int> CoA;
+			bool maxDepthReached = false;
+			while(true)
+			{
 
+				int origin = G->getConnectedVertex();
+				// if vertex cover is found, return it
+				if(origin == -1) {
+					vc = G->getInactiveVertices();
+					k = partialVCSize;
+					return vc;
+				}
+				auto neighbours = G->getNeighbours(origin);
+				int current1 = -1;
+				int current2 = -1;
+
+				if(G->getVertexDegree(origin) < 2)
+				{
+					current1 = neighbours->at(0);
+				}
+				else
+				{
+					current1 = neighbours->at(0);
+					current2 = neighbours->at(1);
+				}
+				int lastCurrent1 = origin;
+				int lastCurrent2 = origin;
+				bool addToA = false;
+				A.push_back(origin);
+
+				while(current1 != -1 || current2 != -1)
+				{
+					// check if maximum search depth k is reached
+					if((current1 != -1 && current2 != -1 && k - partialVCSize - std::min(A.size(), CoA.size()) < 2) || k - partialVCSize - std::min(A.size(), CoA.size()) < 1)
+					{
+						G->setActive(&deleted);
+						partialVCSize -= deleted.size();
+						G->setActive(&(current.first));
+						partialVCSize -= current.first.size();
+						S.pop();
+						maxDepthReached = true;
+						break;
+					}
+
+					if(current1 == current2)
+					{
+						if(addToA)
+						{
+							A.push_back(current1);
+						}
+						else
+						{
+							CoA.push_back(current1);
+						}
+						break;
+					}
+
+					if(current1 != -1)
+					{
+						if(addToA)
+						{
+							A.push_back(current1);
+						}
+						else
+						{
+							CoA.push_back(current1);
+						}
+						
+						int nextCurrent1 = -1;
+						for(auto neighbour : *(G->getNeighbours(current1)))
+						{
+							if(lastCurrent1 != neighbour) { nextCurrent1 = neighbour; }
+						}
+						lastCurrent1 = current1;
+						current1 = nextCurrent1;
+					}
+
+					if(current2 != -1)
+					{
+						if(addToA)
+						{
+							A.push_back(current2);
+						}
+						else
+						{
+							CoA.push_back(current2);
+						}
+						
+						int nextCurrent2 = -1;
+						for(auto neighbour : *(G->getNeighbours(current2)))
+						{
+							if(lastCurrent2 != neighbour) { nextCurrent2 = neighbour; }
+						}
+						lastCurrent2 = current2;
+						current2 = nextCurrent2;
+					}
+					addToA = !addToA;
+				}
+				if(maxDepthReached) break;
+
+				// choose smaller partial vc, delete the selected vertices from the graph and save their indices in deleted
+				if(A.size() <= CoA.size())
+				{
+					deleted.insert(
+						deleted.end(),
+						std::make_move_iterator(A.begin()),
+						std::make_move_iterator(A.end())
+					);
+					G->setInactive(&A);
+					partialVCSize += A.size();
+				}
+				else
+				{
+					deleted.insert(
+						deleted.end(),
+						std::make_move_iterator(CoA.begin()),
+						std::make_move_iterator(CoA.end())
+					);
+					G->setInactive(&CoA);
+					partialVCSize += CoA.size();
+				}
+				A.clear();
+				CoA.clear();
+			}
 		}
 
 		// refined search tree branching for maxVertDegree >= 3
-		else if (branchVertexDegree >= 1 /*3*/) // TODO: readd 3
+		else if (!useDegLEQ2Alg || branchVertexDegree >= 3)
 		{
 			// if k and current partial VC size permit adding the neighbours
 			if (k - partialVCSize >= branchVertexDegree)
@@ -297,7 +423,7 @@ vector<int>* VCVertexBranchingIterative(ArrayGraph* G, int k, std::vector<int>* 
 }
 
 
-vector<int>* vertexBranchingSolverIterative(ArrayGraph* G, bool debug)
+vector<int>* vertexBranchingSolverIterative(ArrayGraph* G, bool useDegLEQ2Alg, bool debug)
 {
 	int k = G->getLowerBoundVC();
 	int u = (int) INFINITY;
@@ -310,7 +436,7 @@ vector<int>* vertexBranchingSolverIterative(ArrayGraph* G, bool debug)
 			//std::cout << "Did not find solution within upper bound u=" << u << "\n";
 			return vc;
 		}
-		vc = VCVertexBranchingIterative(G, k, vc, debug);
+		vc = VCVertexBranchingIterative(G, k, vc, useDegLEQ2Alg, debug);
 		//if(vc == nullptr) { std::cout << "Did not find solution for k=" << k << "\n\n"; }
 		if (vc != nullptr)
 		{
@@ -442,7 +568,7 @@ void chooseImplementationAndOutput(int version = 0, bool printGraph = false, boo
             if (printGraph)
                 G->print();
 
-            vc = vertexBranchingSolverIterative(G, printDebug);
+            vc = vertexBranchingSolverIterative(G, false, printDebug);
             writeSolutionToConsole(G->getStringsFromVertexIndices(vc));
 
             if (printMappings)

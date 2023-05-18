@@ -221,7 +221,7 @@ ArrayGraph* ArrayGraph::readStandardInput()
         }
     }
 
-    G->initGraphState();
+    G->initGraphState(G->originalVertexNames.size(), edges.size());
     return G;
 }
 
@@ -292,10 +292,10 @@ int ArrayGraph::getLowerBoundVC() {
     return 0;
 }
 
-void ArrayGraph::initGraphState()
+void ArrayGraph::initGraphState(int vertexCount, int edgeCount)
 {
-    unsigned int vertexCount = originalVertexNames.size();
     numberOfVertices = vertexCount;
+    numberOfEdges = edgeCount;
     graphState = new std::vector<std::pair<bool, int>>(vertexCount);
     for (auto entry : originalVertexNames)
     {
@@ -316,19 +316,32 @@ std::vector<int>* ArrayGraph::getInactiveVertices()
     return inactive;
 }
 
-// TODO: naive implementation
+int ArrayGraph::getConnectedVertex()
+{
+    for (int i = 0; i < (int) graphState->size(); i++)
+    {
+        if (graphState->at(i).first && graphState->at(i).second >= 1)
+        {
+            return i;
+        }
+    }
+    return -1;
+}
+
 // given an upper bound for the vertex degree (i.e. a pre-calculated max-degree), we can abort as soon as a vertex with a highest possible degree is found
 int ArrayGraph::getMaxDegreeVertex()
 {
+    //int agg = 0;
     int max = -1;
     int maxIndex;
 
     for (int i = 0; i < (int) adjacencyList.size(); i++)
     {
-
+        //if(2*numberOfEdges - agg + i <= max) { break; }
         if (graphState->at(i).first)
         {
             int degree = getVertexDegree(i);
+            //agg += degree;
             if (max < degree)
             {
                 max = degree;
@@ -336,16 +349,6 @@ int ArrayGraph::getMaxDegreeVertex()
             }
         }
     }
-
-    // TODO: version for graphState degree being kept up to date
-    /* for (int i = 0; i < (int) graphState->size(); i++)
-    {
-        if(graphState->at(i).first && max < graphState->at(i).second)
-        {
-            max = graphState->at(i).second;
-            maxIndex = i;
-        }
-    } */
     return maxIndex;
 }
 
@@ -384,7 +387,9 @@ void ArrayGraph::setInactive(std::vector<int>* vertexIndices)
         for(int j=0; j< (int) adjacencyList[vertexIndices->at(i)]->size(); j++)
         {
             graphState->at(adjacencyList[vertexIndices->at(i)]->at(j)).second -= 1;
+            //if(graphState->at(adjacencyList[vertexIndices->at(i)]->at(j)).first) { numberOfEdges--; }
         }
+        //numberOfVertices--;
     }
 }
 
@@ -396,7 +401,9 @@ void ArrayGraph::setActive(std::vector<int>* vertexIndices)
         for(int j=0; j< (int) adjacencyList[vertexIndices->at(i)]->size(); j++)
         {
             graphState->at(adjacencyList[vertexIndices->at(i)]->at(j)).second += 1;
+            //if(graphState->at(adjacencyList[vertexIndices->at(i)]->at(j)).first) { numberOfEdges++; }
         }
+        //numberOfVertices++;
     }
 }
 

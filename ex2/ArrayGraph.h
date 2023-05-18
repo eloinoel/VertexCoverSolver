@@ -22,20 +22,20 @@ private:
     /* maps from original vertex name from input data to index and degree */
     std::unordered_map<std::string, std::pair<int, int>> originalVertexNames;
 
-    /* TODO: maximum vertex degree, when all vertices are active */
-    unsigned int maxDegree;
+    int numberOfVertices;
+    int numberOfEdges;
 
     //================================================================
     // For Cycle Bound
     int cycleNumber = 0;
-
-    int numberOfVertices;
 
     std::vector<std::vector<int>>* cycles;
 
     std::vector<int>* color;
     std::vector<int>* par;
     //================================================================
+
+public:
 
 //functions
 private:
@@ -47,7 +47,7 @@ private:
 	static bool isVertexCharacter(char c);
 
     /* initially sets up activity flags & node degree data structure */
-    void initGraphState();
+    void initGraphState(int vertexCount, int edgeCount);
 
     //================================================================
     // For Cycle Bound
@@ -69,6 +69,9 @@ public:
     void print();
 
     void printOriginalVertexNames();
+
+    inline int getNumberOfVertices() { return numberOfVertices; }
+    inline int getNumberOfEdges() { return numberOfEdges; }
 
     /* calculate lower bound for VC */
     int getLowerBoundVC();
@@ -92,7 +95,12 @@ public:
     /* get graph state array: */
     inline std::vector<std::pair<bool, int>>* getState() { return graphState; };
 
-    /* get vertex with highest degree among active vertices:
+    /* get active vertex with degree at least one:
+    * returns -1 if no vertex in graph
+    */
+    int getConnectedVertex();
+
+    /* get active vertex with highest degree among active vertices:
     * returns -1 if no vertex in graph
     */
     int getMaxDegreeVertex();
