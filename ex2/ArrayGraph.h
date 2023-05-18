@@ -59,6 +59,11 @@ private:
     void printCycles();
     //================================================================
 
+    bool vertexCanBeAddedToClique(int vertex, std::vector<int>* clique);
+    int getCliqueBound();
+    int partition(std::vector<int>* toSort, int low, int high);
+    void quickSort(std::vector<int>* toSort, int low, int high);
+
 
 public:
 
@@ -66,6 +71,8 @@ public:
     static ArrayGraph* readStandardInput();
 
     inline int getVertexCount() { return adjacencyList.size(); }
+
+    std::vector<int>* getVerticesSortedByDegree();
 
     void print();
 

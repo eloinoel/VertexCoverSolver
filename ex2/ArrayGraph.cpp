@@ -1,6 +1,7 @@
 #include <iostream> //output streams
 #include <fstream>  //ifstream file opening
 #include <cmath> //ceil 
+#include <algorithm> //ceil 
 
 #include "ArrayGraph.h"
 
@@ -284,14 +285,6 @@ void ArrayGraph::printOriginalVertexNames()
     }
 }
 
-//TODO: implement cycle and clique bound
-int ArrayGraph::getLowerBoundVC() {
-
-    //int cycleBound = getCycleBound();
-    //return cycleBound;
-    return 0;
-}
-
 void ArrayGraph::initGraphState(int vertexCount, int edgeCount)
 {
     numberOfVertices = vertexCount;
@@ -405,6 +398,141 @@ void ArrayGraph::setActive(std::vector<int>* vertexIndices)
         }
         //numberOfVertices++;
     }
+}
+
+//TODO: implement cycle and clique bound
+int ArrayGraph::getLowerBoundVC() {
+
+    //int cycleBound = getCycleBound();
+    //std::cout << "Cyclebound: " + cycleBound << std::endl; 
+    //return cycleBound;
+    return getCliqueBound();
+}
+
+int ArrayGraph::partition(std::vector<int>* toSort, int low, int high)
+{
+    // choose the last element as the pivot
+    int pivot = toSort->at(high);
+
+    // temporary pivot index
+    int i = low - 1;
+
+    for (int j=low; j<high; j++)
+    {
+        // if the current element is less than or equal to the pivot
+        if (getVertexDegree(toSort->at(j)) <= getVertexDegree(pivot))
+        {
+            // move the temporary pivot index forward
+            i++;
+            // swap the current element with the element at the temporary pivot index
+            // std::iter_swap(toSort->begin()+i, toSort->begin()+j);
+            int tmp = toSort->at(i);
+            (*toSort)[i] = toSort->at(j);
+            (*toSort)[j] = tmp;
+        }
+    }
+
+    // move the pivot element to the correct pivot position (between the smaller and larger elements)
+    i++;
+    // std::iter_swap(toSort->begin()+i, toSort->begin()+high);
+    int tmp = toSort->at(i);
+    (*toSort)[i] = toSort->at(high);
+    (*toSort)[high] = tmp;
+    return i;
+}
+
+void ArrayGraph::quickSort(std::vector<int>* toSort, int low, int high)
+{
+    if (low >= 0 && high >= 0 && low < high)
+    {
+        int p = partition(toSort, low, high);
+        quickSort(toSort, low, p - 1);
+        quickSort(toSort, p + 1, high);
+    }
+}
+
+std::vector<int>* ArrayGraph::getVerticesSortedByDegree()
+{
+    std::vector<int>* sorted = new std::vector<int>();
+    //accumulate vertices
+    for (int i=0; i<numberOfVertices; i++)
+    {
+        if(graphState->at(i).first) sorted->push_back(i);
+    }
+    quickSort(sorted, 0, numberOfVertices-1);
+    /* for (int i: *sorted)
+    	std::cout << sorted->at(i) << ": " << getVertexDegree(i) << "\n"; */
+    return sorted;
+}
+
+
+bool ArrayGraph::vertexCanBeAddedToClique(int vertex, std::vector<int>* clique)
+{
+    //each vertex in clique
+    for (int i = 0; i < (int) clique->size(); i++)
+    {
+        //is a neighbour of vertex
+        bool isNeighbour = false;
+        for(int j = 0; j < (int) adjacencyList[vertex]->size(); j++) // TODO: add condition whether vertex is active if needed
+        {
+            if (adjacencyList[vertex]->at(j) == clique->at(i))
+            {
+                isNeighbour = true;
+                break;
+            }
+        }
+        if(!isNeighbour)
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+/*
+* Calculates clique cover with greedy heuristic
+*/
+int ArrayGraph::getCliqueBound()
+{
+    std::vector<int>* sorted_vertices = getVerticesSortedByDegree();
+    std::vector<std::vector<int>*> cliques = std::vector<std::vector<int>*>();
+
+    //for each vertex
+    for(int i = 0; i < (int) sorted_vertices->size(); i++)
+    {
+        int curVertex = sorted_vertices->at(i);
+        //search for clique to add to
+        std::pair<int, int> maxClique = std::pair<int, int>({-1, -1}); //clique index, clique size
+        for(int j = 0; j < (int) cliques.size(); j++)
+        {
+            bool canBeAdded = vertexCanBeAddedToClique(curVertex, cliques.at(j));
+            if(canBeAdded && (int) cliques.at(j)->size() > maxClique.second)
+            {
+                maxClique.first = j;
+                maxClique.second = cliques.at(j)->size();
+            }
+        }
+        //no clique found
+        if(maxClique.first == -1)
+        {
+            //create clique
+            std::vector<int>* newClique = new std::vector<int>();
+            newClique->push_back(curVertex);
+            cliques.push_back(newClique);
+        } 
+        else
+        {
+            cliques[maxClique.first]->push_back(curVertex);
+        }
+    }
+
+    //aggregate clique bound
+    int cliqueBound = 0;
+    for(int i = 0; i < (int) cliques.size(); i++)
+    {
+        cliqueBound += cliques.at(i)->size() - 1;
+    }
+    return cliqueBound;
 }
 
 

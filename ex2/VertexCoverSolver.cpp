@@ -193,6 +193,7 @@ vector<int>* VCVertexBranchingIterative(ArrayGraph* G, int k, std::vector<int>* 
 		if (branchVertex == -1 || branchVertexDegree == 0)
 		{
 			// if current solution is actually better than the current best solution: update k & vc
+			
 			vc = G->getInactiveVertices();
 			k = partialVCSize;
 
@@ -380,7 +381,7 @@ vector<int>* VCVertexBranchingIterative(ArrayGraph* G, int k, std::vector<int>* 
 		}
 
 		// refined search tree branching for maxVertDegree >= 3
-		else if (!useDegLEQ2Alg || branchVertexDegree >= 3)
+		else if ((!useDegLEQ2Alg && branchVertexDegree >= 1) || branchVertexDegree >= 3)
 		{
 			// if k and current partial VC size permit adding the neighbours
 			if (k - partialVCSize >= branchVertexDegree)
@@ -426,16 +427,11 @@ vector<int>* VCVertexBranchingIterative(ArrayGraph* G, int k, std::vector<int>* 
 vector<int>* vertexBranchingSolverIterative(ArrayGraph* G, bool useDegLEQ2Alg, bool debug)
 {
 	int k = G->getLowerBoundVC();
-	int u = (int) INFINITY;
 	vector<int>* vc = nullptr;
 
 	if(G->getVertexCount() == 0) return new vector<int>();
 	while (true)
 	{
-		if(k > u) {
-			//std::cout << "Did not find solution within upper bound u=" << u << "\n";
-			return vc;
-		}
 		vc = VCVertexBranchingIterative(G, k, vc, useDegLEQ2Alg, debug);
 		//if(vc == nullptr) { std::cout << "Did not find solution for k=" << k << "\n\n"; }
 		if (vc != nullptr)
@@ -557,24 +553,27 @@ void writeSolutionToConsole(vector<string>* vc)
  *  with Cycle Bound
  *  with Clique Bound
 */
-void chooseImplementationAndOutput(int version = 0, bool printGraph = false, bool printMappings = false, bool printDebug = false, bool showVCSize = false)
+void chooseImplementationAndOutput(int version = 0, bool printGraph = false, bool printMappings = false, bool printDebug = false, bool showVCSize = false, bool printVC = true)
 {
     std::vector<int>* vc;
     if(version == 0)
     {
         ArrayGraph* G = ArrayGraph::readStandardInput();
-            if (G == nullptr)
-                throw invalid_argument("Error constructing graph from input file.");
-            if (printGraph)
-                G->print();
+		if (G == nullptr)
+			throw invalid_argument("Error constructing graph from input file.");
+		if (printGraph)
+			G->print();
 
-            vc = vertexBranchingSolverIterative(G, false, printDebug);
-            writeSolutionToConsole(G->getStringsFromVertexIndices(vc));
+		//G->getLowerBoundVC();
+		vc = vertexBranchingSolverIterative(G, false, printDebug);
+		
+		if(printVC)
+			writeSolutionToConsole(G->getStringsFromVertexIndices(vc));
+		if (printMappings)
+			G->printMappings(vc);
+		if (showVCSize)
+			cout << "VC size: " << vc->size() << endl;
 
-            if (printMappings)
-                G->printMappings(vc);
-            if (showVCSize)
-                cout << "VC size: " << vc->size() << endl;
     }
     else if(version == 1)
     {
@@ -585,7 +584,8 @@ void chooseImplementationAndOutput(int version = 0, bool printGraph = false, boo
             G->print();
 
         vc = vertexBranchingSolverRecursive(G);
-        writeSolutionToConsole(G->getStringsFromVertexIndices(vc));
+		if(printVC)
+        	writeSolutionToConsole(G->getStringsFromVertexIndices(vc));
 
         if (printMappings)
             G->printMappings(vc);
@@ -602,7 +602,7 @@ int main(int argc, char* argv[]) {
 
 	try
 	{
-        chooseImplementationAndOutput(0, false, false, false, false);
+        chooseImplementationAndOutput(0, false, false, false, false, true);
 	}
 	catch (const exception& e)
 	{
