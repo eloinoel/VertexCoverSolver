@@ -392,6 +392,9 @@ void ArrayGraph::setActive(std::vector<int>* vertexIndices)
 
 int ArrayGraph::getCycleBound()
 {
+    int maxDegreeVertex = getMaxDegreeVertex();
+    if (maxDegreeVertex == -1)
+        return 0;
     cycleNumber = 0;
 
     // TODO: Find a better spot to allocate/clear/delete these vectors
@@ -403,7 +406,8 @@ int ArrayGraph::getCycleBound()
     par = new std::vector<int>(numberOfVertices, -1);
 
     // TODO: Check with which index to start, maybe there's a more efficient way
-    dfs_cycle(1, -1);
+    // => take the maxDegree!
+    dfs_cycle(maxDegreeVertex, -1);
 
 //    printCycles();
 
@@ -414,7 +418,7 @@ int ArrayGraph::getCycleBound()
             lowerBound += (int) std::ceil(cycleSize/2.f);
     }
 
-    std::cout << "Lower Cycle Bound is "<< lowerBound << "." <<  std::endl;
+//    std::cout << "Lower Cycle Bound is "<< lowerBound << "." <<  std::endl;
 
     return lowerBound;
 }
