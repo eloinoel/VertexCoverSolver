@@ -32,6 +32,7 @@ private:
     int numberOfVertices;
 
     std::vector<std::vector<int>>* cycles;
+    std::vector<std::vector<int>>* disjointCycles;
 
     std::vector<int>* color;
     std::vector<int>* par;
