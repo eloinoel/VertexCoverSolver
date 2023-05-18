@@ -287,9 +287,9 @@ void ArrayGraph::printOriginalVertexNames()
 //TODO: implement cycle and clique bound
 int ArrayGraph::getLowerBoundVC() {
 
-    int cycleBound = getCycleBound();
-    return cycleBound;
-//    return 0;
+    //int cycleBound = getCycleBound();
+    //return cycleBound;
+    return 0;
 }
 
 void ArrayGraph::initGraphState(int vertexCount, int edgeCount)

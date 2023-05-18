@@ -574,7 +574,7 @@ void chooseImplementationAndOutput(int version = 0, bool printGraph = false, boo
             if (printMappings)
                 G->printMappings(vc);
             if (showVCSize)
-                cout << vc->size() << endl;
+                cout << "VC size: " << vc->size() << endl;
     }
     else if(version == 1)
     {
@@ -590,7 +590,7 @@ void chooseImplementationAndOutput(int version = 0, bool printGraph = false, boo
         if (printMappings)
             G->printMappings(vc);
         if (showVCSize)
-            cout << vc->size() << endl;
+            cout << "VC size: " << vc->size() << endl;
     }
 }
 
@@ -602,7 +602,7 @@ int main(int argc, char* argv[]) {
 
 	try
 	{
-        chooseImplementationAndOutput(0);
+        chooseImplementationAndOutput(0, false, false, false, false);
 	}
 	catch (const exception& e)
 	{
