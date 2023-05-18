@@ -30,6 +30,7 @@ private:
     int cycleNumber = 0;
 
     std::vector<std::vector<int>>* cycles;
+    std::vector<std::vector<int>>* disjointCycles;
 
     std::vector<int>* color;
     std::vector<int>* par;

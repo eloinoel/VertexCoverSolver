@@ -67,7 +67,7 @@ vector<int>* vcVertexBranchingRecursive(ArrayGraph* G, int k)
     }
     vector<int>* neighbours = G->getNeighbours(vertex);
     G->setInactive(neighbours);
-	S = vcVertexBranchingRecursive(G, k - 1);
+	S = vcVertexBranchingRecursive(G, k - 1); // TODO: I think here it's k - number of Neighbours
 	if (S != nullptr)
 	{
 		//revert changes to graph

@@ -287,9 +287,9 @@ void ArrayGraph::printOriginalVertexNames()
 //TODO: implement cycle and clique bound
 int ArrayGraph::getLowerBoundVC() {
 
-    //int cycleBound = getCycleBound();
-    //return cycleBound;
-    return 0;
+    int cycleBound = getCycleBound();
+    return cycleBound;
+//    return 0;
 }
 
 void ArrayGraph::initGraphState(int vertexCount, int edgeCount)
@@ -410,19 +410,24 @@ void ArrayGraph::setActive(std::vector<int>* vertexIndices)
 
 int ArrayGraph::getCycleBound()
 {
+    int maxDegreeVertex = getMaxDegreeVertex();
+    if (maxDegreeVertex == -1)
+        return 0;
     cycleNumber = 0;
 
     // TODO: Find a better spot to allocate/clear/delete these vectors
     // for now at every bound check => inefficient!
     cycles = new std::vector<std::vector<int>>;
+    disjointCycles = new std::vector<std::vector<int>>;
 
     color = new std::vector<int>(numberOfVertices, -1);
     par = new std::vector<int>(numberOfVertices, -1);
 
     // TODO: Check with which index to start, maybe there's a more efficient way
-    dfs_cycle(0, -1);
+    // => take the maxDegree!
+    dfs_cycle(maxDegreeVertex, -1);
 
-    printCycles();
+//    printCycles();
 
     int lowerBound = 0;
     for (int i = 0; i < cycleNumber; i++) {
@@ -431,9 +436,10 @@ int ArrayGraph::getCycleBound()
             lowerBound += (int) std::ceil(cycleSize/2.f);
     }
 
+//    std::cout << "Lower Cycle Bound is "<< lowerBound << "." <<  std::endl;
+
     return lowerBound;
 }
-
 
 
 // Function to mark the vertex with
@@ -455,10 +461,16 @@ void ArrayGraph::dfs_cycle(int u, int p)
         int cur = p;
         v.push_back(cur);
 
+        //mark as visited to get disjointed cycles!
+        (*color)[cur] = 2;
         // backtrack the vertex which are
         // in the current cycle thats found
         while (cur != u) {
             cur = (*par)[cur];
+
+            //mark as visited to get disjointed cycles!
+            (*color)[cur] = 2;
+
             v.push_back(cur);
         }
         (*cycles).push_back(v);
@@ -491,7 +503,7 @@ void ArrayGraph::printCycles()
     // print all the vertex with same cycle
     for (int i = 0; i < cycleNumber; i++) {
         // Print the i-th cycle
-        std::cout << "Cycle Number " << i + 1 << ": ";
+        std::cout << "Cycle Number " << i << ": ";
         for (int x : (*cycles)[i])
             std::cout << x << " ";
         std::cout << std::endl;
