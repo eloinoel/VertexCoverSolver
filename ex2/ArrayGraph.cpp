@@ -381,7 +381,7 @@ void ArrayGraph::setInactive(std::vector<int>* vertexIndices)
     for (int i = 0; i < (int) vertexIndices->size(); i++)
     {
         setInactive(vertexIndices->at(i));
-        for(int j=0; j<adjacencyList[vertexIndices->at(i)]->size(); j++)
+        for(int j=0; j< (int) adjacencyList[vertexIndices->at(i)]->size(); j++)
         {
             graphState->at(adjacencyList[vertexIndices->at(i)]->at(j)).second -= 1;
         }
@@ -393,7 +393,7 @@ void ArrayGraph::setActive(std::vector<int>* vertexIndices)
     for (int i = 0; i < (int) vertexIndices->size(); i++)
     {
         setActive(vertexIndices->at(i));
-        for(int j=0; j<adjacencyList[vertexIndices->at(i)]->size(); j++)
+        for(int j=0; j< (int) adjacencyList[vertexIndices->at(i)]->size(); j++)
         {
             graphState->at(adjacencyList[vertexIndices->at(i)]->at(j)).second += 1;
         }
