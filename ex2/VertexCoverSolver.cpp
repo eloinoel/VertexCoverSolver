@@ -9,6 +9,13 @@
 
 using namespace std;
 
+enum VCDebugMode {
+	ExecutionTranscript,
+	StackAccessTranscript,
+	IterationsTaken,
+	NoDebug
+};
+
 /*----------------------------------------------------------*/
 /*---------------   Exercise 2 Solver Code   ---------------*/
 /*----------------------------------------------------------*/
@@ -103,7 +110,7 @@ vector<int>* vertexBranchingSolverRecursive(ArrayGraph* G)
 	}
 }
 
-vector<int>* VCVertexBranchingIterative(ArrayGraph* G, int k, std::vector<int>* vc, bool useDegLEQ2Alg, bool debug)
+vector<int>* VCVertexBranchingIterative(ArrayGraph* G, int k, std::vector<int>* vc, bool useDegLEQ2Alg, VCDebugMode debug)
 {
 	// stack storing the differentials of partial solutions, currently under evaluation and whether a partial solution was already expanded
     std::stack<std::pair<std::vector<int>, bool>> S = std::stack<std::pair<std::vector<int>, bool>>();
@@ -117,19 +124,21 @@ vector<int>* VCVertexBranchingIterative(ArrayGraph* G, int k, std::vector<int>* 
 	std::vector<int> bv = {};
 	std::pair<std::vector<int>, bool> childDifferential = {bv, false};
 	S.push(childDifferential);
-	if(debug)
+	if(debug == ExecutionTranscript)
 	{
 		std::cout << dye("started", 'g') << " BnB with stack size: " << S.size() << " and k=" << k << "\n";
 	}
 
+	int it = 0;
 	while (!S.empty())
 	{
+		if(debug == IterationsTaken) it++;
 		// retrieve the differential of the current partial vertex cover solution to its parent solution (+ expanded tag)
 		current = S.top();
 
 		if (current.second)
 		{
-			if(debug)
+			if(debug == ExecutionTranscript)
 			{
 				std::cout << tileStr("--", partialVCSize) << "- " << dye("Traversing", 'y') << " back up a previously expanded search tree node\n";
 				std::cout << tileStr("--", partialVCSize) << "- " << dye("Restoring", 'p') << " vertices: {";
@@ -150,11 +159,11 @@ vector<int>* VCVertexBranchingIterative(ArrayGraph* G, int k, std::vector<int>* 
 		G->setInactive(&current.first);
 		partialVCSize += current.first.size();
 
-		if(debug)
+		if(debug == ExecutionTranscript)
 		{
-			auto SP = S;
+			//auto SP = S;
 			std::cout << tileStr("--", partialVCSize) << "- " << dye("peeking", 'y') << " stack: {";
-			while (!SP.empty())
+			/* while (!SP.empty())
 			{
 				auto ccurrent = SP.top();
 				SP.pop();
@@ -166,8 +175,8 @@ vector<int>* VCVertexBranchingIterative(ArrayGraph* G, int k, std::vector<int>* 
 				}
 				std::cout << "}";
 				if(!SP.empty()) std::cout << ", ";
-			}
-			std::cout << "} of size: " << S.size() << "\n";	
+			} */
+			std::cout << "} of size: " << S.size() << "\n";
 
 			std::cout << tileStr("--", partialVCSize) << "- " << dye("Deleting", 'p') << " vertices: {";
 			if (current.first.size() > 0) std::cout << current.first.at(0);
@@ -177,14 +186,25 @@ vector<int>* VCVertexBranchingIterative(ArrayGraph* G, int k, std::vector<int>* 
 			}
 			std::cout << "}\n";
 			std::cout << tileStr("--", partialVCSize) << "- " << dye("checking", 'y') << " partial solution:\n";
-			std::cout << tileStr("--", partialVCSize) << "- " << "best=" << k << ", partialVCSize: " << partialVCSize << "\n";
+			std::cout << tileStr("--", partialVCSize) << "- " << "k=" << k << ", partialVCSize: " << partialVCSize << "\n";
+		}
+
+		if(debug == StackAccessTranscript)
+		{
+			std::cout << tileStr("-", partialVCSize) << dye("{", 'r');
+			if (current.first.size() > 0) std::cout << current.first.at(0);
+			for (int i=1; i< (int) current.first.size(); i++)
+			{
+				std::cout << dye(", ", 'r') << current.first.at(i);
+			}
+			std::cout << dye("}", 'r') << "\n";
 		}
 
 		// get maxDegVert of remaining active vertices (the way the algorithm branches is determined by the choice of this vertex)
 		branchVertex = G->getMaxDegreeVertex();
 		branchVertexDegree = G->getVertexDegree(branchVertex);
 
-		if(debug)
+		if(debug == ExecutionTranscript)
 		{
 			std::cout << tileStr("--", partialVCSize) << "> " << dye("selected", 'b') << " branchVertex: " << branchVertex << " with degree " << branchVertexDegree << "\n";
 		}
@@ -197,7 +217,7 @@ vector<int>* VCVertexBranchingIterative(ArrayGraph* G, int k, std::vector<int>* 
 			vc = G->getInactiveVertices();
 			k = partialVCSize;
 
-			if(debug)
+			if(debug == ExecutionTranscript)
 			{
 				std::cout << tileStr("--", partialVCSize) << "> " << dye("found", 'g') << " VC: {";
 				if (vc->size() > 0) std::cout << vc->at(0);
@@ -207,7 +227,7 @@ vector<int>* VCVertexBranchingIterative(ArrayGraph* G, int k, std::vector<int>* 
 				}
 				std::cout << "} of size: " << partialVCSize << "\n";
 			}
-			if(debug)
+			if(debug == ExecutionTranscript)
 			{
 				std::cout << tileStr("--", partialVCSize) << "- " << dye("Restoring", 'p') << " vertices: {";
 				if (current.first.size() > 0) std::cout << current.first.at(0);
@@ -217,6 +237,8 @@ vector<int>* VCVertexBranchingIterative(ArrayGraph* G, int k, std::vector<int>* 
 				}
 				std::cout << "}\n";
 			}
+			
+			if(debug == IterationsTaken) std::cout << "(k=" << k << ") solved in " << it << " iterations.\n";
 			// return vertex cover
 			return vc;
 		}
@@ -225,7 +247,7 @@ vector<int>* VCVertexBranchingIterative(ArrayGraph* G, int k, std::vector<int>* 
 		// or if the current solution has already been expanded, revert its deletion of vertices and traverse back up to the next partial solution
 		if (k <= partialVCSize)
 		{
-			if(debug)
+			if(debug == ExecutionTranscript)
 			{
 				std::cout << tileStr("--", partialVCSize) << "> " << dye("reached", 'c') << " search tree depth k=" << k << "\n";
 				std::cout << tileStr("--", partialVCSize) << "- " << dye("Restoring", 'p') << " vertices: {";
@@ -235,6 +257,15 @@ vector<int>* VCVertexBranchingIterative(ArrayGraph* G, int k, std::vector<int>* 
 					std::cout << ", " << current.first.at(i);
 				}
 				std::cout << "}\n";
+			}
+			if(debug == StackAccessTranscript) {
+				std::cout << tileStr("-", partialVCSize) << dye("{", 'g');
+				if (current.first.size() > 0) std::cout << current.first.at(0);
+				for (int i=1; i< (int) current.first.size(); i++)
+				{
+					std::cout << dye(", ", 'g') << current.first.at(i);
+				}
+				std::cout << dye("}", 'g') << "\n";
 			}
 
 			G->setActive(&current.first);
@@ -381,12 +412,12 @@ vector<int>* VCVertexBranchingIterative(ArrayGraph* G, int k, std::vector<int>* 
 		}
 
 		// refined search tree branching for maxVertDegree >= 3
-		else if ((!useDegLEQ2Alg && branchVertexDegree >= 1) || branchVertexDegree >= 3)
+		else if ((!useDegLEQ2Alg && branchVertexDegree >= 1) || (useDegLEQ2Alg && branchVertexDegree >= 3))
 		{
 			// if k and current partial VC size permit adding the neighbours
 			if (k - partialVCSize >= branchVertexDegree)
 			{
-				if(debug)
+				if(debug == ExecutionTranscript)
 				{
 					std::cout << tileStr("--", partialVCSize) << "> " << dye("pushing", 'p') << " maxDegreeVertex neighbourhood deletion: {";
 					if (G->getNeighbours(branchVertex)->size() > 0) std::cout << G->getNeighbours(branchVertex)->at(0);
@@ -405,7 +436,7 @@ vector<int>* VCVertexBranchingIterative(ArrayGraph* G, int k, std::vector<int>* 
 			// if k and current partial VC size permit adding the current vertex
 			if (k - partialVCSize >= 1)
 			{
-				if(debug)
+				if(debug == ExecutionTranscript)
 				{
 					std::cout << tileStr("--", partialVCSize) << "> " << dye("pushing", 'p') << " maxDegreeVertex deletion: {" << branchVertex << "}\n";
 				}
@@ -420,11 +451,12 @@ vector<int>* VCVertexBranchingIterative(ArrayGraph* G, int k, std::vector<int>* 
 		}
 	}
 
+	if(debug == IterationsTaken && vc == nullptr) { std::cout << "(k=" << k << ") determined to have no solution in " << it << " iterations.\n"; }
 	return vc;
 }
 
 
-vector<int>* vertexBranchingSolverIterative(ArrayGraph* G, bool useDegLEQ2Alg, bool debug)
+vector<int>* vertexBranchingSolverIterative(ArrayGraph* G, bool useDegLEQ2Alg, VCDebugMode debug)
 {
 	int k = G->getLowerBoundVC();
 	vector<int>* vc = nullptr;
@@ -565,7 +597,7 @@ void chooseImplementationAndOutput(int version = 0, bool printGraph = false, boo
 			G->print();
 
 		//G->getLowerBoundVC();
-		vc = vertexBranchingSolverIterative(G, false, printDebug);
+		vc = vertexBranchingSolverIterative(G, false, IterationsTaken/* printDebug */);
 		
 		if(printVC)
 			writeSolutionToConsole(G->getStringsFromVertexIndices(vc));
