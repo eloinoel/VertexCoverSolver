@@ -5,6 +5,7 @@
 #include <unordered_map> //O(1) for insert and access instead of O(log n) for ordered maps
 #include <vector>
 #include <algorithm>
+#include <list>
 
 class ArrayGraph
 {
@@ -28,9 +29,9 @@ private:
     //================================================================
     // For Cycle Bound
     int cycleNumber = 0;
+    int minMax = 1;
 
     std::vector<std::vector<int>>* cycles;
-    std::vector<std::vector<int>>* disjointCycles;
 
     std::vector<int>* color;
     std::vector<int>* par;
@@ -57,6 +58,15 @@ private:
     void dfs_cycle(int u, int p);
 
     void printCycles();
+
+    std::list<int> getDisjointCycles();
+
+    std::list<int> getDisjointSet(std::list<int> validCycles);
+
+    std::list<int> getAllDisjointSet(std::list<int> validCycles);
+
+    void printVector(std::list<int>* vec, std::string name);
+
     //================================================================
 
     bool vertexCanBeAddedToClique(int vertex, std::vector<int>* clique);
