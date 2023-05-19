@@ -284,13 +284,6 @@ void ArrayGraph::printOriginalVertexNames()
     }
 }
 
-//TODO: implement cycle and clique bound
-int ArrayGraph::getLowerBoundVC() {
-
-    int cycleBound = getCycleBound();
-    return cycleBound;
-//    return 0;
-}
 
 void ArrayGraph::initGraphState()
 {
@@ -389,38 +382,137 @@ void ArrayGraph::setActive(std::vector<int>* vertexIndices)
     }
 }
 
+//TODO: implement cycle and clique bound
+int ArrayGraph::getLowerBoundVC() {
+
+    int cycleBound = getCycleBound();
+    return cycleBound;
+//    return 0;
+}
+
 
 int ArrayGraph::getCycleBound()
 {
-    int maxDegreeVertex = getMaxDegreeVertex();
-    if (maxDegreeVertex == -1)
+    int graphSize = graphState->size();
+    if (graphSize == 0)
         return 0;
     cycleNumber = 0;
 
     // TODO: Find a better spot to allocate/clear/delete these vectors
     // for now at every bound check => inefficient!
     cycles = new std::vector<std::vector<int>>;
-    disjointCycles = new std::vector<std::vector<int>>;
+//    disjointCycles = new std::vector<std::vector<int>>;
+    validDisjointSets = new std::vector<std::list<int>>;
+    bestDisjointSet = new std::list<int>;
 
     color = new std::vector<int>(numberOfVertices, -1);
     par = new std::vector<int>(numberOfVertices, -1);
 
     // TODO: Check with which index to start, maybe there's a more efficient way
     // => take the maxDegree!
+    int maxDegreeVertex = getMaxDegreeVertex();
     dfs_cycle(maxDegreeVertex, -1);
 
-//    printCycles();
+    std::list<int> disjointCyclesMax;
+//    std::list<int> disjointCyclesMin;
+
+    disjointCyclesMax = getDisjointCycles();
+//    minMax = 0;
+//    disjointCyclesMin = getDisjointCycles();
+//
 
     int lowerBound = 0;
     for (int i = 0; i < cycleNumber; i++) {
         int cycleSize = (*cycles)[i].size();
-        if(cycleSize > 2)
-            lowerBound += (int) std::ceil(cycleSize/2.f);
+        if(cycleSize > 2) {
+            int cycleVC = (int) std::ceil(cycleSize / 2.f);
+            lowerBound += cycleVC;
+        }
     }
 
-//    std::cout << "Lower Cycle Bound is "<< lowerBound << "." <<  std::endl;
+    int lowerBoundDisMax = 0;
+    int lowerBoundDis = lowerBoundDisMax;
+    for (auto i: disjointCyclesMax) {
+        int cycleSize = (*cycles)[i].size();
+        if(cycleSize > 2) {
+            int cycleVC = (int) std::ceil(cycleSize / 2.f);
+            lowerBoundDisMax += cycleVC;
+        }
+    }
 
-    return lowerBound;
+//    int lowerBoundMax = 0;
+//    for (auto i: (*bestDisjointSet)) {
+//        int cycleSize = (*cycles)[i].size();
+//        if(cycleSize > 2) {
+//            int cycleVC = (int) std::ceil(cycleSize / 2.f);
+//            lowerBoundMax += cycleVC;
+//        }
+//    }
+
+//    int lowerBoundDisMin = 0;
+//    for (auto i: disjointCyclesMin) {
+//        int cycleSize = (*cycles)[i].size();
+//        if(cycleSize > 2) {
+//            int cycleVC = (int) std::ceil(cycleSize / 2.f);
+//            lowerBoundDisMin += cycleVC;
+//        }
+//    }
+
+//    std::cout << "Lower bound with MAX " << lowerBoundDisMax << std::endl;
+//    std::cout << "Lower bound with All " << lowerBoundMax << std::endl;
+//
+//    if (lowerBoundDisMax < lowerBoundMax)
+//        lowerBoundDis = lowerBoundMax;
+//    else
+        lowerBoundDis = lowerBoundDisMax;
+
+//    std::cout<< std::endl;
+//    std::cout<< "ALL THE CYCLES!" << std::endl;
+//    printCycles();
+//    std::unordered_map<int, int> countVertexInCycles;
+//    for (int i = 0; i < cycleNumber; i++) {
+//        for (int x : (*cycles)[i])
+//        {
+//            countVertexInCycles[x]++;
+//        }
+//    }
+////    for(auto v: countVertexInCycles)
+////        std::cout << v.first << " appears " << v.second << " times." << std::endl;
+//
+//    std::cout<< std::endl;
+//    std::cout<< "ALL THE DISJOINT CYCLES!" << std::endl;
+//
+//    std::cout << "The disjoint cycles are:" << std::endl;
+//    for (auto i: disjointCycles) {
+//        std::cout << "Cycle Number " << i << ": ";
+//        for (int x : (*cycles)[i])
+//            std::cout << x << " ";
+//        std::cout << std::endl;
+//    }
+//
+//    std::unordered_map<int, int> countVertexInDisCycles;
+//    for (auto i: disjointCycles) {
+//        for (int x : (*cycles)[i])
+//        {
+//            countVertexInDisCycles[x]++;
+//        }
+//    }
+//
+////    for(auto v: countVertexInDisCycles)
+////        std::cout << v.first << " appears " << v.second << " times." << std::endl;
+//    std::cout << std::endl;
+//    std::cout << "Lower Cycle Bound is "<< lowerBound << "." <<  std::endl << std::endl;
+//    std::cout << "Lower Disjoint Cycle Bound is "<< lowerBoundDis << "." <<  std::endl << std::endl;
+
+    std::cout << "#recursive steps: " << lowerBoundDis << std::endl;
+
+    delete cycles;
+    delete color;
+    delete par;
+    delete bestDisjointSet;
+    delete validDisjointSets;
+
+    return lowerBoundDis;
 }
 
 
@@ -437,10 +529,14 @@ void ArrayGraph::dfs_cycle(int u, int p)
     // seen vertex, but was not completely visited -> cycle detected.
     // backtrack based on parents to find the complete cycle.
     if ((*color)[u] == 1) {
+        int cur = p;
+//
+//        if ((*color)[cur] == 2)
+//            return;
         std::vector<int> v;
         cycleNumber++;
 
-        int cur = p;
+
         v.push_back(cur);
 
         //mark as visited to get disjointed cycles!
@@ -450,11 +546,16 @@ void ArrayGraph::dfs_cycle(int u, int p)
         while (cur != u) {
             cur = (*par)[cur];
 
+//            if ((*color)[cur] == 2){
+//                cycleNumber--;
+//                return;}
+
             //mark as visited to get disjointed cycles!
             (*color)[cur] = 2;
 
             v.push_back(cur);
         }
+//        (*color)[cur] = 2;
         (*cycles).push_back(v);
         return;
     }
@@ -476,6 +577,203 @@ void ArrayGraph::dfs_cycle(int u, int p)
 
     // completely visited.
     (*color)[u] = 2;
+}
+
+
+std::list<int> ArrayGraph::getDisjointCycles()
+{
+    using namespace  std;
+
+    list<int> disjointCycles;
+    list<int> disjointAllCycles;
+
+    //initialize indexList
+    for (int i = 0; i < cycleNumber; ++i) {
+        disjointCycles.push_back(i);
+        disjointAllCycles.push_back(i);
+        int cycleSize = (*cycles)[i].size();
+    }
+
+
+//    cout << "Average Cycle Size is " << averageCycleSize << endl << endl;
+
+
+    disjointCycles = getDisjointSet(disjointCycles);
+
+//    disjointAllCycles = getAllDisjointSet(disjointAllCycles);
+//
+//    int maxLowerBound = 0;
+//    int bestDisjointSetIdx = -1;
+//    int itrIdx = 0;
+////    cout << "Lower Bound of all disjoint Sets" << endl;
+//    for (auto itr = (*validDisjointSets).begin();
+//        itr != (*validDisjointSets).end(); itr++) {
+//        std::list<int> currentDisjointSet = *itr;
+//        int currentLowerBound = 0;
+////        cout<< "Disjoint Set " << itrIdx <<  " lower bound = ";
+//        for (auto i: currentDisjointSet) {
+//            int cycleSize = (*cycles)[i].size();
+//            if(cycleSize > 2) {
+//                int cycleVC = (int) std::ceil(cycleSize / 2.f);
+//                currentLowerBound += cycleVC;
+//            }
+//        }
+////        cout << currentLowerBound << endl;
+//        if (currentLowerBound > maxLowerBound){
+//            maxLowerBound = currentLowerBound;
+//            bestDisjointSetIdx = itrIdx;
+//        }
+//        itrIdx++;
+//    }
+//    cout << endl;
+//    cout << "Maximal Lower Bound: " << maxLowerBound << endl;
+//
+//    if(maxLowerBound == 0)
+//        return {};
+//    else {
+//        auto it = (*validDisjointSets).begin();
+//        advance(it, bestDisjointSetIdx);
+//        *bestDisjointSet = *it;
+//    }
+
+//    printVector(&disjointCycles, "Disjoint Cycles");
+
+    return disjointCycles;
+
+}
+
+std::list<int> ArrayGraph::getDisjointSet(std::list<int> validCycles)
+{
+
+    std::unordered_map<int, int> countVertices;
+    std::unordered_map<int, std::list<int>> vertexCycle;
+
+//    printVector(&validCycles, "Valid Cycles");
+
+    int max = -1;
+    int maxIdx = -1;
+
+    for (int i: validCycles) {
+        for (int x : (*cycles)[i]){
+            countVertices[x]++;
+            vertexCycle[x].push_back(i);
+
+            if(countVertices[x] > max){
+                max = countVertices[x];
+                maxIdx = x;
+            }
+        }
+    }
+
+    if(max == 1 || max == -1)
+        return validCycles;
+
+    std::list<int> fightingCycles = vertexCycle[maxIdx];
+
+//    printVector(&fightingCycles, "Fighting Cycles");
+
+    //remove all but first from validCycles
+    int fightingSize = fightingCycles.size();
+    std::list<int>::iterator it = fightingCycles.begin();
+
+    int maxSize = -1;
+    int minSize = INT32_MAX;
+    int minSizeOdd = INT32_MAX;
+
+
+
+    for (int i = 0; i < fightingSize; ++i) {
+        int idx = *it;
+        int cycleSize = (*cycles)[idx].size();
+        if( cycleSize> maxSize )
+            maxSize = idx;
+        if( cycleSize < minSize) {
+            minSize = idx;
+            if(cycleSize % 2 == 1 )
+                minSizeOdd = idx;
+        }
+        advance(it, 1);
+    }
+
+    if(minSizeOdd == INT32_MAX)
+        minSizeOdd = minSize;
+
+    int method;
+    if(minMax == 1)
+        method = maxSize;
+    else
+        method = minSizeOdd;
+
+//    std::cout << "Cycle with biggest size: " << maxSize << std::endl;
+
+    it = fightingCycles.begin();
+    for (int i = 0; i < fightingSize; ++i) {
+        if(*it != method)
+            validCycles.remove(*it);
+        advance(it, 1);
+    }
+
+    validCycles = getDisjointSet(validCycles);
+    return validCycles;
+}
+
+std::list<int> ArrayGraph::getAllDisjointSet(std::list<int> validCycles) {
+
+    std::unordered_map<int, int> countVertices;
+    std::unordered_map<int, std::list<int>> vertexCycle;
+
+//    printVector(&validCycles, "Valid Cycles");
+
+    int max = -1;
+    int maxIdx = -1;
+
+    for (int i: validCycles) {
+        for (int x : (*cycles)[i]){
+            countVertices[x]++;
+            vertexCycle[x].push_back(i);
+
+            if(countVertices[x] > max){
+                max = countVertices[x];
+                maxIdx = x;
+            }
+        }
+    }
+
+    if(max == 1 || max == -1) {
+//        printVector(&validCycles, "Finished Valid Set of Cycles");
+        (*validDisjointSets).push_back(validCycles);
+        return validCycles;
+    }
+    std::list<int> fightingCycles = vertexCycle[maxIdx];
+//    printVector(&fightingCycles, "Conflicting Cycles");
+
+    //remove all but first from validCycles
+    int fightingSize = fightingCycles.size();
+    std::list<int>::iterator it = fightingCycles.begin();
+
+
+    it = fightingCycles.begin();
+    for (int i = 0; i < fightingSize; ++i) {
+        int cur = *it;
+        validCycles.remove(cur);
+//        std::cout << "Removing Cycle Number: " << cur << std::endl;
+        validCycles = getAllDisjointSet(validCycles);
+        validCycles.push_back(cur);
+//        std::cout << "Adding back Cycle Number: " << cur << std::endl;
+        advance(it, 1);
+    }
+
+    return validCycles;
+}
+
+void ArrayGraph::printVector(std::list<int> *vec, std::string name)
+{
+    std::cout << name << " are: " << std::endl;
+    for (auto itr = (*vec).begin();
+         itr != (*vec).end(); itr++) {
+        std::cout << *itr << " ";
+    }
+    std::cout << std::endl;
 }
 
 // Function to print the cycles

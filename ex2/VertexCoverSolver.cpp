@@ -67,7 +67,7 @@ vector<int>* vcVertexBranchingRecursive(ArrayGraph* G, int k)
     }
     vector<int>* neighbours = G->getNeighbours(vertex);
     G->setInactive(neighbours);
-	S = vcVertexBranchingRecursive(G, k - 1); // TODO: I think here it's k - number of Neighbours
+	S = vcVertexBranchingRecursive(G, k - neighbours->size()); // TODO: I think here it's k - number of Neighbours
 	if (S != nullptr)
 	{
 		//revert changes to graph
@@ -448,7 +448,7 @@ void chooseImplementationAndOutput(int version = 0, bool printGraph = false, boo
             if (printMappings)
                 G->printMappings(vc);
             if (showVCSize)
-                cout << vc->size() << endl;
+                cout << "The Vertex Cover is of size " << vc->size() << endl;
     }
     else if(version == 1)
     {
@@ -464,7 +464,7 @@ void chooseImplementationAndOutput(int version = 0, bool printGraph = false, boo
         if (printMappings)
             G->printMappings(vc);
         if (showVCSize)
-            cout << vc->size() << endl;
+            cout << "The Vertex Cover is of size " << vc->size() << endl;
     }
 }
 
@@ -476,7 +476,7 @@ int main(int argc, char* argv[]) {
 
 	try
 	{
-        chooseImplementationAndOutput(0);
+        chooseImplementationAndOutput(0, 0, 0, 0, 0);
 	}
 	catch (const exception& e)
 	{
