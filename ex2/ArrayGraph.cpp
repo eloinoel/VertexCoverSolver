@@ -2,6 +2,7 @@
 #include <fstream>  //ifstream file opening
 #include <cmath> //ceil 
 #include <algorithm> //ceil
+#include <stack>          // std::stack
 
 #include "ArrayGraph.h"
 
@@ -345,6 +346,29 @@ int ArrayGraph::getMaxDegreeVertex()
     return maxIndex;
 }
 
+int ArrayGraph::getMaxDegreeVertex(std::vector<int>* candidates)
+{
+    //int agg = 0;
+    int max = -1;
+    int maxIndex;
+
+    for (int candidate : *candidates)
+    {
+        //if(2*numberOfEdges - agg + i <= max) { break; }
+        if (graphState->at(candidate).first)
+        {
+            int degree = getVertexDegree(candidate);
+            //agg += degree;
+            if (max < degree)
+            {
+                max = degree;
+                maxIndex = candidate;
+            }
+        }
+    }
+    return maxIndex;
+}
+
 int ArrayGraph::getFirstActiveVertex()
 {
     for (int i = 0; i < (int) graphState->size(); i++)
@@ -355,6 +379,15 @@ int ArrayGraph::getFirstActiveVertex()
         }
     }
     return -1; // TODO: -1 is dummy return
+}
+
+bool contains(std::vector<int>* vertexIndices, int vertexIndex)
+{
+    for(int i=0; i<(int) vertexIndices->size(); i++)
+    {
+        if(vertexIndices->at(i) == vertexIndex) return true;
+    }
+    return false;
 }
 
 // TODO: maybe provide an array that the neighbours are written into
@@ -370,6 +403,58 @@ std::vector<int>* ArrayGraph::getNeighbours(int vertexIndex)
         }
     }
     return neighbours;
+}
+
+// get unison of neighbours of origins that arent already contained in origins
+std::vector<int>* ArrayGraph::getNeighbours(std::vector<int>* origins)
+{
+    std::vector<int>* neighbours = new std::vector<int>();
+    for (int origin : *origins)
+    {
+        for (int i = 0; i < (int) adjacencyList[origin]->size(); i++)
+        {
+            if (!contains(origins, adjacencyList[origin]->at(i)) && graphState->at(adjacencyList[origin]->at(i)).first)
+            {
+                neighbours->push_back(adjacencyList[origin]->at(i));
+            }
+        }
+    }
+    return neighbours;
+}
+
+// Find the components with size > 1 containing the origin points
+std::vector<std::vector<int>>* ArrayGraph::getComponents(std::vector<int>* origins)
+{
+    std::vector<std::vector<int>>* components = new std::vector<std::vector<int>>();
+    std::stack<int> S = std::stack<int>();
+    std::vector<int>* visited = new std::vector<int>();
+    int current;
+    for (int i = 0; i < (int) origins->size(); i++)
+    {
+        if(contains(visited, origins->at(i))) continue;
+        std::vector<int> component = std::vector<int>();
+        while(!S.empty()) { S.pop(); }
+        S.push(origins->at(i));
+        visited->push_back(origins->at(i));
+        //std::cout << "DFS for " << origins->at(i) << "\n";
+        while(!S.empty())
+        {
+            current = S.top();
+            S.pop();
+            component.push_back(current);
+            for(int neighbour : *getNeighbours(current))
+            {
+                if(contains(visited, neighbour)) continue;
+                visited->push_back(neighbour);
+                S.push(neighbour);
+            }
+        }
+        //std::cout << "Pushing\n";
+        if(component.size() <= 1) continue;
+        components->push_back(component);
+    }
+    //std::cout << "Returning\n";
+    return components;
 }
 
 void ArrayGraph::setInactive(std::vector<int>* vertexIndices)

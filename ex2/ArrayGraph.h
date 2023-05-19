@@ -122,6 +122,7 @@ public:
     * returns -1 if no vertex in graph
     */
     int getMaxDegreeVertex();
+    int getMaxDegreeVertex(std::vector<int>* candidates);
 
     /* get degree of the vertex with passed vertex index: */
     inline int getVertexDegree(int vertexIndex) { return graphState->at(vertexIndex).second; };
@@ -139,6 +140,9 @@ public:
     
     /* get indices of a vertices neighbours: */
     std::vector<int>* getNeighbours(int vertexIndex);
+    std::vector<int>* getNeighbours(std::vector<int>* origins);
+
+    std::vector<std::vector<int>>* getComponents(std::vector<int>* origins);
 
     int getFirstActiveVertex();
 
