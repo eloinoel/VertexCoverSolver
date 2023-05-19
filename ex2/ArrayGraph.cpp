@@ -485,13 +485,18 @@ void ArrayGraph::setActive(std::vector<int>* vertexIndices)
     }
 }
 
-//TODO: implement cycle and clique bound
 int ArrayGraph::getLowerBoundVC() {
 
+    int cliqueBound = getCliqueBound();
     //int cycleBound = getCycleBound();
-    //std::cout << "Cyclebound: " + cycleBound << std::endl;
     //return cycleBound;
-    return getCliqueBound();
+    return cliqueBound;
+}
+
+std::pair<int, int> ArrayGraph::getAllLowerBounds() {
+    int cliqueBound = getCliqueBound();
+    int cycleBound = getCycleBound();
+    return std::pair<int, int>({cliqueBound, cycleBound});
 }
 
 int ArrayGraph::partition(std::vector<int>* toSort, int low, int high)
