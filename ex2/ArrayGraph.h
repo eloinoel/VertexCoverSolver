@@ -94,6 +94,8 @@ public:
     /* calculate lower bound for VC */
     int getLowerBoundVC();
 
+    std::pair<int, int> getAllLowerBounds();
+
     /* get flag array for vertices being active: */
     //std::vector<bool>* getActive();
 

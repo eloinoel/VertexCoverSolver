@@ -553,7 +553,7 @@ void writeSolutionToConsole(vector<string>* vc)
  *  with Cycle Bound
  *  with Clique Bound
 */
-void chooseImplementationAndOutput(int version = 0, bool printGraph = false, bool printMappings = false, bool printDebug = false, bool showVCSize = false, bool printVC = true)
+void chooseImplementationAndOutput(int version = 0, bool printGraph = false, bool printMappings = false, bool printDebug = false, bool showVCSize = false, bool printVC = true, bool printBounds = false)
 {
     std::vector<int>* vc;
     if(version == 0)
@@ -564,7 +564,12 @@ void chooseImplementationAndOutput(int version = 0, bool printGraph = false, boo
 		if (printGraph)
 			G->print();
 
-		//G->getLowerBoundVC();
+        pair<int, int> lowerBounds;
+        if(printBounds)
+        {
+            lowerBounds = G->getAllLowerBounds();
+        }
+
 		vc = vertexBranchingSolverIterative(G, false, printDebug);
 		
 		if(printVC)
@@ -574,6 +579,20 @@ void chooseImplementationAndOutput(int version = 0, bool printGraph = false, boo
 		if (showVCSize)
 			cout << "VC size: " << vc->size() << endl;
 
+        if(printBounds)
+        {
+            //cout << "Clique bound: " << lowerBounds.first << ", Cycle bound: " << lowerBounds.second;
+            //cout << "last-k: " << lowerBounds.first << "-" << lowerBounds.second;
+            if(lowerBounds.first < lowerBounds.second) 
+            {
+                cout << "#recursive steps: " << 0;
+            }
+            else
+            {
+                cout << "#recursive steps: " << 1;
+            }
+
+        }
     }
     else if(version == 1)
     {
@@ -602,7 +621,7 @@ int main(int argc, char* argv[]) {
 
 	try
 	{
-        chooseImplementationAndOutput(0, false, false, false, false, true);
+        chooseImplementationAndOutput(0, false, false, false, false, true, true);
 	}
 	catch (const exception& e)
 	{
