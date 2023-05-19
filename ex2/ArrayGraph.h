@@ -34,8 +34,6 @@ private:
     int numberOfVertices;
 
     std::vector<std::vector<int>>* cycles;
-    std::vector<std::list<int>>* validDisjointSets;
-    std::list<int>* bestDisjointSet;
 
     std::vector<int>* color;
     std::vector<int>* par;
