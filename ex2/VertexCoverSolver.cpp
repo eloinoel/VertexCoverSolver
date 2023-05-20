@@ -20,8 +20,9 @@ enum VCDebugMode {
 /*---------------   Exercise 2 Solver Code   ---------------*/
 /*----------------------------------------------------------*/
 
-vector<int>* vcVertexBranchingRecursive(ArrayGraph* G, int k)
+vector<int>* vcVertexBranchingRecursive(ArrayGraph* G, int k, int* numRec)
 {
+    (*numRec)++;
 	if (k < 0)
     {
 		return nullptr;
@@ -44,7 +45,7 @@ vector<int>* vcVertexBranchingRecursive(ArrayGraph* G, int k)
 
 	//delete first vertex from graph and explore solution
     G->setInactive(vertex);
-	vector<int>* S = vcVertexBranchingRecursive(G, k - 1);
+	vector<int>* S = vcVertexBranchingRecursive(G, k - 1, numRec);
 	if (S != nullptr)
 	{   
 		//revert changes to graph
@@ -67,7 +68,7 @@ vector<int>* vcVertexBranchingRecursive(ArrayGraph* G, int k)
 
     vector<int>* neighbours = G->getNeighbours(vertex);
     G->setInactive(neighbours);
-	S = vcVertexBranchingRecursive(G, k - neighbours->size());
+	S = vcVertexBranchingRecursive(G, k - neighbours->size(), numRec);
 	if (S != nullptr)
 	{
 		//revert changes to graph
@@ -87,14 +88,14 @@ vector<int>* vcVertexBranchingRecursive(ArrayGraph* G, int k)
 	return nullptr;
 }
 
-vector<int>* vertexBranchingSolverRecursive(ArrayGraph* G)
+vector<int>* vertexBranchingSolverRecursive(ArrayGraph* G, int* numRec)
 {
 	int k = G->getLowerBoundVC();
 	vector<int> *vc;
 
 	while (true)
 	{
-		vc = vcVertexBranchingRecursive(G, k);
+		vc = vcVertexBranchingRecursive(G, k, numRec);
 		if (vc != nullptr)
 		{
 			return vc;
@@ -927,9 +928,14 @@ void chooseImplementationAndOutput(int version = 0, bool printGraph = false, boo
         if (printGraph)
             G->print();
 
-        vc = vertexBranchingSolverRecursive(G);
+        int numRecursiveSteps = 0;
+        vc = vertexBranchingSolverRecursive(G, &numRecursiveSteps);
 		if(printVC)
-        	writeSolutionToConsole(G->getStringsFromVertexIndices(vc));
+        {
+            writeSolutionToConsole(G->getStringsFromVertexIndices(vc));
+            cout << "#recursive steps: " << numRecursiveSteps << endl;
+        }
+
 
         if (printMappings)
             G->printMappings(vc);
