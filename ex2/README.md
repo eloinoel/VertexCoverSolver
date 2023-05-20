@@ -67,3 +67,15 @@ cd ..; cmake --build build; cd logs; ../build/bin/VertexCoverSolver < ./../../vc
 
 # rebuild and execute benchmark in logs folder
 cd ..; cmake --build build; cd logs; ./../../vc-data-students/benchmark-fast.sh "./../build/bin/VertexCoverSolver" 30 3
+
+
+## SSH remote testing machines
+
+# connect
+ssh algeng-ss23-team6@aba01.akt.tu-berlin.de
+password: 9b5MEDypeZPf
+
+# upload data to their remote machine
+scp -r ./vc-data-students/ algeng-ss23-team6@aba01.akt.tu-berlin.de:./local/
+scp ./VertexCoverSolver algeng-ss23-team6@aba01.akt.tu-berlin.de:./local/src
+
