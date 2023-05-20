@@ -462,7 +462,41 @@ std::vector<int>* ArrayGraph::getNeighbours(std::vector<int>* origins)
     return neighbours;
 }
 
-/* Find the components with size > 1 containing the origin points */
+// Find the first component with size > 1 that contains any the origin points
+std::vector<int> ArrayGraph::getFirstComponent(std::vector<int>* origins)
+{
+    std::stack<int> S = std::stack<int>();
+    std::vector<int>* visited = new std::vector<int>();
+    std::vector<int> component = std::vector<int>();
+    int current;
+    for (int i = 0; i < (int) origins->size(); i++)
+    {
+        if(contains(visited, origins->at(i))) continue;
+        while(!S.empty()) { S.pop(); }
+        while(!visited->empty()) { visited->pop_back(); }
+        S.push(origins->at(i));
+        visited->push_back(origins->at(i));
+        //std::cout << "DFS for " << origins->at(i) << "\n";
+        while(!S.empty())
+        {
+            current = S.top();
+            S.pop();
+            component.push_back(current);
+            for(int neighbour : *getNeighbours(current))
+            {
+                if(contains(visited, neighbour)) continue;
+                visited->push_back(neighbour);
+                S.push(neighbour);
+            }
+        }
+        //std::cout << "Pushing\n";
+        if(component.size() <= 1) continue;
+        return component;
+    }
+    return component;
+}
+
+// Find the components with size > 1 containing the origin points
 std::vector<std::vector<int>>* ArrayGraph::getComponents(std::vector<int>* origins)
 {
     std::vector<std::vector<int>>* components = new std::vector<std::vector<int>>();

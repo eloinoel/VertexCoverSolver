@@ -146,6 +146,8 @@ public:
     std::vector<int>* getNeighbours(int vertexIndex);
     std::vector<int>* getNeighbours(std::vector<int>* origins);
 
+    // Find the first component with size > 1 that contains any the origin points
+    std::vector<int> getFirstComponent(std::vector<int>* origins);
     std::vector<std::vector<int>>* getComponents(std::vector<int>* origins);
 
     std::pair<int, int>* getFirstValidEdge();
