@@ -63,7 +63,7 @@ cmake --build build
 build/bin/VertexCoverSolver < ../vc-data-students/1-random/000002_000000000012.dimacs
 
 # rebuild and test one case from logs folder
-cd ..; cmake --build build; cd logs; ../build/bin/VertexCoverSolver < ./../../vc-data-students/1-random/000004_000000000004.dimacs   
+cd ..; cmake --build build; cd logs; ../build/bin/VertexCoverSolver < ./../../vc-data-students/1-random/000002_000000000012.dimacs  
 
 # rebuild and execute benchmark in logs folder
 cd ..; cmake --build build; cd logs; ./../../vc-data-students/benchmark-fast.sh "./../build/bin/VertexCoverSolver" 30 3

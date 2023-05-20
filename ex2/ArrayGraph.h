@@ -73,6 +73,7 @@ private:
     int getCliqueBound();
     int partition(std::vector<int>* toSort, int low, int high);
     void quickSort(std::vector<int>* toSort, int low, int high);
+    bool contains(std::vector<int>* vertexIndices, int vertexIndex);
 
 
 public:
@@ -124,6 +125,7 @@ public:
     * returns -1 if no vertex in graph
     */
     int getMaxDegreeVertex();
+    /* get max degree vertex out of candidates */
     int getMaxDegreeVertex(std::vector<int>* candidates);
 
     /* get degree of the vertex with passed vertex index: */
@@ -146,7 +148,7 @@ public:
 
     std::vector<std::vector<int>>* getComponents(std::vector<int>* origins);
 
-    int getFirstActiveVertex();
+    std::pair<int, int>* getFirstValidEdge();
 
     std::vector<std::string>* getStringsFromVertexIndices(std::vector<int>* vertices);
 

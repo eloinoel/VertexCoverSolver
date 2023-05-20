@@ -6,7 +6,11 @@
 
 #include "ArrayGraph.h"
 
-// TODO: make more efficent, employ less copies
+
+/*----------------------------------------------------------*/
+/*-----------------   Graph Construction   -----------------*/
+/*----------------------------------------------------------*/
+
 /**
  * reads an standard input and creates a graph out of received data
  * assumes that no duplicate edges are present in the read data
@@ -249,6 +253,29 @@ bool ArrayGraph::isVertexCharacter(char c)
 	return false;
 }
 
+void ArrayGraph::printOriginalVertexNames()
+{
+    for (auto entry : originalVertexNames)
+    {
+        std::cout << entry.first << ": index = " << entry.second.first << ", degree = " << entry.second.second << std::endl;
+    }
+}
+
+void ArrayGraph::initGraphState(int vertexCount, int edgeCount)
+{
+    numberOfVertices = vertexCount;
+    numberOfEdges = edgeCount;
+    graphState = new std::vector<std::pair<bool, int>>(vertexCount);
+    for (auto entry : originalVertexNames)
+    {
+        graphState->at(entry.second.first) = std::make_pair(true, entry.second.second);
+    }
+}
+
+/*----------------------------------------------------------*/
+/*-------------------   Graph Utility   --------------------*/
+/*----------------------------------------------------------*/
+
 void ArrayGraph::print()
 {
     if (adjacencyList.size() > 0)
@@ -278,23 +305,36 @@ void ArrayGraph::print()
 	}
 }
 
-void ArrayGraph::printOriginalVertexNames()
+void ArrayGraph::printMappings(std::vector<int>* vertices)
 {
-    for (auto entry : originalVertexNames)
+    std::cout << "Mapping string --> index:" << std::endl;
+    for (int i = 0; i < (int) vertices->size(); i++)
     {
-        std::cout << entry.first << ": index = " << entry.second.first << ", degree = " << entry.second.second << std::endl;
+        for (auto entry : originalVertexNames)
+        {
+            if(entry.second.first == vertices->at(i))
+            {
+                std::cout << entry.first << " --> " << vertices->at(i) << std::endl;
+            }
+        }
     }
+    std::cout << std::endl;
 }
 
-void ArrayGraph::initGraphState(int vertexCount, int edgeCount)
+std::vector<std::string>* ArrayGraph::getStringsFromVertexIndices(std::vector<int>* vertices)
 {
-    numberOfVertices = vertexCount;
-    numberOfEdges = edgeCount;
-    graphState = new std::vector<std::pair<bool, int>>(vertexCount);
-    for (auto entry : originalVertexNames)
+    std::vector<std::string>* solution = new std::vector<std::string>();
+    for (int i = 0; i < (int) vertices->size(); i++)
     {
-        graphState->at(entry.second.first) = std::make_pair(true, entry.second.second);
+        for (auto entry : originalVertexNames)
+        {
+            if(entry.second.first == vertices->at(i))
+            {
+                solution->push_back(entry.first);
+            }
+        }
     }
+    return solution;
 }
 
 std::vector<int>* ArrayGraph::getInactiveVertices()
@@ -369,29 +409,29 @@ int ArrayGraph::getMaxDegreeVertex(std::vector<int>* candidates)
     return maxIndex;
 }
 
-int ArrayGraph::getFirstActiveVertex()
+/*
+ * Iterate through graph and find first still active edge 
+*/
+std::pair<int, int>* ArrayGraph::getFirstValidEdge()
 {
+    //iterate through active vertices
     for (int i = 0; i < (int) graphState->size(); i++)
     {
         if(graphState->at(i).first)
         {
-            return i;
+            //find valid edge
+            for(int j = 0; j < (int) adjacencyList[i]->size(); j++)
+            {
+                if(graphState->at(adjacencyList[i]->at(j)).first)
+                {
+                    return new std::pair<int, int> ({i, adjacencyList[i]->at(j)});
+                }
+            }
         }
     }
-    return -1; // TODO: -1 is dummy return
+    return nullptr;
 }
 
-bool contains(std::vector<int>* vertexIndices, int vertexIndex)
-{
-    for(int i=0; i<(int) vertexIndices->size(); i++)
-    {
-        if(vertexIndices->at(i) == vertexIndex) return true;
-    }
-    return false;
-}
-
-// TODO: maybe provide an array that the neighbours are written into
-// Then in cases, where there is no need to allocate a new array, that time can be saved
 std::vector<int>* ArrayGraph::getNeighbours(int vertexIndex)
 {
     std::vector<int>* neighbours = new std::vector<int>();
@@ -405,7 +445,7 @@ std::vector<int>* ArrayGraph::getNeighbours(int vertexIndex)
     return neighbours;
 }
 
-// get unison of neighbours of origins that arent already contained in origins
+/* get unison of neighbours of origins that arent already contained in origins */
 std::vector<int>* ArrayGraph::getNeighbours(std::vector<int>* origins)
 {
     std::vector<int>* neighbours = new std::vector<int>();
@@ -422,7 +462,7 @@ std::vector<int>* ArrayGraph::getNeighbours(std::vector<int>* origins)
     return neighbours;
 }
 
-// Find the components with size > 1 containing the origin points
+/* Find the components with size > 1 containing the origin points */
 std::vector<std::vector<int>>* ArrayGraph::getComponents(std::vector<int>* origins)
 {
     std::vector<std::vector<int>>* components = new std::vector<std::vector<int>>();
@@ -485,6 +525,10 @@ void ArrayGraph::setActive(std::vector<int>* vertexIndices)
     }
 }
 
+/*----------------------------------------------------------*/
+/*------------------   Calculate Bounds   ------------------*/
+/*----------------------------------------------------------*/
+
 int ArrayGraph::getLowerBoundVC() {
 
     int cliqueBound = getCliqueBound();
@@ -497,48 +541,6 @@ std::pair<int, int> ArrayGraph::getAllLowerBounds() {
     int cliqueBound = getCliqueBound();
     int cycleBound = getCycleBound();
     return std::pair<int, int>({cliqueBound, cycleBound});
-}
-
-int ArrayGraph::partition(std::vector<int>* toSort, int low, int high)
-{
-    // choose the last element as the pivot
-    int pivot = toSort->at(high);
-
-    // temporary pivot index
-    int i = low - 1;
-
-    for (int j=low; j<high; j++)
-    {
-        // if the current element is less than or equal to the pivot
-        if (getVertexDegree(toSort->at(j)) <= getVertexDegree(pivot))
-        {
-            // move the temporary pivot index forward
-            i++;
-            // swap the current element with the element at the temporary pivot index
-            // std::iter_swap(toSort->begin()+i, toSort->begin()+j);
-            int tmp = toSort->at(i);
-            (*toSort)[i] = toSort->at(j);
-            (*toSort)[j] = tmp;
-        }
-    }
-
-    // move the pivot element to the correct pivot position (between the smaller and larger elements)
-    i++;
-    // std::iter_swap(toSort->begin()+i, toSort->begin()+high);
-    int tmp = toSort->at(i);
-    (*toSort)[i] = toSort->at(high);
-    (*toSort)[high] = tmp;
-    return i;
-}
-
-void ArrayGraph::quickSort(std::vector<int>* toSort, int low, int high)
-{
-    if (low >= 0 && high >= 0 && low < high)
-    {
-        int p = partition(toSort, low, high);
-        quickSort(toSort, low, p - 1);
-        quickSort(toSort, p + 1, high);
-    }
 }
 
 std::vector<int>* ArrayGraph::getVerticesSortedByDegree()
@@ -554,7 +556,6 @@ std::vector<int>* ArrayGraph::getVerticesSortedByDegree()
     	std::cout << sorted->at(i) << ": " << getVertexDegree(i) << "\n"; */
     return sorted;
 }
-
 
 bool ArrayGraph::vertexCanBeAddedToClique(int vertex, std::vector<int>* clique)
 {
@@ -625,7 +626,6 @@ int ArrayGraph::getCliqueBound()
     return cliqueBound;
 }
 
-
 int ArrayGraph::getCycleBound()
 {
     int graphSize = graphState->size();
@@ -678,7 +678,6 @@ int ArrayGraph::getCycleBound()
 
     return lowerBoundDis;
 }
-
 
 // Function to mark the vertex with
 // different colors for different cycles
@@ -742,7 +741,6 @@ void ArrayGraph::dfs_cycle(int u, int p)
     // completely visited.
     (*color)[u] = 2;
 }
-
 
 std::list<int> ArrayGraph::getDisjointCycles()
 {
@@ -823,17 +821,6 @@ std::list<int> ArrayGraph::getDisjointSet(std::list<int> validCycles)
     return validCycles;
 }
 
-
-void ArrayGraph::printVector(std::list<int> *vec, std::string name)
-{
-    std::cout << name << " are: " << std::endl;
-    for (auto itr = (*vec).begin();
-         itr != (*vec).end(); itr++) {
-        std::cout << *itr << " ";
-    }
-    std::cout << std::endl;
-}
-
 // Function to print the cycles
 void ArrayGraph::printCycles()
 {
@@ -848,34 +835,75 @@ void ArrayGraph::printCycles()
     }
 }
 
-std::vector<std::string>* ArrayGraph::getStringsFromVertexIndices(std::vector<int>* vertices)
+/*----------------------------------------------------------*/
+/*----------------------   Utility   -----------------------*/
+/*----------------------------------------------------------*/
+
+int ArrayGraph::partition(std::vector<int>* toSort, int low, int high)
 {
-    std::vector<std::string>* solution = new std::vector<std::string>();
-    for (int i = 0; i < (int) vertices->size(); i++)
+    // choose the last element as the pivot
+    int pivot = toSort->at(high);
+
+    // temporary pivot index
+    int i = low - 1;
+
+    for (int j=low; j<high; j++)
     {
-        for (auto entry : originalVertexNames)
+        // if the current element is less than or equal to the pivot
+        if (getVertexDegree(toSort->at(j)) <= getVertexDegree(pivot))
         {
-            if(entry.second.first == vertices->at(i))
-            {
-                solution->push_back(entry.first);
-            }
+            // move the temporary pivot index forward
+            i++;
+            // swap the current element with the element at the temporary pivot index
+            // std::iter_swap(toSort->begin()+i, toSort->begin()+j);
+            int tmp = toSort->at(i);
+            (*toSort)[i] = toSort->at(j);
+            (*toSort)[j] = tmp;
         }
     }
-    return solution;
+
+    // move the pivot element to the correct pivot position (between the smaller and larger elements)
+    i++;
+    // std::iter_swap(toSort->begin()+i, toSort->begin()+high);
+    int tmp = toSort->at(i);
+    (*toSort)[i] = toSort->at(high);
+    (*toSort)[high] = tmp;
+    return i;
 }
 
-void ArrayGraph::printMappings(std::vector<int>* vertices)
+void ArrayGraph::quickSort(std::vector<int>* toSort, int low, int high)
 {
-    std::cout << "Mapping string --> index:" << std::endl;
-    for (int i = 0; i < (int) vertices->size(); i++)
+    if (low >= 0 && high >= 0 && low < high)
     {
-        for (auto entry : originalVertexNames)
-        {
-            if(entry.second.first == vertices->at(i))
-            {
-                std::cout << entry.first << " --> " << vertices->at(i) << std::endl;
-            }
-        }
+        int p = partition(toSort, low, high);
+        quickSort(toSort, low, p - 1);
+        quickSort(toSort, p + 1, high);
+    }
+}
+
+void ArrayGraph::printVector(std::list<int> *vec, std::string name)
+{
+    std::cout << name << " are: " << std::endl;
+    for (auto itr = (*vec).begin();
+         itr != (*vec).end(); itr++) {
+        std::cout << *itr << " ";
     }
     std::cout << std::endl;
 }
+
+/**
+ * List of vertices contains a certain vertex
+*/
+bool ArrayGraph::contains(std::vector<int>* vertexIndices, int vertexIndex)
+{
+    for(int i=0; i<(int) vertexIndices->size(); i++)
+    {
+        if(vertexIndices->at(i) == vertexIndex) return true;
+    }
+    return false;
+}
+
+
+
+
+
