@@ -77,6 +77,7 @@ private:
 
 
 public:
+    bool isVertexCoverFound();
 
     // TODO: make more efficent, employ less copies
     static ArrayGraph* readStandardInput();
@@ -101,11 +102,11 @@ public:
     //std::vector<bool>* getActive();
 
     /* set vertices with the passed vertex indices to active and update degrees for those vertices and their neighbours: */
-    inline void setActive(int vertexIndex) { graphState->at(vertexIndex).first = true; };
+    void setActive(int vertexIndex);
     void setActive(std::vector<int>* vertexIndices);
 
     /* set vertices with the passed vertex indices to inactive and update degrees for their neighbours: */
-    inline void setInactive(int vertexIndex) { graphState->at(vertexIndex).first = false; };
+    void setInactive(int vertexIndex);
     void setInactive(std::vector<int>* vertexIndices);
 
     inline bool isActive(int vertexIndex) { return graphState->at(vertexIndex).first; };
@@ -155,6 +156,7 @@ public:
     std::vector<std::string>* getStringsFromVertexIndices(std::vector<int>* vertices);
 
     void printMappings(std::vector<int>* vertices);
+    void printMappings();
 
 };
 

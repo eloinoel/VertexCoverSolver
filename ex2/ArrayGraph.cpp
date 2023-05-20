@@ -321,6 +321,16 @@ void ArrayGraph::printMappings(std::vector<int>* vertices)
     std::cout << std::endl;
 }
 
+void ArrayGraph::printMappings()
+{
+    std::cout << "Mapping string --> index:" << std::endl;
+    for (auto entry : originalVertexNames)
+    {
+            std::cout << entry.first << " --> " << entry.second.first << std::endl;
+    }
+    std::cout << std::endl;
+}
+
 std::vector<std::string>* ArrayGraph::getStringsFromVertexIndices(std::vector<int>* vertices)
 {
     std::vector<std::string>* solution = new std::vector<std::string>();
@@ -367,7 +377,7 @@ int ArrayGraph::getMaxDegreeVertex()
 {
     //int agg = 0;
     int max = -1;
-    int maxIndex;
+    int maxIndex = -1;
 
     for (int i = 0; i < (int) adjacencyList.size(); i++)
     {
@@ -390,7 +400,7 @@ int ArrayGraph::getMaxDegreeVertex(std::vector<int>* candidates)
 {
     //int agg = 0;
     int max = -1;
-    int maxIndex;
+    int maxIndex = -1;
 
     for (int candidate : *candidates)
     {
@@ -409,6 +419,28 @@ int ArrayGraph::getMaxDegreeVertex(std::vector<int>* candidates)
     return maxIndex;
 }
 
+bool ArrayGraph::isVertexCoverFound()
+{
+    //for each vertex
+    for(int i = 0; i < (int) adjacencyList.size(); i++)
+    {
+        //if active
+        if(graphState->at(i).first)
+        {
+            //check if all neighbours
+            for(int j = 0; j < (int) adjacencyList.at(i)->size(); j++)
+            {
+                //are inactive
+                if(graphState->at(j).first)
+                {
+                    return false;
+                }
+            }
+        }
+
+    }
+    return true;
+}
 /*
  * Iterate through graph and find first still active edge 
 */
@@ -531,18 +563,35 @@ std::vector<std::vector<int>>* ArrayGraph::getComponents(std::vector<int>* origi
     return components;
 }
 
+
+void ArrayGraph::setInactive(int vertexIndex)
+{
+    graphState->at(vertexIndex).first = false;
+    for(int j=0; j< (int) adjacencyList[vertexIndex]->size(); j++)
+    {
+        graphState->at(adjacencyList[vertexIndex]->at(j)).second -= 1;
+        //if(graphState->at(adjacencyList[vertexIndices->at(i)]->at(j)).first) { numberOfEdges--; }
+    }
+    //numberOfVertices--;
+}
+
 void ArrayGraph::setInactive(std::vector<int>* vertexIndices)
 {
     for (int i = 0; i < (int) vertexIndices->size(); i++)
     {
         setInactive(vertexIndices->at(i));
-        for(int j=0; j< (int) adjacencyList[vertexIndices->at(i)]->size(); j++)
-        {
-            graphState->at(adjacencyList[vertexIndices->at(i)]->at(j)).second -= 1;
-            //if(graphState->at(adjacencyList[vertexIndices->at(i)]->at(j)).first) { numberOfEdges--; }
-        }
-        //numberOfVertices--;
     }
+}
+
+void ArrayGraph::setActive(int vertexIndex)
+{
+    graphState->at(vertexIndex).first = true; 
+    for(int j=0; j< (int) adjacencyList[vertexIndex]->size(); j++)
+    {
+        graphState->at(adjacencyList[vertexIndex]->at(j)).second += 1;
+        //if(graphState->at(adjacencyList[vertexIndices->at(i)]->at(j)).first) { numberOfEdges++; }
+    }
+    //numberOfVertices++;
 }
 
 void ArrayGraph::setActive(std::vector<int>* vertexIndices)
@@ -550,12 +599,6 @@ void ArrayGraph::setActive(std::vector<int>* vertexIndices)
     for (int i = 0; i < (int) vertexIndices->size(); i++)
     {
         setActive(vertexIndices->at(i));
-        for(int j=0; j< (int) adjacencyList[vertexIndices->at(i)]->size(); j++)
-        {
-            graphState->at(adjacencyList[vertexIndices->at(i)]->at(j)).second += 1;
-            //if(graphState->at(adjacencyList[vertexIndices->at(i)]->at(j)).first) { numberOfEdges++; }
-        }
-        //numberOfVertices++;
     }
 }
 

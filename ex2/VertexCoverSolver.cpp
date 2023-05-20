@@ -23,16 +23,19 @@ enum VCDebugMode {
 vector<int>* vcVertexBranchingRecursive(ArrayGraph* G, int k)
 {
 	if (k < 0)
+    {
 		return nullptr;
+	}
 
 	int vertex = G->getMaxDegreeVertex();
+    
     //no vertices left
     if (vertex == -1)
     {
         return new vector<int>();
     }
 
-    int vertexDeg = G->getVertexDegree(vertex); //TODO: maybe duplicate degree calculation
+    int vertexDeg = G->getVertexDegree(vertex); 
 	//graph has no edges left
 	if (vertexDeg == 0)
 	{
@@ -43,7 +46,7 @@ vector<int>* vcVertexBranchingRecursive(ArrayGraph* G, int k)
     G->setInactive(vertex);
 	vector<int>* S = vcVertexBranchingRecursive(G, k - 1);
 	if (S != nullptr)
-	{
+	{   
 		//revert changes to graph
 		G->setActive(vertex); //TODO: not necessary????
 		//return results
@@ -56,12 +59,12 @@ vector<int>* vcVertexBranchingRecursive(ArrayGraph* G, int k)
 		G->setActive(vertex);
 	}
 
-
 	//cannot fully explore neighbours
     if (vertexDeg > k) 
     {
         return nullptr;
     }
+
     vector<int>* neighbours = G->getNeighbours(vertex);
     G->setInactive(neighbours);
 	S = vcVertexBranchingRecursive(G, k - neighbours->size());
@@ -79,7 +82,7 @@ vector<int>* vcVertexBranchingRecursive(ArrayGraph* G, int k)
 	else
 	{
 		//revert changes to graph
-		G->setInactive(neighbours);
+		G->setActive(neighbours);
 	}
 	return nullptr;
 }
@@ -925,13 +928,13 @@ void chooseImplementationAndOutput(int version = 0, bool printGraph = false, boo
             G->print();
 
         vc = vertexBranchingSolverRecursive(G);
-		/* if(printVC)
+		if(printVC)
         	writeSolutionToConsole(G->getStringsFromVertexIndices(vc));
 
         if (printMappings)
             G->printMappings(vc);
         if (showVCSize)
-            cout << "VC size: " << vc->size() << endl; */
+            cout << "VC size: " << vc->size() << endl;
     }
     else if(version == 2)
     {
@@ -976,8 +979,8 @@ int main(int argc, char* argv[]) {
 
 	try
 	{
-        chooseImplementationAndOutput(0, false, false, false, false, true, true);
-        //chooseImplementationAndOutput(3); //exercise 1
+        //chooseImplementationAndOutput(0, false, false, false, false, true, true);
+        chooseImplementationAndOutput(1); //exercise 1
 	}
 	catch (const exception& e)
 	{
