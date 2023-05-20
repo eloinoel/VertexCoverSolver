@@ -370,8 +370,8 @@ vector<int>* VCVertexBranchingIterativeDebug(ArrayGraph* G, int k, std::vector<i
 		{
 			if(debug == ExecutionTranscript)
 			{
-				std::cout << tileStr("--", partialVCSize) << "- " << dye("Traversing", 'y') << " back up a previously expanded search tree node\n";
-				std::cout << tileStr("--", partialVCSize) << "- " << dye("Restoring", 'p') << " vertices: {";
+				std::cout << tileStr("-", partialVCSize) << "- " << dye("Traversing", 'y') << " back up a previously expanded search tree node\n";
+				std::cout << tileStr("-", partialVCSize) << "- " << dye("Restoring", 'p') << " vertices: {";
 				if (current.first.size() > 0) std::cout << current.first.at(0);
 				for (int i=1; i < (int) current.first.size(); i++)
 				{
@@ -392,8 +392,8 @@ vector<int>* VCVertexBranchingIterativeDebug(ArrayGraph* G, int k, std::vector<i
 		if(debug == ExecutionTranscript)
 		{
 			auto SP = S;
-			std::cout << tileStr("--", partialVCSize) << "- " << dye("peeking", 'y') << " stack: {";
-			while (!SP.empty())
+			std::cout << tileStr("-", partialVCSize) << "- " << dye("peeking", 'y') << " stack: {";
+			/* while (!SP.empty())
 			{
 				auto ccurrent = SP.top();
 				SP.pop();
@@ -405,18 +405,18 @@ vector<int>* VCVertexBranchingIterativeDebug(ArrayGraph* G, int k, std::vector<i
 				}
 				std::cout << "}";
 				if(!SP.empty()) std::cout << ", ";
-			}
+			} */
 			std::cout << "} of size: " << S.size() << "\n";
 
-			std::cout << tileStr("--", partialVCSize) << "- " << dye("Deleting", 'p') << " vertices: {";
+			std::cout << tileStr("-", partialVCSize) << "- " << dye("Deleting", 'p') << " vertices: {";
 			if (current.first.size() > 0) std::cout << current.first.at(0);
 			for (int i=1; i< (int) current.first.size(); i++)
 			{
 				std::cout << ", " << current.first.at(i);
 			}
 			std::cout << "}\n";
-			std::cout << tileStr("--", partialVCSize) << "- " << dye("checking", 'y') << " partial solution:\n";
-			std::cout << tileStr("--", partialVCSize) << "- " << "k=" << k << ", partialVCSize: " << partialVCSize << "\n";
+			std::cout << tileStr("-", partialVCSize) << "- " << dye("checking", 'y') << " partial solution:\n";
+			std::cout << tileStr("-", partialVCSize) << "- " << "k=" << k << ", partialVCSize: " << partialVCSize << "\n";
 		}
 
 		if(debug == StackAccessTranscript)
@@ -436,7 +436,7 @@ vector<int>* VCVertexBranchingIterativeDebug(ArrayGraph* G, int k, std::vector<i
 
 		if(debug == ExecutionTranscript)
 		{
-			std::cout << tileStr("--", partialVCSize) << "> " << dye("selected", 'b') << " branchVertex: " << branchVertex << " with degree " << branchVertexDegree << "\n";
+			std::cout << tileStr("-", partialVCSize) << "> " << dye("selected", 'b') << " branchVertex: " << branchVertex << " with degree " << branchVertexDegree << "\n";
 		}
 
 		// if no active vertex left in graph or no vertex with degree >= 0: (We found a solution)
@@ -449,7 +449,7 @@ vector<int>* VCVertexBranchingIterativeDebug(ArrayGraph* G, int k, std::vector<i
 
 			if(debug == ExecutionTranscript)
 			{
-				std::cout << tileStr("--", partialVCSize) << "> " << dye("found", 'g') << " VC: {";
+				std::cout << tileStr("-", partialVCSize) << "> " << dye("found", 'g') << " VC: {";
 				if (vc->size() > 0) std::cout << vc->at(0);
 				for (int i=1; i < (int) vc->size(); i++)
 				{
@@ -459,7 +459,7 @@ vector<int>* VCVertexBranchingIterativeDebug(ArrayGraph* G, int k, std::vector<i
 			}
 			if(debug == ExecutionTranscript)
 			{
-				std::cout << tileStr("--", partialVCSize) << "- " << dye("Restoring", 'p') << " vertices: {";
+				std::cout << tileStr("-", partialVCSize) << "- " << dye("Restoring", 'p') << " vertices: {";
 				if (current.first.size() > 0) std::cout << current.first.at(0);
 				for (int i=1; i < (int) current.first.size(); i++)
 				{
@@ -479,8 +479,8 @@ vector<int>* VCVertexBranchingIterativeDebug(ArrayGraph* G, int k, std::vector<i
 		{
 			if(debug == ExecutionTranscript)
 			{
-				std::cout << tileStr("--", partialVCSize) << "> " << dye("reached", 'c') << " search tree depth k=" << k << "\n";
-				std::cout << tileStr("--", partialVCSize) << "- " << dye("Restoring", 'p') << " vertices: {";
+				std::cout << tileStr("-", partialVCSize) << "> " << dye("reached", 'c') << " search tree depth k=" << k << "\n";
+				std::cout << tileStr("-", partialVCSize) << "- " << dye("Restoring", 'p') << " vertices: {";
 				if (current.first.size() > 0) std::cout << current.first.at(0);
 				for (int i=1; i < (int) current.first.size(); i++)
 				{
@@ -514,7 +514,7 @@ vector<int>* VCVertexBranchingIterativeDebug(ArrayGraph* G, int k, std::vector<i
 		{
 			if(debug == ExecutionTranscript)
 			{
-				std::cout << tileStr("--", partialVCSize) << "> " << dye("started", 'c') << " linear time algorithm\n";
+				std::cout << tileStr("-", partialVCSize) << "> " << dye("started", 'c') << " linear time algorithm on branchVertex: " << branchVertex << "\n";
 			}
 			// determine partial 2 VC for each connected component
 			std::vector<int> deleted;
@@ -526,15 +526,16 @@ vector<int>* VCVertexBranchingIterativeDebug(ArrayGraph* G, int k, std::vector<i
 				int origin = G->getConnectedVertex();
 				if(debug == ExecutionTranscript)
 				{
-					std::cout << tileStr("--", partialVCSize) << "> " << dye("selected", 'b') << " propagation origin: " << origin << "\n";
+					std::cout << tileStr("-", partialVCSize) << "> " << dye("selected", 'b') << " propagation origin: " << origin << "\n";
+					it++;
 				}
 				// if vertex cover is found, return it
-				if(origin == -1) {
+				if(origin == -1 && k >= partialVCSize) {
 					vc = G->getInactiveVertices();
 					k = partialVCSize;
 					if(debug == ExecutionTranscript)
 					{
-						std::cout << tileStr("--", partialVCSize) << "> " << dye("found", 'g') << " VC: {";
+						std::cout << tileStr("-", partialVCSize) << "> " << dye("found", 'g') << " VC: {";
 						if (vc->size() > 0) std::cout << vc->at(0);
 						for (int i=1; i < (int) vc->size(); i++)
 						{
@@ -544,6 +545,47 @@ vector<int>* VCVertexBranchingIterativeDebug(ArrayGraph* G, int k, std::vector<i
 					}
 					return vc;
 				}
+
+				if(k <= partialVCSize)
+				{
+					/* if(debug == NoDebug)
+					{
+						auto SP = S;
+						std::cout << tileStr("-", partialVCSize) << "- " << dye("peeking", 'y') << " stack: {";
+						for (int j=0; !SP.empty() && j<7; j++)
+						{
+							auto ccurrent = SP.top();
+							SP.pop();
+							std::cout << "{";
+							if (ccurrent.first.size() > 0) std::cout << ccurrent.first.at(0);
+							for (int i=1; i< (int) ccurrent.first.size(); i++)
+							{
+								std::cout << ", " << ccurrent.first.at(i);
+							}
+							std::cout << "}";
+							if(!SP.empty()) std::cout << ", ";
+						}
+						std::cout << "} of size: " << S.size() << "\n";
+	
+						std::cout << tileStr("-", partialVCSize) << "> " << dye("reached", 'c') << " search tree depth k=" << k << "\n";
+						std::cout << tileStr("-", partialVCSize) << "- " << dye("Restoring", 'p') << " vertices: {";
+						if (current.first.size() > 0) std::cout << current.first.at(0);
+						for (int i=1; i < (int) current.first.size(); i++)
+						{
+							std::cout << ", " << current.first.at(i);
+						}
+						std::cout << "}\n";
+					} */
+					//std::cout << tileStr("-", partialVCSize) << "> " << dye("reached", 'c') << " search tree depth k=" << k << " with partial VC size: " << partialVCSize << " and linVC: " << std::min(A.size(), CoA.size()) << "\n";
+					G->setActive(&deleted);
+					partialVCSize -= deleted.size();
+					G->setActive(&(current.first));
+					partialVCSize -= current.first.size();
+					S.pop();
+					maxDepthReached = true;
+					break;
+				}
+
 				auto neighbours = G->getNeighbours(origin);
 				int current1 = -1;
 				int current2 = -1;
@@ -564,17 +606,6 @@ vector<int>* VCVertexBranchingIterativeDebug(ArrayGraph* G, int k, std::vector<i
 
 				while(current1 != -1 || current2 != -1)
 				{
-					// check if maximum search depth k is reached
-					if((current1 != -1 && current2 != -1 && k - partialVCSize - std::min(A.size(), CoA.size()) < 2) || k - partialVCSize - std::min(A.size(), CoA.size()) < 1)
-					{
-						G->setActive(&deleted);
-						partialVCSize -= deleted.size();
-						G->setActive(&(current.first));
-						partialVCSize -= current.first.size();
-						S.pop();
-						maxDepthReached = true;
-						break;
-					}
 
 					if(current1 == current2)
 					{
@@ -642,6 +673,7 @@ vector<int>* VCVertexBranchingIterativeDebug(ArrayGraph* G, int k, std::vector<i
 					);
 					G->setInactive(&A);
 					partialVCSize += A.size();
+					//std::cout << tileStr("-", partialVCSize) << "> " << dye("Deleting", 'y') << " A with size " << A.size() << " ===> (" << partialVCSize << "/" << k << ")\n";
 				}
 				else
 				{
@@ -652,6 +684,26 @@ vector<int>* VCVertexBranchingIterativeDebug(ArrayGraph* G, int k, std::vector<i
 					);
 					G->setInactive(&CoA);
 					partialVCSize += CoA.size();
+					//std::cout << tileStr("-", partialVCSize) << "> " << dye("Deleting", 'y') << " CoA with size " << CoA.size() << " ===> (" << partialVCSize << "/" << k << ")\n";
+				}
+				//std::cout << tileStr("-", partialVCSize) << "> " << dye("A + CoA = ", 'y') << A.size() + CoA.size() << " ===> (" << partialVCSize << "/" << k << ")" << "\n";
+				if(debug == ExecutionTranscript)
+				{
+					std::cout << tileStr("-", partialVCSize) << "- " << dye("A =", 'y') << " {";
+					if (A.size() > 0) std::cout << A.at(0);
+					for (int i=1; i < (int) A.size(); i++)
+					{
+						std::cout << ", " << A.at(i);
+					}
+					std::cout << "}\n";
+
+					std::cout << tileStr("-", partialVCSize) << "- " << dye("CoA =", 'y') << " {";
+					if (CoA.size() > 0) std::cout << CoA.at(0);
+					for (int i=1; i < (int) CoA.size(); i++)
+					{
+						std::cout << ", " << CoA.at(i);
+					}
+					std::cout << "}\n";
 				}
 				A.clear();
 				CoA.clear();
@@ -666,7 +718,7 @@ vector<int>* VCVertexBranchingIterativeDebug(ArrayGraph* G, int k, std::vector<i
 			{
 				if(debug == ExecutionTranscript)
 				{
-					std::cout << tileStr("--", partialVCSize) << "> " << dye("pushing", 'p') << " maxDegreeVertex neighbourhood deletion: {";
+					std::cout << tileStr("-", partialVCSize) << "> " << dye("pushing", 'p') << " maxDegreeVertex neighbourhood deletion: {";
 					if (G->getNeighbours(branchVertex)->size() > 0) std::cout << G->getNeighbours(branchVertex)->at(0);
 					for (int i=1; i<(int) G->getNeighbours(branchVertex)->size(); i++)
 					{
@@ -685,7 +737,7 @@ vector<int>* VCVertexBranchingIterativeDebug(ArrayGraph* G, int k, std::vector<i
 			{
 				if(debug == ExecutionTranscript)
 				{
-					std::cout << tileStr("--", partialVCSize) << "> " << dye("pushing", 'p') << " maxDegreeVertex deletion: {" << branchVertex << "}\n";
+					std::cout << tileStr("-", partialVCSize) << "> " << dye("pushing", 'p') << " maxDegreeVertex deletion: {" << branchVertex << "}\n";
 				}
 
 				// TODO: is there no way to create this inline?
@@ -710,7 +762,7 @@ vector<int>* vertexBranchingSolverIterative(ArrayGraph* G, bool useDegLEQ2Alg, V
 	if(G->getVertexCount() == 0) return new vector<int>();
 	while (true)
 	{
-		vc = VCVertexBranchingIterative(G, k, vc, useDegLEQ2Alg);
+		vc = VCVertexBranchingIterativeDebug(G, k, vc, useDegLEQ2Alg, debug);
 		//if(vc == nullptr) { std::cout << "Did not find solution for k=" << k << "\n\n"; }
 		if (vc != nullptr)
 		{
@@ -911,7 +963,7 @@ void chooseImplementationAndOutput(int version = 0, bool printGraph = false, boo
             lowerBounds = G->getAllLowerBounds();
         }
 
-		vc = vertexBranchingSolverIterative(G, true, ExecutionTranscript/* NoDebug */);
+		vc = vertexBranchingSolverIterative(G, true, /* ExecutionTranscript */NoDebug);
 		
 		if(printVC)
 			writeSolutionToConsole(G->getStringsFromVertexIndices(vc));
@@ -1002,7 +1054,7 @@ int main(int argc, char* argv[]) {
 	try
 	{
         //chooseImplementationAndOutput(0, false, false, false, false, true, true);
-        chooseImplementationAndOutput(1); //exercise 1
+        chooseImplementationAndOutput(0); //exercise 1
 	}
 	catch (const exception& e)
 	{
