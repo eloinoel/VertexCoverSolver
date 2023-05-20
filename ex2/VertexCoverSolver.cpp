@@ -598,9 +598,9 @@ vector<int>* VCVertexBranchingIterative(ArrayGraph* G, int k, std::vector<int>* 
 
 		if(debug == ExecutionTranscript)
 		{
-			//auto SP = S;
+			auto SP = S;
 			std::cout << tileStr("--", partialVCSize) << "- " << dye("peeking", 'y') << " stack: {";
-			/* while (!SP.empty())
+			while (!SP.empty())
 			{
 				auto ccurrent = SP.top();
 				SP.pop();
@@ -612,7 +612,7 @@ vector<int>* VCVertexBranchingIterative(ArrayGraph* G, int k, std::vector<int>* 
 				}
 				std::cout << "}";
 				if(!SP.empty()) std::cout << ", ";
-			} */
+			}
 			std::cout << "} of size: " << S.size() << "\n";
 
 			std::cout << tileStr("--", partialVCSize) << "- " << dye("Deleting", 'p') << " vertices: {";
@@ -719,6 +719,10 @@ vector<int>* VCVertexBranchingIterative(ArrayGraph* G, int k, std::vector<int>* 
 		// solve graph with maxVertDegree <= 2 in linear time
 		if (useDegLEQ2Alg && branchVertexDegree <= 2)
 		{
+			if(debug == ExecutionTranscript)
+			{
+				std::cout << tileStr("--", partialVCSize) << "> " << dye("started", 'c') << " linear time algorithm\n";
+			}
 			// determine partial 2 VC for each connected component
 			std::vector<int> deleted;
 			std::vector<int> A;
@@ -726,12 +730,25 @@ vector<int>* VCVertexBranchingIterative(ArrayGraph* G, int k, std::vector<int>* 
 			bool maxDepthReached = false;
 			while(true)
 			{
-
 				int origin = G->getConnectedVertex();
+				if(debug == ExecutionTranscript)
+				{
+					std::cout << tileStr("--", partialVCSize) << "> " << dye("selected", 'b') << " propagation origin: " << origin << "\n";
+				}
 				// if vertex cover is found, return it
 				if(origin == -1) {
 					vc = G->getInactiveVertices();
 					k = partialVCSize;
+					if(debug == ExecutionTranscript)
+					{
+						std::cout << tileStr("--", partialVCSize) << "> " << dye("found", 'g') << " VC: {";
+						if (vc->size() > 0) std::cout << vc->at(0);
+						for (int i=1; i < (int) vc->size(); i++)
+						{
+							std::cout << ", " << vc->at(i);
+						}
+						std::cout << "} of size: " << partialVCSize << "\n";
+					}
 					return vc;
 				}
 				auto neighbours = G->getNeighbours(origin);
@@ -1055,8 +1072,7 @@ void chooseImplementationAndOutput(int version = 0, bool printGraph = false, boo
             lowerBounds = G->getAllLowerBounds();
         }
 
-		//G->getLowerBoundVC();
-		vc = vertexBranchingSolverIterative(G, false, NoDebug/* printDebug */);
+		vc = vertexBranchingSolverIterative(G, true, ExecutionTranscript/* NoDebug */);
 		
 		if(printVC)
 			writeSolutionToConsole(G->getStringsFromVertexIndices(vc));

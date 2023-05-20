@@ -659,6 +659,32 @@ int ArrayGraph::getCliqueBound()
     return cliqueBound;
 }
 
+/* int ArrayGraph::getNaiveCycleBound()
+{
+    int best = 0;
+    std::vector<std::vector<int>>* cycles;
+    std::stack<int> S;
+    for(int i=0; i<getNumberOfVertices(); i++)
+    {
+        if(!graphState->at(i).first || getVertexDegree(i) <= 0)
+        {
+            continue;
+        }
+        cycles = new std::vector<std::vector<int>>();
+        while()
+        {
+
+        }
+        int current = 0;
+        for(auto cycle : *cycles)
+            current += std::ceil((double) cycle.size() / (double) 2);
+        if(best < current)
+        {
+            best = current;
+        }
+    }
+    return best;
+} */
 
 int ArrayGraph::getCycleBound()
 {

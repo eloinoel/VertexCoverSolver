@@ -54,6 +54,7 @@ private:
     //================================================================
     // For Cycle Bound
     int getCycleBound();
+    int getNaiveCycleBound();
 
     void dfs_cycle(int u, int p);
 
