@@ -710,7 +710,15 @@ vector<int>* vertexBranchingSolverIterative(ArrayGraph* G, bool useDegLEQ2Alg, V
 	if(G->getVertexCount() == 0) return new vector<int>();
 	while (true)
 	{
-		vc = VCVertexBranchingIterative(G, k, vc, useDegLEQ2Alg);
+        if(debug != NoDebug)
+        {
+            vc = VCVertexBranchingIterative(G, k, vc, useDegLEQ2Alg);
+        }
+        else
+        {
+            vc = VCVertexBranchingIterativeDebug(G, k, vc, useDegLEQ2Alg, debug);
+        }
+		
 		//if(vc == nullptr) { std::cout << "Did not find solution for k=" << k << "\n\n"; }
 		if (vc != nullptr)
 		{
@@ -911,7 +919,7 @@ void chooseImplementationAndOutput(int version = 0, bool printGraph = false, boo
             lowerBounds = G->getAllLowerBounds();
         }
 
-		vc = vertexBranchingSolverIterative(G, true, ExecutionTranscript/* NoDebug */);
+		vc = vertexBranchingSolverIterative(G, false, ExecutionTranscript/* NoDebug */);
 		
 		if(printVC)
 			writeSolutionToConsole(G->getStringsFromVertexIndices(vc));
@@ -996,13 +1004,13 @@ void chooseImplementationAndOutput(int version = 0, bool printGraph = false, boo
 /*-----------------------   Main   -------------------------*/
 /*----------------------------------------------------------*/
 
-//TODO: recursive steps print anpassen
+//TODO: recursive steps print für Iterative anpassen
 int main(int argc, char* argv[]) {
 
 	try
 	{
         //chooseImplementationAndOutput(0, false, false, false, false, true, true);
-        chooseImplementationAndOutput(1); //exercise 1
+        chooseImplementationAndOutput(0);
 	}
 	catch (const exception& e)
 	{
