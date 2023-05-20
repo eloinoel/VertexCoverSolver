@@ -74,9 +74,11 @@ private:
     int getCliqueBound();
     int partition(std::vector<int>* toSort, int low, int high);
     void quickSort(std::vector<int>* toSort, int low, int high);
+    bool contains(std::vector<int>* vertexIndices, int vertexIndex);
 
 
 public:
+    bool isVertexCoverFound();
 
     // TODO: make more efficent, employ less copies
     static ArrayGraph* readStandardInput();
@@ -101,11 +103,11 @@ public:
     //std::vector<bool>* getActive();
 
     /* set vertices with the passed vertex indices to active and update degrees for those vertices and their neighbours: */
-    inline void setActive(int vertexIndex) { graphState->at(vertexIndex).first = true; };
+    void setActive(int vertexIndex);
     void setActive(std::vector<int>* vertexIndices);
 
     /* set vertices with the passed vertex indices to inactive and update degrees for their neighbours: */
-    inline void setInactive(int vertexIndex) { graphState->at(vertexIndex).first = false; };
+    void setInactive(int vertexIndex);
     void setInactive(std::vector<int>* vertexIndices);
 
     inline bool isActive(int vertexIndex) { return graphState->at(vertexIndex).first; };
@@ -125,6 +127,7 @@ public:
     * returns -1 if no vertex in graph
     */
     int getMaxDegreeVertex();
+    /* get max degree vertex out of candidates */
     int getMaxDegreeVertex(std::vector<int>* candidates);
 
     /* get degree of the vertex with passed vertex index: */
@@ -149,11 +152,12 @@ public:
     std::vector<int> getFirstComponent(std::vector<int>* origins);
     std::vector<std::vector<int>>* getComponents(std::vector<int>* origins);
 
-    int getFirstActiveVertex();
+    std::pair<int, int>* getFirstValidEdge();
 
     std::vector<std::string>* getStringsFromVertexIndices(std::vector<int>* vertices);
 
     void printMappings(std::vector<int>* vertices);
+    void printMappings();
 
 };
 
