@@ -161,6 +161,15 @@ int BipartiteArrayGraph::hopcroftKarp()
     return result;
 }
 
+bool BipartiteArrayGraph::areADJ(int u, int v)
+{
+    for(int i=0; i<(int) getAdjacencyList()->at(u)->size(); i++)
+    {
+        if(getAdjacencyList()->at(u)->at(i) == v) return true;
+    }
+    return false;
+}
+
 int BipartiteArrayGraph::hopcroftKarpCycleBound()
 {
     //stores pair of u in matching where u is a vertex on left side of pipartite graph, otherwise -1
@@ -230,6 +239,24 @@ int BipartiteArrayGraph::hopcroftKarpCycleBound()
 
         if(foundCycle)
         {
+            // attempt to subdivide the cycle
+            if(currentCycle.size() >= 6)
+            {
+                for(int c=1; (int) currentCycle.size() >= c + 4; c += 2) {
+                    for(int i=0; i<(int) currentCycle.size(); i++)
+                    {
+                        if(areADJ(currentCycle[i], currentCycle[i+3+c])
+                        && areADJ(currentCycle[i+1], currentCycle[i+2+c]))
+                        {
+                            LPCyclebound += 1 + c;
+                            // TODO: cull i+1 -> i+2+c from currentCycle
+                            currentCycle.erase(currentCycle.begin()+i+1, currentCycle.begin()+i+2+c+1);
+                            i -= (2 + c); 
+                            if((int) currentCycle.size() < c + 4) break;
+                        }
+                    }
+                }
+            }
             //std::cout << "found cycle of size: " << currentCycle.size() << "\n";
             // calculate 
             LPCyclebound += std::ceil((double) currentCycle.size() / (double) 2);

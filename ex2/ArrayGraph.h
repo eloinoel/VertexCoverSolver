@@ -54,8 +54,6 @@ protected:
 
     //================================================================
     // For Cycle Bound
-    int getCycleBound();
-    int getLPCycleBound();
 
     void dfs_cycle(int u, int p);
 
@@ -72,8 +70,6 @@ protected:
     //================================================================
 
     bool vertexCanBeAddedToClique(int vertex, std::vector<int>* clique);
-    int getCliqueBound();
-    int getLPBound();
     int partition(std::vector<int>* toSort, int low, int high);
     void quickSort(std::vector<int>* toSort, int low, int high);
     bool contains(std::vector<int>* vertexIndices, int vertexIndex);
@@ -102,6 +98,10 @@ public:
     inline int getNumberOfEdges() { return numberOfEdges; }
 
     /* calculate lower bound for VC */
+    int getCliqueBound();
+    int getCycleBound();
+    int getLPBound();
+    int getLPCycleBound();
     int getLowerBoundVC();
 
     std::vector<int> getAllLowerBounds();

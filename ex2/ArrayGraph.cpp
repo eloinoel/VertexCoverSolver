@@ -619,7 +619,7 @@ int ArrayGraph::getLowerBoundVC() {
 
 std::vector<int> ArrayGraph::getAllLowerBounds() {
     int cliqueBound = getCliqueBound();
-    int cycleBound = getCycleBound();
+    int cycleBound = 0; //getCycleBound(); // TODO: cycle bound throws access error
     int lpBound = getLPBound();
     int lpCycleBound = getLPCycleBound();
     return std::vector<int>({cliqueBound, cycleBound, lpBound, lpCycleBound});

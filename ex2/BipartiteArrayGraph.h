@@ -24,6 +24,8 @@ public:
     inline int getMaximumMatching() { return hopcroftKarp(); };
     inline int getMaximumMatchingCycleBound() { return hopcroftKarpCycleBound(); };
 
+    bool areADJ(int u, int v);
+
 private:
 
     int hopcroftKarp();
