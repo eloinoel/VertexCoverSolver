@@ -1,5 +1,7 @@
 #include <queue>
+#include <math.h>
 #include <climits>
+#include <iostream>
 #include "BipartiteArrayGraph.h"
 #define NIL 0
 #define INF INT_MAX
@@ -157,4 +159,86 @@ int BipartiteArrayGraph::hopcroftKarp()
         }
     }
     return result;
+}
+
+int BipartiteArrayGraph::hopcroftKarpCycleBound()
+{
+    //stores pair of u in matching where u is a vertex on left side of pipartite graph, otherwise -1
+    pairU = std::vector<int>(getLeftSize() + 1);
+    //stores pair of v in matching where v is a vertex on rig side of pipartite graph, otherwise -1
+    pairV = std::vector<int>(getRightSize() + 1);
+
+    dist = std::vector<int>(getLeftSize() + 1);
+
+    //init with no matching
+    for(int i = 0; i < (int) pairU.size(); i++)
+    {
+        pairU[i] = NIL;
+    }
+    for(int i = 0; i < (int) pairV.size(); i++)
+    {
+        pairV[i] = NIL;
+    }
+
+    //keep updating result while there is an augmenting path
+    while(hasAugmentingPath_BFS())
+    {
+        //find free vertex
+        for(int i = 1; i < (int) pairU.size(); i++)
+        {
+            if(pairU[i] == NIL && hasAugmentingPath_DFS(i))
+            {
+
+            }
+        }
+    }
+
+    int LPCyclebound = 0;
+    std::vector<int> leftMatches = pairU;
+    std::vector<int> currentCycle = std::vector<int>();
+    bool foundCycle;
+    int current;
+    while(true)
+    {
+        // find uncovered vertex index
+        current = -1;
+        foundCycle = false;
+        for(int i=1; i<(int)leftMatches.size(); i++)
+        {
+            if(leftMatches[i] != -1)
+            {
+                current = i;
+                break;
+            }
+        }
+        if(current == -1) break;
+        //std::cout << "found uncovered vertex: " << current << "\n";
+
+        // determine cycle
+        while(current != -1 && current != 0/* leftMatches[current] != -1 && leftMatches[current] != 0 */)
+        {
+            if(currentCycle.size() > 2 && currentCycle.front() == current)
+            {
+                foundCycle = true;
+                break;
+            }
+            //std::cout << "adding " << current << " to cycle\n";
+            currentCycle.push_back(current);
+            leftMatches[current] = -1;
+            current = pairU[current];
+        }
+
+        if(foundCycle)
+        {
+            //std::cout << "found cycle of size: " << currentCycle.size() << "\n";
+            // calculate 
+            LPCyclebound += std::ceil((double) currentCycle.size() / (double) 2);
+        }
+        else if(currentCycle.size() == 2)
+        {
+            LPCyclebound++;
+        }
+        currentCycle.clear();
+    }
+    return LPCyclebound/2; // TODO: it seems like we are counting each cycle twice, so we need to divide by 2
 }

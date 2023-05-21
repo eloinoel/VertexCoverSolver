@@ -55,6 +55,7 @@ protected:
     //================================================================
     // For Cycle Bound
     int getCycleBound();
+    int getLPCycleBound();
 
     void dfs_cycle(int u, int p);
 

@@ -21,11 +21,13 @@ public:
     inline int getLeftSize() { return getNumberOfVertices()/2; }
     inline int getRightSize() { return getNumberOfVertices()/2; }
 
-    inline int getMaximumMatching() {return hopcroftKarp();};
+    inline int getMaximumMatching() { return hopcroftKarp(); };
+    inline int getMaximumMatchingCycleBound() { return hopcroftKarpCycleBound(); };
 
 private:
 
     int hopcroftKarp();
+    int hopcroftKarpCycleBound();
     bool hasAugmentingPath_BFS();
     bool hasAugmentingPath_DFS(int u);
 };

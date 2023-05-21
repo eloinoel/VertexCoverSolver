@@ -760,7 +760,7 @@ vector<int>* vertexBranchingSolverIterative(ArrayGraph* G, bool useDegLEQ2Alg, i
 	if(G->getVertexCount() == 0) return new vector<int>();
 	while (true)
 	{
-        if(debug != NoDebug)
+        if(debug == NoDebug)
         {
             vc = VCVertexBranchingIterative(G, k, vc, useDegLEQ2Alg, numRec);
         }
@@ -976,9 +976,9 @@ void chooseImplementationAndOutput(int version = 0, bool printGraph = false, boo
 		if(printVC)
 		{
 			writeSolutionToConsole(G->getStringsFromVertexIndices(vc));
-			//vector<int> bounds = G->getAllLowerBounds();
-			//cout << "#recursive steps: " << bounds[0] - bounds[2] + 1 << endl;
-			cout << "#recursive steps: " << numRecursiveSteps << endl;
+			vector<int> bounds = G->getAllLowerBounds();
+			//cout << "#recursive steps: " << /* G->getLowerBoundVC() */bounds[3] - bounds[1] + 1 << endl;
+			//cout << "#recursive steps: " << numRecursiveSteps << endl;
 		}
 		if (printMappings)
 			G->printMappings(vc);

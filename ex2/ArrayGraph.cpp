@@ -613,6 +613,7 @@ int ArrayGraph::getLowerBoundVC() {
     //int cycleBound = getCycleBound();
     //return cycleBound;
     //return getLPBound();
+    //return getLPCycleBound();
     return cliqueBound;
 }
 
@@ -620,7 +621,8 @@ std::vector<int> ArrayGraph::getAllLowerBounds() {
     int cliqueBound = getCliqueBound();
     int cycleBound = getCycleBound();
     int lpBound = getLPBound();
-    return std::vector<int>({cliqueBound, cycleBound, lpBound});
+    int lpCycleBound = getLPCycleBound();
+    return std::vector<int>({cliqueBound, cycleBound, lpBound, lpCycleBound});
 }
 
 std::vector<int>* ArrayGraph::getVerticesSortedByDegree()
@@ -770,6 +772,17 @@ int ArrayGraph::getCycleBound()
 
     return lowerBoundDis;
 }
+
+int ArrayGraph::getLPCycleBound()
+{
+    // generate bipartite graph that splits vertices into left and right
+    BipartiteArrayGraph* bipartiteGraph = BipartiteArrayGraph::createBipartiteGraphByVertexSplit(this);
+
+    // execute Hopcroft Karp to the maximum matching size
+    int LPCycleBound = bipartiteGraph->getMaximumMatchingCycleBound();
+    return LPCycleBound;
+}
+
 
 // Function to mark the vertex with
 // different colors for different cycles
