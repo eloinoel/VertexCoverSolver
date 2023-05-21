@@ -41,6 +41,7 @@ public:
 
 //functions
 private:
+protected:
     inline ArrayGraph() {};
 
 	static std::string eraseLeadingTrailingWhitespacesFromString(std::string str);
@@ -54,7 +55,6 @@ private:
     //================================================================
     // For Cycle Bound
     int getCycleBound();
-    int getNaiveCycleBound();
 
     void dfs_cycle(int u, int p);
 
@@ -77,12 +77,17 @@ private:
     void quickSort(std::vector<int>* toSort, int low, int high);
     bool contains(std::vector<int>* vertexIndices, int vertexIndex);
 
-
 public:
+    /* split each node in this graph in two and edges between the split nodes */
+    ArrayGraph* createVertexSplitBipartiteGraph();
+
     bool isVertexCoverFound();
 
     // TODO: make more efficent, employ less copies
     static ArrayGraph* readStandardInput();
+
+    std::vector<std::vector<int>*>* getAdjacencyList() { return &adjacencyList; };
+    void setAdjacencyList(std::vector<std::vector<int>*> _adjacencyList) { adjacencyList = _adjacencyList; };
 
     inline int getVertexCount() { return adjacencyList.size(); }
 
@@ -98,7 +103,7 @@ public:
     /* calculate lower bound for VC */
     int getLowerBoundVC();
 
-    std::pair<int, int> getAllLowerBounds();
+    std::vector<int> getAllLowerBounds();
 
     /* get flag array for vertices being active: */
     //std::vector<bool>* getActive();

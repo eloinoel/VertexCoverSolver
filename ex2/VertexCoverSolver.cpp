@@ -963,18 +963,21 @@ void chooseImplementationAndOutput(int version = 0, bool printGraph = false, boo
 		if (printGraph)
 			G->print();
 
-        pair<int, int> lowerBounds;
+        vector<int> lowerBounds;
         if(printBounds)
         {
             lowerBounds = G->getAllLowerBounds();
         }
 
 		int numRecursiveSteps = 0;
-		vc = vertexBranchingSolverIterative(G, true, &numRecursiveSteps,/* ExecutionTranscript */NoDebug);
+		vc = vertexBranchingSolverIterative(G, true, &numRecursiveSteps, NoDebug);
+		//vc = new std::vector<int>();
 		
 		if(printVC)
 		{
 			writeSolutionToConsole(G->getStringsFromVertexIndices(vc));
+			//vector<int> bounds = G->getAllLowerBounds();
+			//cout << "#recursive steps: " << bounds[0] - bounds[2] + 1 << endl;
 			cout << "#recursive steps: " << numRecursiveSteps << endl;
 		}
 		if (printMappings)
@@ -984,17 +987,7 @@ void chooseImplementationAndOutput(int version = 0, bool printGraph = false, boo
 
         if(printBounds)
         {
-            //cout << "Clique bound: " << lowerBounds.first << ", Cycle bound: " << lowerBounds.second;
-            //cout << "last-k: " << lowerBounds.first << "-" << lowerBounds.second;
-            if(lowerBounds.first < lowerBounds.second) 
-            {
-                cout << "#recursive steps: " << lowerBounds.second;
-            }
-            else
-            {
-                cout << "#recursive steps: " << lowerBounds.first;
-            }
-
+            cout << "Clique bound: " << lowerBounds[0] << ", Cycle bound: " << lowerBounds[1] << ", LP bound: " << lowerBounds[2];
         }
     }
     else if(version == 1)
@@ -1063,8 +1056,8 @@ int main(int argc, char* argv[]) {
 
 	try
 	{
-        //chooseImplementationAndOutput(0, false, false, false, false, true, true);
-        chooseImplementationAndOutput(0);
+        chooseImplementationAndOutput(0, false, false, false, false, true, false);
+        //chooseImplementationAndOutput(3);
 	}
 	catch (const exception& e)
 	{

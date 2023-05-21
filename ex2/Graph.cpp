@@ -373,6 +373,11 @@ Graph* Graph::readStandardInput()
 				{
 					break;
 				}
+				// fix for OS-side CRLF end of lines
+           		else if (line[j] == (char) 13)
+            	{
+                	continue;
+            	}
 				else
 				{
 					cerr << "readInput: illegal character read for vertex name 2\n";

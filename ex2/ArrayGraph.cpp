@@ -5,6 +5,7 @@
 #include <stack>          // std::stack
 
 #include "ArrayGraph.h"
+#include "BipartiteArrayGraph.h"
 
 
 /*----------------------------------------------------------*/
@@ -611,13 +612,15 @@ int ArrayGraph::getLowerBoundVC() {
     int cliqueBound = getCliqueBound();
     //int cycleBound = getCycleBound();
     //return cycleBound;
+    //return getLPBound();
     return cliqueBound;
 }
 
-std::pair<int, int> ArrayGraph::getAllLowerBounds() {
+std::vector<int> ArrayGraph::getAllLowerBounds() {
     int cliqueBound = getCliqueBound();
     int cycleBound = getCycleBound();
-    return std::pair<int, int>({cliqueBound, cycleBound});
+    int lpBound = getLPBound();
+    return std::vector<int>({cliqueBound, cycleBound, lpBound});
 }
 
 std::vector<int>* ArrayGraph::getVerticesSortedByDegree()
@@ -703,37 +706,17 @@ int ArrayGraph::getCliqueBound()
     return cliqueBound;
 }
 
+/* Hopcroft Karp Algorithm */
 int ArrayGraph::getLPBound()
 {
-    
+    //generate bipartite graph that splits vertices into left and right
+    BipartiteArrayGraph* bipartiteGraph = BipartiteArrayGraph::createBipartiteGraphByVertexSplit(this);
+
+    //execute Hopcroft Karp to the maximum matching size
+    int maximumMatchingSize = bipartiteGraph->getMaximumMatching();
+
+    return maximumMatchingSize/2;
 };
-
-/* int ArrayGraph::getNaiveCycleBound()
-{
-    int best = 0;
-    std::vector<std::vector<int>>* cycles;
-    std::stack<int> S;
-    for(int i=0; i<getNumberOfVertices(); i++)
-    {
-        if(!graphState->at(i).first || getVertexDegree(i) <= 0)
-        {
-            continue;
-        }
-        cycles = new std::vector<std::vector<int>>();
-        while()
-        {
-
-        }
-        int current = 0;
-        for(auto cycle : *cycles)
-            current += std::ceil((double) cycle.size() / (double) 2);
-        if(best < current)
-        {
-            best = current;
-        }
-    }
-    return best;
-} */
 
 int ArrayGraph::getCycleBound()
 {

@@ -92,7 +92,7 @@ endif()
 #endif()
 
 # Create an executable
-add_executable(VertexCoverSolver VertexCoverSolver.cpp Graph.cpp ArrayGraph.cpp)
+add_executable(VertexCoverSolver VertexCoverSolver.cpp Graph.cpp ArrayGraph.cpp BipartiteArrayGraph.cpp)
 
 # Add header-only dependencies
 #target_include_directories(ex2 PRIVATE "${polyscope_SOURCE_DIR}/deps/args")
