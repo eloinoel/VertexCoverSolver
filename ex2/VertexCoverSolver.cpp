@@ -107,7 +107,7 @@ vector<int>* vertexBranchingSolverRecursive(ArrayGraph* G, int* numRec)
 /**
  * Iterative Branching with maxDegree heuristic
 */
-vector<int>* VCVertexBranchingIterative(ArrayGraph* G, int k, std::vector<int>* vc, bool useDegLEQ2Alg)
+vector<int>* VCVertexBranchingIterative(ArrayGraph* G, int k, std::vector<int>* vc, bool useDegLEQ2Alg, int* numRec)
 {
 	// stack storing the differentials of partial solutions, currently under evaluation and whether a partial solution was already expanded
     std::stack<std::pair<std::vector<int>, bool>> S = std::stack<std::pair<std::vector<int>, bool>>();
@@ -122,9 +122,9 @@ vector<int>* VCVertexBranchingIterative(ArrayGraph* G, int k, std::vector<int>* 
 	std::pair<std::vector<int>, bool> childDifferential = {bv, false};
 	S.push(childDifferential);
 
-	int it = 0;
 	while (!S.empty())
 	{
+		(*numRec)++;
 		// retrieve the differential of the current partial vertex cover solution to its parent solution (+ expanded tag)
 		current = S.top();
 
@@ -179,14 +179,26 @@ vector<int>* VCVertexBranchingIterative(ArrayGraph* G, int k, std::vector<int>* 
 			bool maxDepthReached = false;
 			while(true)
 			{
-
 				int origin = G->getConnectedVertex();
+				
 				// if vertex cover is found, return it
-				if(origin == -1) {
+				if(origin == -1 && k >= partialVCSize) {
 					vc = G->getInactiveVertices();
 					k = partialVCSize;
 					return vc;
 				}
+
+				if(k <= partialVCSize)
+				{
+					G->setActive(&deleted);
+					partialVCSize -= deleted.size();
+					G->setActive(&(current.first));
+					partialVCSize -= current.first.size();
+					S.pop();
+					maxDepthReached = true;
+					break;
+				}
+
 				auto neighbours = G->getNeighbours(origin);
 				int current1 = -1;
 				int current2 = -1;
@@ -207,18 +219,7 @@ vector<int>* VCVertexBranchingIterative(ArrayGraph* G, int k, std::vector<int>* 
 
 				while(current1 != -1 || current2 != -1)
 				{
-					// check if maximum search depth k is reached
-					if((current1 != -1 && current2 != -1 && k - partialVCSize - std::min(A.size(), CoA.size()) < 2) || k - partialVCSize - std::min(A.size(), CoA.size()) < 1)
-					{
-						G->setActive(&deleted);
-						partialVCSize -= deleted.size();
-						G->setActive(&(current.first));
-						partialVCSize -= current.first.size();
-						S.pop();
-						maxDepthReached = true;
-						break;
-					}
-
+					(*numRec)++;
 					if(current1 == current2)
 					{
 						if(addToA)
@@ -316,9 +317,9 @@ vector<int>* VCVertexBranchingIterative(ArrayGraph* G, int k, std::vector<int>* 
 			if (k - partialVCSize >= 1)
 			{
 				// TODO: is there no way to create this inline?
-				/* std::vector<int> bv = std::vector<int>();
-				bv.push_back(branchVertex); */
-				std::pair<std::vector<int>, bool> childDifferentialV ({{branchVertex}, false});
+				std::vector<int> bv = std::vector<int>();
+				bv.push_back(branchVertex);
+				std::pair<std::vector<int>, bool> childDifferentialV({bv, false});
 				S.push(childDifferentialV);
 			}
 
@@ -326,7 +327,6 @@ vector<int>* VCVertexBranchingIterative(ArrayGraph* G, int k, std::vector<int>* 
 	}
 	return vc;
 }
-
 
 string tileStr(string toTile, int n) {
 	string tiling = "";
@@ -340,7 +340,7 @@ string tileStr(string toTile, int n) {
  * Iterative Branching with lots of Debug prints
  * Don't try to understand the code from this method
 */
-vector<int>* VCVertexBranchingIterativeDebug(ArrayGraph* G, int k, std::vector<int>* vc, bool useDegLEQ2Alg, VCDebugMode debug)
+vector<int>* VCVertexBranchingIterativeDebug(ArrayGraph* G, int k, std::vector<int>* vc, bool useDegLEQ2Alg, int* numRec, VCDebugMode debug)
 {
 	// stack storing the differentials of partial solutions, currently under evaluation and whether a partial solution was already expanded
     std::stack<std::pair<std::vector<int>, bool>> S = std::stack<std::pair<std::vector<int>, bool>>();
@@ -359,10 +359,9 @@ vector<int>* VCVertexBranchingIterativeDebug(ArrayGraph* G, int k, std::vector<i
 		std::cout << dye("started", 'g') << " BnB with stack size: " << S.size() << " and k=" << k << "\n";
 	}
 
-	int it = 0;
 	while (!S.empty())
 	{
-		if(debug == IterationsTaken) it++;
+		(*numRec)++;
 		// retrieve the differential of the current partial vertex cover solution to its parent solution (+ expanded tag)
 		current = S.top();
 
@@ -468,7 +467,7 @@ vector<int>* VCVertexBranchingIterativeDebug(ArrayGraph* G, int k, std::vector<i
 				std::cout << "}\n";
 			}
 			
-			if(debug == IterationsTaken) std::cout << "(k=" << k << ") solved in " << it << " iterations.\n";
+			if(debug == IterationsTaken) std::cout << "(k=" << k << ") solved in " << (*numRec) << " iterations.\n";
 			// return vertex cover
 			return vc;
 		}
@@ -527,7 +526,6 @@ vector<int>* VCVertexBranchingIterativeDebug(ArrayGraph* G, int k, std::vector<i
 				if(debug == ExecutionTranscript)
 				{
 					std::cout << tileStr("-", partialVCSize) << "> " << dye("selected", 'b') << " propagation origin: " << origin << "\n";
-					it++;
 				}
 				// if vertex cover is found, return it
 				if(origin == -1 && k >= partialVCSize) {
@@ -606,7 +604,7 @@ vector<int>* VCVertexBranchingIterativeDebug(ArrayGraph* G, int k, std::vector<i
 
 				while(current1 != -1 || current2 != -1)
 				{
-
+					(*numRec)++;
 					if(current1 == current2)
 					{
 						if(addToA)
@@ -750,11 +748,11 @@ vector<int>* VCVertexBranchingIterativeDebug(ArrayGraph* G, int k, std::vector<i
 		}
 	}
 
-	if(debug == IterationsTaken && vc == nullptr) { std::cout << "(k=" << k << ") determined to have no solution in " << it << " iterations.\n"; }
+	if(debug == IterationsTaken && vc == nullptr) { std::cout << "(k=" << k << ") determined to have no solution in " << (*numRec) << " iterations.\n"; }
 	return vc;
 }
 
-vector<int>* vertexBranchingSolverIterative(ArrayGraph* G, bool useDegLEQ2Alg, VCDebugMode debug)
+vector<int>* vertexBranchingSolverIterative(ArrayGraph* G, bool useDegLEQ2Alg, int* numRec,  VCDebugMode debug)
 {
 	int k = G->getLowerBoundVC();
 	vector<int>* vc = nullptr;
@@ -764,11 +762,11 @@ vector<int>* vertexBranchingSolverIterative(ArrayGraph* G, bool useDegLEQ2Alg, V
 	{
         if(debug != NoDebug)
         {
-            vc = VCVertexBranchingIterative(G, k, vc, useDegLEQ2Alg);
+            vc = VCVertexBranchingIterative(G, k, vc, useDegLEQ2Alg, numRec);
         }
         else
         {
-            vc = VCVertexBranchingIterativeDebug(G, k, vc, useDegLEQ2Alg, debug);
+            vc = VCVertexBranchingIterativeDebug(G, k, vc, useDegLEQ2Alg, numRec, debug);
         }
 		
 		//if(vc == nullptr) { std::cout << "Did not find solution for k=" << k << "\n\n"; }
@@ -971,10 +969,14 @@ void chooseImplementationAndOutput(int version = 0, bool printGraph = false, boo
             lowerBounds = G->getAllLowerBounds();
         }
 
-		vc = vertexBranchingSolverIterative(G, true, /* ExecutionTranscript */NoDebug);
+		int numRecursiveSteps = 0;
+		vc = vertexBranchingSolverIterative(G, true, &numRecursiveSteps,/* ExecutionTranscript */NoDebug);
 		
 		if(printVC)
+		{
 			writeSolutionToConsole(G->getStringsFromVertexIndices(vc));
+			cout << "#recursive steps: " << numRecursiveSteps << endl;
+		}
 		if (printMappings)
 			G->printMappings(vc);
 		if (showVCSize)
