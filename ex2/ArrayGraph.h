@@ -72,6 +72,7 @@ private:
 
     bool vertexCanBeAddedToClique(int vertex, std::vector<int>* clique);
     int getCliqueBound();
+    int getLPBound();
     int partition(std::vector<int>* toSort, int low, int high);
     void quickSort(std::vector<int>* toSort, int low, int high);
     bool contains(std::vector<int>* vertexIndices, int vertexIndex);

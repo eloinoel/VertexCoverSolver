@@ -703,6 +703,11 @@ int ArrayGraph::getCliqueBound()
     return cliqueBound;
 }
 
+int ArrayGraph::getLPBound()
+{
+    
+};
+
 /* int ArrayGraph::getNaiveCycleBound()
 {
     int best = 0;
