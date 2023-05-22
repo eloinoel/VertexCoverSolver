@@ -609,10 +609,10 @@ void ArrayGraph::setActive(std::vector<int>* vertexIndices)
 
 int ArrayGraph::getLowerBoundVC() {
 
-    //return getCliqueBound();
+    return getCliqueBound();
     //return getCycleBound();
-    return getLPBound();
-    //return getLPCycleBound(); //TODO: doesn't work, cycle bound should be higher than LP bound but isn't the case
+    //return getLPBound();
+    //return getLPCycleBound(); //TODO: doesn't work, cycle bound should be higher than LP bound but isn't the case, no time to debug this
 }
 
 std::vector<int> ArrayGraph::getAllLowerBounds() {
