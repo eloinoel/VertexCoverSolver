@@ -977,7 +977,7 @@ void chooseImplementationAndOutput(int version = 0, bool printGraph = false, boo
 		{
 			writeSolutionToConsole(G->getStringsFromVertexIndices(vc));
 			//vector<int> bounds = G->getAllLowerBounds();
-			//cout << "#recursive steps: " << G->getLPCycleBound() - G->getCycleBound()/* G->getLowerBoundVC() *//* bounds[3] - bounds[1] + 1 */ << endl;
+			//cout << "#recursive steps: " << 100 + G->getCliqueBound() - G->getLPCycleBound()/* G->getLowerBoundVC() *//* bounds[3] - bounds[1] + 1 */ << endl;
 			cout << "#recursive steps: " << numRecursiveSteps << endl;
 		}
 		if (printMappings)
