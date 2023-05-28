@@ -202,6 +202,11 @@ int BipartiteArrayGraph::hopcroftKarpCycleBound()
         }
     }
 
+    /* std::cout << "pairU: {";
+    for(auto elem : pairU)
+        std::cout << elem << ", ";
+    std::cout << "}" << std::endl; */
+
     int LPCyclebound = 0;
     std::vector<int> leftMatches = pairU;
     std::vector<int> currentCycle = std::vector<int>();
@@ -226,8 +231,12 @@ int BipartiteArrayGraph::hopcroftKarpCycleBound()
         // determine cycle
         while(current != -1 && current != 0/* leftMatches[current] != -1 && leftMatches[current] != 0 */)
         {
-            if(currentCycle.size() > 2 && currentCycle.front() == current)
+            if(currentCycle.size() >= 2 && contains(getAdjacencyList()->at(currentCycle.back()), currentCycle.front()+pairU.size()-1)/* currentCycle.front() == current */) // TODO:
             {
+               /*  std::cout << "found cycle: {";
+                for(auto elem : currentCycle)
+                    std::cout << elem << ", ";
+                std::cout << "}" << std::endl; */
                 foundCycle = true;
                 break;
             }
@@ -240,7 +249,7 @@ int BipartiteArrayGraph::hopcroftKarpCycleBound()
         if(foundCycle)
         {
             // attempt to subdivide the cycle
-            if(currentCycle.size() >= 6)
+            /* if(currentCycle.size() >= 6)
             {
                 for(int c=1; (int) currentCycle.size() >= c + 4; c += 2) {
                     for(int i=0; i<(int) currentCycle.size(); i++)
@@ -256,16 +265,20 @@ int BipartiteArrayGraph::hopcroftKarpCycleBound()
                         }
                     }
                 }
-            }
+            } */
             //std::cout << "found cycle of size: " << currentCycle.size() << "\n";
             // calculate 
             LPCyclebound += std::ceil((double) currentCycle.size() / (double) 2);
         }
-        else if(currentCycle.size() == 2)
+        /* else
+        {
+            LPCyclebound += std::floor((double) currentCycle.size() / (double) 2);
+        } */
+        /* else if(currentCycle.size() == 2)
         {
             LPCyclebound++;
-        }
+        } */
         currentCycle.clear();
     }
-    return LPCyclebound/2; // TODO: it seems like we are counting each cycle twice, so we need to divide by 2
+    return LPCyclebound;
 }

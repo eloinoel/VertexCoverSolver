@@ -66,7 +66,7 @@ build/bin/VertexCoverSolver < ../vc-data-students/1-random/000002_000000000012.d
 cd ..; cmake --build build; cd logs; ../build/bin/VertexCoverSolver < ./../../vc-data-students/1-random/000002_000000000012.dimacs  
 
 # rebuild and execute benchmark in logs folder
-cd ..; cmake --build build; cd logs; ./../../vc-data-students/benchmark-fast.sh "./../build/bin/VertexCoverSolver" 30 3
+cd ..; cmake --build build; cd logs; ./../../vc-data-students/benchmark-fast.sh "./../build/bin/VertexCoverSolver" 300 3
 
 
 ## SSH remote testing machines
