@@ -26,17 +26,6 @@ private:
     int numberOfVertices;
     int numberOfEdges;
 
-    //================================================================
-    // For Cycle Bound
-    int cycleNumber = 0;
-    int minMax = 1;
-
-    std::vector<std::vector<int>>* cycles;
-
-    std::vector<int>* color;
-    std::vector<int>* par;
-    //================================================================
-
 public:
 
 //functions
@@ -52,22 +41,7 @@ protected:
     /* initially sets up activity flags & node degree data structure */
     void initGraphState(int vertexCount, int edgeCount);
 
-    //================================================================
-    // For Cycle Bound
-
-    void dfs_cycle(int u, int p);
-
-    void printCycles();
-
-    std::list<int> getDisjointCycles();
-
-    std::list<int> getDisjointSet(std::list<int> validCycles);
-
-    std::list<int> getAllDisjointSet(std::list<int> validCycles);
-
     void printVector(std::list<int>* vec, std::string name);
-
-    //================================================================
 
     bool vertexCanBeAddedToClique(int vertex, std::vector<int>* clique);
     int partition(std::vector<int>* toSort, int low, int high);
@@ -75,9 +49,6 @@ protected:
     bool contains(std::vector<int>* vertexIndices, int vertexIndex);
 
 public:
-    /* split each node in this graph in two and edges between the split nodes */
-    ArrayGraph* createVertexSplitBipartiteGraph();
-
     bool isVertexCoverFound();
 
     // TODO: make more efficent, employ less copies
@@ -99,7 +70,6 @@ public:
 
     /* calculate lower bound for VC */
     int getCliqueBound();
-    int getCycleBound();
     int getLPBound();
     int getLPCycleBound();
     int getLowerBoundVC();
@@ -139,25 +109,10 @@ public:
 
     /* get degree of the vertex with passed vertex index: */
     inline int getVertexDegree(int vertexIndex) { return graphState->at(vertexIndex).second; };
-    /* int getVertexDegree(int vertexIndex) { // TODO: this is a preliminary implementation until degrees are updated on the fly
-        int degree = 0;
-        for (int i = 0; i < (int) adjacencyList[vertexIndex]->size(); i++)
-        {
-            if(graphState->at(adjacencyList[vertexIndex]->at(i)).first)
-            {
-                degree++;
-            }
-        }
-        return degree;
-    }; */
     
     /* get indices of a vertices neighbours: */
     std::vector<int>* getNeighbours(int vertexIndex);
     std::vector<int>* getNeighbours(std::vector<int>* origins);
-
-    // Find the first component with size > 1 that contains any the origin points
-    std::vector<int> getFirstComponent(std::vector<int>* origins);
-    std::vector<std::vector<int>>* getComponents(std::vector<int>* origins);
 
     std::pair<int, int>* getFirstValidEdge();
 
