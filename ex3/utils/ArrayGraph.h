@@ -41,18 +41,6 @@ private:
     int numberOfVertices;
     int numberOfEdges;
 
-    //================================================================
-    // For the reduction rules
-    /* contains meta information about the reduced vertices:
-    * 0: numRec to backtrack
-    * [1][0]: index of the node
-    * [1][1]:
-    */
-    std::vector<std::pair<int, std::pair<int, int>>>* vcReduced;
-    std::vector<int>* deleted;
-
-    //================================================================
-
 public:
 
 //functions
@@ -68,7 +56,7 @@ protected:
     /* initially sets up activity flags & node degree data structure */
     void initGraphState(int vertexCount, int edgeCount);
 
-    //================================================================
+    void printVector(std::list<int>* vec, std::string name);
 
     bool vertexCanBeAddedToClique(int vertex, std::vector<int>* clique);
     int partition(std::vector<int>* toSort, int low, int high);
@@ -90,9 +78,6 @@ protected:
     //================================================================
 
 public:
-    /* split each node in this graph in two and edges between the split nodes */
-    ArrayGraph* createVertexSplitBipartiteGraph();
-
     bool isVertexCoverFound();
 
     // TODO: make more efficent, employ less copies
@@ -114,7 +99,6 @@ public:
 
     /* calculate lower bound for VC */
     int getCliqueBound();
-//    int getCycleBound();
     int getLPBound();
     int getLPCycleBound();
     int getLowerBoundVC();
@@ -154,25 +138,10 @@ public:
 
     /* get degree of the vertex with passed vertex index: */
     inline int getVertexDegree(int vertexIndex) { return graphState->at(vertexIndex).second; };
-    /* int getVertexDegree(int vertexIndex) { // TODO: this is a preliminary implementation until degrees are updated on the fly
-        int degree = 0;
-        for (int i = 0; i < (int) adjacencyList[vertexIndex]->size(); i++)
-        {
-            if(graphState->at(adjacencyList[vertexIndex]->at(i)).first)
-            {
-                degree++;
-            }
-        }
-        return degree;
-    }; */
     
     /* get indices of a vertices neighbours: */
     std::vector<int>* getNeighbours(int vertexIndex);
     std::vector<int>* getNeighbours(std::vector<int>* origins);
-
-    // Find the first component with size > 1 that contains any the origin points
-    std::vector<int> getFirstComponent(std::vector<int>* origins);
-    std::vector<std::vector<int>>* getComponents(std::vector<int>* origins);
 
     std::pair<int, int>* getFirstValidEdge();
 
@@ -181,13 +150,8 @@ public:
     void printMappings(std::vector<int>* vertices);
     void printMappings();
 
-
     // return bool indicating if no vertex cover possible
     bool applyReductionRules(int* k, std::vector<ReductionVertices>* reductionArray);
-
-
-//    bool applyReductionRules(int* k, std::vector<std::pair<std::vector<int>, std::vector<int>>>** merged, std::vector<std::pair<std::vector<int>, int>>* deletedReduced)
-//    bool applyReductionRules(int* k, std::vector<std::pair<std::vector<int>, int>>* deletedReduced)
 
     // Adds the deleted vertices from the reduction rules to the vertex cover
     void addReducedVertices(std::vector<int>* S, std::vector<ReductionVertices>* reductionArray);
@@ -195,8 +159,8 @@ public:
     // Restores the initial kernel problem
     void addBackReducedVertices(int *k, std::vector<ReductionVertices>* reductionArray);
 
-
-    // TODO: Functions
+    //TODO: ------------Functions that need implementation-------------
+    
     /* Get list of vertices of degree d*/
     std::vector<int>* getVerticesDegree(int d);
 

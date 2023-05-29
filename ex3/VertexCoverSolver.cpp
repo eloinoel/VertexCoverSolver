@@ -57,8 +57,6 @@ vector<int>* vcVertexBranchingRecursive(ArrayGraph* G, int k, int* numRec)
 	vector<int>* S = vcVertexBranchingRecursive(G, k - 1, numRec);
 	if (S != nullptr)
 	{
-		//revert changes to graph
-		//G->setActive(vertex); //TODO: not necessary????
 		//return results
 
         // Add Reduced Vertices to Vertex Cover
@@ -85,8 +83,6 @@ vector<int>* vcVertexBranchingRecursive(ArrayGraph* G, int k, int* numRec)
 	S = vcVertexBranchingRecursive(G, k - neighbours->size(), numRec);
 	if (S != nullptr)
 	{
-		//revert changes to graph
-		//G->setActive(neighbours); //TODO: not necessary????
 		//return results
         for (int i = 0; i < (int) neighbours->size(); i++)
         {
