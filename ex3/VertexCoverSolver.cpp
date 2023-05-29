@@ -8,12 +8,12 @@
 
 using namespace std;
 
-enum VCDebugMode {
-	ExecutionTranscript,
-	StackAccessTranscript,
-	IterationsTaken,
-	NoDebug
-};
+//enum VCDebugMode {
+//	ExecutionTranscript,
+//	StackAccessTranscript,
+//	IterationsTaken,
+//	NoDebug
+//};
 
 /*----------------------------------------------------------*/
 /*---------------   Exercise 2 Solver Code   ---------------*/
@@ -42,6 +42,16 @@ vector<int>* vcVertexBranchingRecursive(ArrayGraph* G, int k, int* numRec)
 		return new vector<int>();
 	}
 
+    //================================================================
+    // Reduction Rules
+    vector<ReductionVertices>* reductionVertices = new vector<ReductionVertices>;
+
+    if(!G->applyBounds(k, reductionVertices)) {
+        delete reductionVertices;
+        return nullptr;
+    }
+    //================================================================
+
 	//delete first vertex from graph and explore solution
     G->setInactive(vertex);
 	vector<int>* S = vcVertexBranchingRecursive(G, k - 1, numRec);
@@ -50,6 +60,11 @@ vector<int>* vcVertexBranchingRecursive(ArrayGraph* G, int k, int* numRec)
 		//revert changes to graph
 		//G->setActive(vertex); //TODO: not necessary????
 		//return results
+
+        // Add Reduced Vertices to Vertex Cover
+        G->addReducedVertices(S, merged, deletedReduced);
+        delete reductionVertices;
+
 		S->push_back(vertex);
 		return S;
 	}
@@ -77,20 +92,40 @@ vector<int>* vcVertexBranchingRecursive(ArrayGraph* G, int k, int* numRec)
         {
             S->push_back(neighbours->at(i));
         }
-		return S;
+
+        // Add Reduced Vertices to Vertex Cover
+        G->addReducedVertices(S, merged, deletedReduced);
+        delete reductionVertices;
+
+        return S;
 	}
 	else
 	{
 		//revert changes to graph
 		G->setActive(neighbours);
 	}
+
+    //================================================================
+    // Reverse Data Reduction
+    G->addBackReducedVertices(k, reductionVertices);
+    delete reductionVertices;
+    //================================================================
+
 	return nullptr;
 }
 
 vector<int>* vertexBranchingSolverRecursive(ArrayGraph* G, int* numRec)
 {
-	int k = G->getLowerBoundVC();
+//	int k = G->getLowerBoundVC();
+	int k = 1;
+//	int k = 2;
+//	int k = 3;
+//	int k = 4;
+
 	vector<int> *vc;
+
+    // Apply Reduction Rules for the first time
+    if(G->applyReductionRules(&k, numRec))
 
 	while (true)
 	{

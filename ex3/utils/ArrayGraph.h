@@ -7,6 +7,21 @@
 #include <algorithm>
 #include <list>
 
+enum RULES{
+    DEGREE_ZERO,        // = 0
+    DEGREE_ONE,         // = 1
+    DEGREE_TWO,         // = 2
+    HIGH_DEGREE,        // = 3
+    DOMINATION          // = 4
+};
+
+class ReductionVertices{
+    int rule;
+    int kDecrement;
+    std::vector<int> deletedVertices; // First idx is always to add in VC if(rule!=0)
+    std::vector<int>* savedAdjacency;
+};
+
 class ArrayGraph
 {
 //variables
@@ -27,14 +42,15 @@ private:
     int numberOfEdges;
 
     //================================================================
-    // For Cycle Bound
-    int cycleNumber = 0;
-    int minMax = 1;
+    // For the reduction rules
+    /* contains meta information about the reduced vertices:
+    * 0: numRec to backtrack
+    * [1][0]: index of the node
+    * [1][1]:
+    */
+    std::vector<std::pair<int, std::pair<int, int>>>* vcReduced;
+    std::vector<int>* deleted;
 
-    std::vector<std::vector<int>>* cycles;
-
-    std::vector<int>* color;
-    std::vector<int>* par;
     //================================================================
 
 public:
@@ -53,26 +69,25 @@ protected:
     void initGraphState(int vertexCount, int edgeCount);
 
     //================================================================
-    // For Cycle Bound
-
-    void dfs_cycle(int u, int p);
-
-    void printCycles();
-
-    std::list<int> getDisjointCycles();
-
-    std::list<int> getDisjointSet(std::list<int> validCycles);
-
-    std::list<int> getAllDisjointSet(std::list<int> validCycles);
-
-    void printVector(std::list<int>* vec, std::string name);
-
-    //================================================================
 
     bool vertexCanBeAddedToClique(int vertex, std::vector<int>* clique);
     int partition(std::vector<int>* toSort, int low, int high);
     void quickSort(std::vector<int>* toSort, int low, int high);
     bool contains(std::vector<int>* vertexIndices, int vertexIndex);
+
+    //================================================================
+    // TODO: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAH
+    // Reduction Rules
+    bool rule_HighDegree(int *k, std::vector<ReductionVertices>* reductionVertices);
+    bool rule_DegreeZero(std::vector<ReductionVertices>* reductionArray);
+
+    // TODO: Check that numberOfVertices & numberOfEdges are up to date
+    void rule_Buss(int* k);
+
+    void rule_DegreeOne(int* k, std::vector<ReductionVertices>* reductionArray);
+    void rule_DegreeTwo(int* k, std::vector<ReductionVertices>* reductionArray);
+//    void rule_Domination(int* k);
+    //================================================================
 
 public:
     /* split each node in this graph in two and edges between the split nodes */
@@ -99,7 +114,7 @@ public:
 
     /* calculate lower bound for VC */
     int getCliqueBound();
-    int getCycleBound();
+//    int getCycleBound();
     int getLPBound();
     int getLPCycleBound();
     int getLowerBoundVC();
@@ -165,6 +180,41 @@ public:
 
     void printMappings(std::vector<int>* vertices);
     void printMappings();
+
+
+    // return bool indicating if no vertex cover possible
+    bool applyReductionRules(int* k, std::vector<ReductionVertices>* reductionArray);
+
+
+//    bool applyReductionRules(int* k, std::vector<std::pair<std::vector<int>, std::vector<int>>>** merged, std::vector<std::pair<std::vector<int>, int>>* deletedReduced)
+//    bool applyReductionRules(int* k, std::vector<std::pair<std::vector<int>, int>>* deletedReduced)
+
+    // Adds the deleted vertices from the reduction rules to the vertex cover
+    void addReducedVertices(std::vector<int>* S, std::vector<ReductionVertices>* reductionArray);
+
+    // Restores the initial kernel problem
+    void addBackReducedVertices(int *k, std::vector<ReductionVertices>* reductionArray);
+
+
+    // TODO: Functions
+    /* Get list of vertices of degree d*/
+    std::vector<int>* getVerticesDegree(int d);
+
+    /* Add 2 Adjacency Lists*/
+    std::vector<int>* putAdjacencyTogether(std::vector<int>* neigh1, std::vector<int>* neigh2);
+
+    /* Changes Adjacency of vertex
+     * update own & neighbours degree here!
+     * => add a degree to new neighbours they will be decreased after again by setInactive in Degree Two Rule
+     * */
+    void setVertexAdjacency(int vertexIndex, std::vector<int>* savedAdjacency);
+
+    /* Restore saved Adjacency of vertex
+     * update neighbours degree will be done in setActive()
+     * */
+    void setVertexAdjacencyBack(int vertexIndex, std::vector<int>* savedAdjacency);
+
+
 
 };
 

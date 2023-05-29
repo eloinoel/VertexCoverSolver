@@ -229,6 +229,11 @@ ArrayGraph* ArrayGraph::readStandardInput()
     }
 
     G->initGraphState(G->originalVertexNames.size(), edges.size());
+
+    // Initialize reduction rules
+    vcReduced = new std::vector<int>;
+    deleted = new std::vector<int>;
+
     return G;
 }
 
@@ -718,58 +723,6 @@ int ArrayGraph::getLPBound()
     return maximumMatchingSize/2;
 };
 
-int ArrayGraph::getCycleBound()
-{
-    int graphSize = graphState->size();
-    if (graphSize == 0)
-        return 0;
-    cycleNumber = 0;
-
-    // TODO: Find a better spot to allocate/clear/delete these vectors
-    // for now at every bound check => inefficient!
-    cycles = new std::vector<std::vector<int>>;
-
-    color = new std::vector<int>(numberOfVertices, -1);
-    par = new std::vector<int>(numberOfVertices, -1);
-
-    // TODO: Check with which index to start, maybe there's a more efficient way
-    // => take the maxDegree!
-    int maxDegreeVertex = getMaxDegreeVertex();
-    dfs_cycle(maxDegreeVertex, -1);
-
-    std::list<int> disjointCyclesMax;
-
-    disjointCyclesMax = getDisjointCycles();
-
-    int lowerBound = 0;
-    for (int i = 0; i < cycleNumber; i++) {
-        int cycleSize = (*cycles)[i].size();
-        if(cycleSize > 2) {
-            int cycleVC = (int) std::ceil(cycleSize / 2.f);
-            lowerBound += cycleVC;
-        }
-    }
-
-    int lowerBoundDisMax = 0;
-    int lowerBoundDis = lowerBoundDisMax;
-    for (auto i: disjointCyclesMax) {
-        int cycleSize = (*cycles)[i].size();
-        if(cycleSize > 2) {
-            int cycleVC = (int) std::ceil(cycleSize / 2.f);
-            lowerBoundDisMax += cycleVC;
-        }
-    }
-
-    lowerBoundDis = lowerBoundDisMax;
-
-//    std::cout << "#recursive steps: " << lowerBoundDis << std::endl;
-
-    delete cycles;
-    delete color;
-    delete par;
-
-    return lowerBoundDis;
-}
 
 int ArrayGraph::getLPCycleBound()
 {
@@ -781,162 +734,6 @@ int ArrayGraph::getLPCycleBound()
     return LPCycleBound;
 }
 
-
-// Function to mark the vertex with
-// different colors for different cycles
-void ArrayGraph::dfs_cycle(int u, int p)
-{
-
-    // already (completely) visited vertex.
-    if ((*color)[u] == 2) {
-        return;
-    }
-
-    // seen vertex, but was not completely visited -> cycle detected.
-    // backtrack based on parents to find the complete cycle.
-    if ((*color)[u] == 1) {
-        int cur = p;
-//
-//        if ((*color)[cur] == 2)
-//            return;
-        std::vector<int> v;
-        cycleNumber++;
-
-
-        v.push_back(cur);
-
-        //mark as visited to get disjointed cycles!
-        (*color)[cur] = 2;
-        // backtrack the vertex which are
-        // in the current cycle thats found
-        while (cur != u) {
-            cur = (*par)[cur];
-
-//            if ((*color)[cur] == 2){
-//                cycleNumber--;
-//                return;}
-
-            //mark as visited to get disjointed cycles!
-            (*color)[cur] = 2;
-
-            v.push_back(cur);
-        }
-//        (*color)[cur] = 2;
-        (*cycles).push_back(v);
-        return;
-    }
-    (*par)[u] = p;
-
-    // partially visited.
-    (*color)[u] = 1;
-
-    // simple dfs on graph
-    std::vector<int> neighbours = *getNeighbours(u);
-    for (int v : neighbours) {
-
-        // if it has not been visited previously
-        if (v == par->at(u)) {
-            continue;
-        }
-        dfs_cycle(v, u);
-    }
-
-    // completely visited.
-    (*color)[u] = 2;
-}
-
-std::list<int> ArrayGraph::getDisjointCycles()
-{
-    using namespace  std;
-
-    list<int> disjointCycles;
-    list<int> disjointAllCycles;
-
-    //initialize indexList
-    for (int i = 0; i < cycleNumber; ++i) {
-        disjointCycles.push_back(i);
-        disjointAllCycles.push_back(i);
-        int cycleSize = (*cycles)[i].size();
-    }
-
-    disjointCycles = getDisjointSet(disjointCycles);
-
-//    printVector(&disjointCycles, "Disjoint Cycles");
-
-    return disjointCycles;
-
-}
-
-std::list<int> ArrayGraph::getDisjointSet(std::list<int> validCycles)
-{
-
-    std::unordered_map<int, int> countVertices;
-    std::unordered_map<int, std::list<int>> vertexCycle;
-
-//    printVector(&validCycles, "Valid Cycles");
-
-    int max = -1;
-    int maxIdx = -1;
-
-    for (int i: validCycles) {
-        for (int x : (*cycles)[i]){
-            countVertices[x]++;
-            vertexCycle[x].push_back(i);
-
-            if(countVertices[x] > max){
-                max = countVertices[x];
-                maxIdx = x;
-            }
-        }
-    }
-
-    if(max == 1 || max == -1)
-        return validCycles;
-
-    std::list<int> fightingCycles = vertexCycle[maxIdx];
-
-//    printVector(&fightingCycles, "Fighting Cycles");
-
-    //remove all but first from validCycles
-    int fightingSize = fightingCycles.size();
-    std::list<int>::iterator it = fightingCycles.begin();
-
-    int maxSize = -1;
-
-    for (int i = 0; i < fightingSize; ++i) {
-        int idx = *it;
-        int cycleSize = (*cycles)[idx].size();
-        if( cycleSize> maxSize )
-            maxSize = idx;
-        advance(it, 1);
-    }
-
-//    std::cout << "Cycle with biggest size: " << maxSize << std::endl;
-
-    it = fightingCycles.begin();
-    for (int i = 0; i < fightingSize; ++i) {
-        if(*it != maxSize)
-            validCycles.remove(*it);
-        advance(it, 1);
-    }
-
-    validCycles = getDisjointSet(validCycles);
-    return validCycles;
-}
-
-// Function to print the cycles
-void ArrayGraph::printCycles()
-{
-
-    // print all the vertex with same cycle
-    for (int i = 0; i < cycleNumber; i++) {
-        // Print the i-th cycle
-        std::cout << "Cycle Number " << i << ": ";
-        for (int x : (*cycles)[i])
-            std::cout << x << " ";
-        std::cout << std::endl;
-    }
-}
 
 /*----------------------------------------------------------*/
 /*----------------------   Utility   -----------------------*/
@@ -1007,6 +804,288 @@ bool ArrayGraph::contains(std::vector<int>* vertexIndices, int vertexIndex)
 }
 
 
+/*----------------------------------------------------------*/
+/*------------------   Reduction Rules   -------------------*/
+/*----------------------------------------------------------*/
+
+bool ArrayGraph::applyReductionRules(int* k, std::vector<ReductionVertices>* reductionArray)
+{
+    // if both rules are not applicable
+    if(!rule_HighDegree(k, reductionArray)) && !rule_DegreeZero(reductionArray))
+        //if Buss rule == true => no vertex cover
+        if(rule_Buss(k))
+            return false;
+
+    // TODO: Apply rule 0, 1 & 2 at every deactivation?
+//    rule_DegreeOne();
+//    rule_DegreeTwo();
+
+    return true;
+}
+
+bool ArrayGraph::rule_HighDegree(int *k, std::vector<ReductionVertices>* reductionArray)
+{
+    int cnt = 0;
+
+    int maxDegIdx = getMaxDegreeVertex();
+    int maxDeg = getVertexDegree(maxDegIdx);
+    while(maxDeg > k)
+    {
+        std::vector<int> tooHighToHandle = *getVerticesDegree(maxDeg);
+        if(!tooHighToHandle.empty())
+        {
+            for (int i = 0; i < tooHighToHandle.size(); ++i) {
+                cnt++;
+                int vertexID = tooHighToHandle.at(i);
+
+                // save deleted vertex
+                ReductionVertices delVer;
+                delVer.rule = 3;
+                delVer.deletedVertices.push_back(vertexID);
+                delVer.kDecrement = 1;
+                delVer.savedAdjacency->push_back(getNeighbours(vertexID));
+                reductionArray->push_back(delVer);
+
+                setInactive(vertexID);
+                (*k)--;
+            }
+        }
+        maxDeg--;
+    }
 
 
+    if(cnt == 0)
+        return false;
+    return true;
+}
 
+
+bool ArrayGraph::rule_DegreeZero(std::vector<ReductionVertices>* reductionArray)
+{
+    std::vector<int> zeroDegree = *getVerticesDegree(maxDeg);
+
+    if(zeroDegree.empty())
+        return false;
+
+    for (int i = 0; i < zeroDegree.size(); ++i) {
+        int vertexID = zeroDegree.at(i);
+
+        // save deleted vertex
+        ReductionVertices delVer;
+        delVer.rule = 0;
+        delVer.kDecrement = 0;
+        delVer.deletedVertices.push_back(vertexID);
+        reductionArray->push_back(delVer);
+
+        setInactive(vertexID);
+    }
+
+    return true;
+}
+
+
+bool ArrayGraph::rule_Buss(int* k)
+{
+    int k_square = std::pow(k, 2);
+
+    // If |V| > k^2 + k || |E|>k^2 => no vertex cover
+    if((numberOfVertices > k_square + k) || (numberOfEdges > k_square))
+        return true;
+    return false;
+}
+
+
+void ArrayGraph::rule_DegreeOne(int* k, std::vector<ReductionVertices>* reductionArray)
+{
+    std::vector<int> degreeOne = *getVerticesDegree(maxDeg);
+
+    if(degreeOne.empty())
+        return;
+
+    for (int i = 0; i < degreeOne.size(); ++i) {
+        int vertexID = degreeOne.at(i);
+
+        // THIS SHOULD HOLD THROUGH
+        int neighbour = getNeighbours(vertexID)->at(0);
+
+        // save deleted vertex
+        ReductionVertices delVer;
+        delVer.rule = 1;
+        delVer.kDecrement = 1;
+        delVer.deletedVertices.push_back(neighbour);
+        delVer.deletedVertices.push_back(vertexID);
+        delVer.savedAdjacency->push_back(getNeighbours(neighbour));
+        reductionArray->push_back(delVer);
+
+        setInactive(neighbour);
+        setInactive(vertexID);
+        (*k)--;
+    }
+
+}
+
+
+//void ArrayGraph::mergeVertices(std::vector<int> listOfVerticesToMerge)
+//{
+//    // add a vertex x to G with edges to the union of all the merged neighbors
+//    // remove listOfVerticesToMerge from the graph
+//}
+
+
+void ArrayGraph::rule_DegreeTwo(int* k, std::vector<ReductionVertices>* reductionArray)
+{
+    std::vector<int> degreeTwo = *getVerticesDegree(maxDeg);
+
+    if(degreeTwo.empty())
+        return;
+
+    for (int i = 0; i < degreeTwo.size(); ++i) {
+        int vertexID = degreeTwo.at(i);
+
+        std::vector<int>* neighbours = getNeighbours(vertexID);
+        int neighbourOne = neighbours->at(0);
+        int neighbourTwo = neighbours->at(1);
+
+        // Get shortest Neighbourhood to go through less to check for connection
+        int shortestNeighbourhoodIdx;
+        int otherNeighbourIdx;
+        if(getVertexDegree(neighbourOne) > getVertexDegree(neighbourTwo) )
+        {
+            shortestNeighbourhoodIdx = neighbourTwo;
+            otherNeighbourIdx = neighbourOne;
+        }
+        else
+        {
+            shortestNeighbourhoodIdx = neighbourOne;
+            otherNeighbourIdx = neighbourTwo;
+        }
+
+        std::vector<int>* shortestNeighbourhood = getNeighbours(shortestNeighbourhoodIdx);
+        std::vector<int>* otherNeighbour = getNeighbours(otherNeighbourIdx);
+
+        // save deleted vertex
+        ReductionVertices delVer;
+        delVer.rule = 2;
+        delVer.deletedVertices.push_back(otherNeighbourIdx);            // at (0)
+        delVer.deletedVertices.push_back(shortestNeighbourhoodIdx);     // at (1)
+        delVer.deletedVertices.push_back(vertexID);                     // at (2)
+
+        delVer.savedAdjacency->push_back(getNeighbours(vertexID));
+
+        // CASE The neighbours know each other
+        if(contains(shortestNeighbourhood,otherNeighbourIdx))
+        {
+            delVer.kDecrement = 2;
+//            setInactive(otherNeighbourIdx);
+//            setInactive(shortestNeighbourhoodIdx);
+            setInactive(vertexID);
+            (*k)-=2;
+        }
+        // CASE Neighbours don't know each other => setInactive or do that in addReducedVertices?
+        else
+        {
+            delVer.kDecrement = 1;
+            setVertexAdjacency(vertexID, putAdjacencyTogether(shortestNeighbourhood, otherNeighbour));
+//            setInactive(otherNeighbourIdx);
+//            setInactive(shortestNeighbourhoodIdx);
+            (*k)--;
+        }
+        setInactive(otherNeighbourIdx);
+        setInactive(shortestNeighbourhoodIdx);
+
+        reductionArray->push_back(delVer);
+    }
+}
+
+//void ArrayGraph::rule_Domination(int* k)
+//{}
+
+void ArrayGraph::addReducedVertices(std::vector<int>* S, std::vector<ReductionVertices>* reductionArray)
+{
+    if(reductionArray->empty())
+        return;
+
+    for (int i = 0; i < reductionArray->size(); ++i) {
+        ReductionVertices curReduction = reductionArray->at(i);
+        int curAddition = curReduction.deletedVertices.at(0);
+        switch (curReduction.rule) {
+            // Degree Zero Rule
+            case 0:
+                break;
+            // Degree One Rule
+            case 1:
+                S->push_back(curAddition);
+                break;
+            // Degree Two Rule
+            case 2:
+                if (curReduction.kDecrement == 2)
+                {
+                   S->push_back(curReduction.deletedVertices.at(1));
+                }
+                S->push_back(curAddition);
+                break;
+            // High Degree Rule
+            case 3:
+                S->push_back(curAddition);
+                break;
+            // Domination Rule
+            case 4:
+
+                break;
+            default:
+                std::cout<< "There shouldn't be this rule"
+                break;
+        }
+    }
+
+    // TODO: Eventually slow, especially if pointer is getting deleted later
+    reductionArray->clear();
+}
+
+
+void ArrayGraph::addBackReducedVertices(int *k, std::vector<ReductionVertices>* reductionArray)
+{
+    if(reductionArray->empty())
+        return;
+
+    for (int i = 0; i < reductionArray->size(); ++i) {
+        ReductionVertices curReduction = reductionArray->at(i);
+        int curVertex = curReduction.deletedVertices.at(0);
+        switch (curReduction.rule) {
+            // Degree Zero
+            case 0:
+                setActive(curVertex);
+                break;
+                // Degree One
+            case 1:
+                setActive(curVertex);
+                setActive(curReduction.deletedVertices.at(1));
+//                (*k)++;
+                break;
+            case 2:
+                if (curReduction.kDecrement == 2)
+                {
+                    setActive(curReduction.deletedVertices.at(2));
+                }
+                setActive(curReduction.deletedVertices.at(1));
+                setActive(curVertex);
+                break;
+            // High Degree Rule
+            case 3:
+                setVertexAdjacencyBack(curVertex, curReduction.savedAdjacency);
+                setActive(curVertex);
+//                (*k)++;
+                break;
+            case 4:
+
+                break;
+            default:
+                std::cout<< "There shouldn't be this rule"
+                break;
+        }
+        (*k) += curReduction.kDecrement;
+    }
+
+    // TODO: Eventually slow, especially if pointer is getting deleted later
+    reductionArray->clear();
+}
