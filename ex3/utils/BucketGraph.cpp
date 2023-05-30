@@ -235,8 +235,8 @@ void BucketGraph::initActiveList(std::vector<std::pair<std::string, std::string>
 
 void BucketGraph::initBucketQueue()
 {
+    // init bucketQueue
     bucketQueue = list<Bucket>();
-    bool foundDeg;
     int maxDeg = -1;
     for (auto elem : activeList)
     {
@@ -245,21 +245,22 @@ void BucketGraph::initBucketQueue()
             maxDeg = elem.degree;
         }
 
-        foundDeg = false;
         for (auto bucket = bucketQueue.begin(); bucket != bucketQueue.end(); ++bucket)
         {
             if(elem.degree == bucket->degree)
             {
                 bucket->insert({elem.bucketVertex});
-                foundDeg = true;
+                break;
             }
-        }
-        if(!foundDeg)
-        {
-            addBucket(elem.degree, {elem.bucketVertex});
+            else if(elem.degree < bucket->degree)
+            {
+                bucketQueue.insert(bucket, Bucket(elem.degree, {elem.bucketVertex}));
+                break;
+            }
         }
     }
 
+    // init bucketReferences
     int deg = 0;
     bucketReferences = std::vector<Bucket*>(maxDeg+1);
     for (auto bucket = bucketQueue.begin(); bucket != bucketQueue.end(); ++bucket)
@@ -293,6 +294,7 @@ void BucketGraph::removeFromBucketQueue(int degree, std::vector<BucketVertex*> v
     } */
 }
 
+// TODO: extend bucketReferences if necessary
 void BucketGraph::addToBucketQueue(int degree, std::vector<BucketVertex*> vertices)
 {
     if(bucketReferences[degree]->vertices.size() == 0)
