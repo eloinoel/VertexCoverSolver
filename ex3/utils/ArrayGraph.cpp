@@ -731,7 +731,7 @@ bool ArrayGraph::contains(std::vector<int>* vertexIndices, int vertexIndex)
 /*----------------------------------------------------------*/
 /*------------------   Reduction Rules   -------------------*/
 /*----------------------------------------------------------*/
-
+/* 
 bool ArrayGraph::applyReductionRules(int* k, std::vector<ReductionVertices>* reductionArray)
 {
     // if both rules are not applicable
@@ -1008,3 +1008,4 @@ void ArrayGraph::addBackReducedVertices(int *k, std::vector<ReductionVertices>* 
     // TODO: Eventually slow, especially if pointer is getting deleted later
     reductionArray->clear();
 }
+ */

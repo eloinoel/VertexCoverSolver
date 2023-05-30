@@ -120,24 +120,24 @@ vector<int>* vertexBranchingSolverRecursive(ArrayGraph* G, int* numRec)
 	while (true)
 	{
         // Reduction Rules
-        vector<ReductionVertices>* reductionVertices = new vector<ReductionVertices>;
+        //vector<ReductionVertices>* reductionVertices = new vector<ReductionVertices>;
 
         // Apply Reduction Rules for the first time
-        if(G->applyReductionRules(&k, reductionVertices))
-            return nullptr;
+       /*  if(G->applyReductionRules(&k, reductionVertices))
+            return nullptr; */
 
 		vc = vcVertexBranchingRecursive(G, k, numRec);
 		if (vc != nullptr)
 		{
             // Add Reduced Vertices to Vertex Cover
-            G->addReducedVertices(vc, reductionVertices);
-            delete reductionVertices;
+            /* G->addReducedVertices(vc, reductionVertices);
+            delete reductionVertices; */
 
 			return vc;
 		}
 
-        G->addBackReducedVertices(&k, reductionVertices);
-        delete reductionVertices;
+        /* G->addBackReducedVertices(&k, reductionVertices);
+        delete reductionVertices; */
 
         k++;
 	}
@@ -202,6 +202,12 @@ void chooseImplementationAndOutput(int version = 1, bool printGraph = false, boo
         BucketGraph* G = BucketGraph::readStandardInput();
         if (G == nullptr)
             throw invalid_argument("Error constructing graph from input file.");
+        if (printGraph)
+        {
+            G->print();
+            G->printActiveList();
+        }
+
     }
     else
     {
@@ -218,7 +224,7 @@ int main(int argc, char* argv[]) {
 	try
 	{
         //chooseImplementationAndOutput(0, false, false, false, false, true, false);
-        chooseImplementationAndOutput(1);
+        chooseImplementationAndOutput(1, true);
 	}
 	catch (const exception& e)
 	{

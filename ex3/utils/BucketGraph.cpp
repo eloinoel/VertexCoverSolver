@@ -5,6 +5,8 @@
 #include "BucketGraph.h"
 #include "ColorPrint.h"
 
+typedef ColorPrint cp;
+
 /*----------------------------------------------------------*/
 /*-----------------   Graph Construction   -----------------*/
 /*----------------------------------------------------------*/
@@ -158,7 +160,7 @@ void BucketGraph::initActiveList(std::vector<std::pair<std::string, std::string>
     {
         vertexReferences[k] = nullptr;
     }
-    
+
     //add edges
     for (int k = 0; k < (int) edges.size(); k++)
     {
@@ -194,6 +196,7 @@ void BucketGraph::initActiveList(std::vector<std::pair<std::string, std::string>
             Vertex* firstVertex = new Vertex(new std::vector<int>(), edges[k].first, indexFirst, maxDegFirst);
             vertexReferences[indexFirst] = firstVertex;
             //insert
+            activeList.push_back(*firstVertex);
             if (maxDegFirst > 0)
             {
                 (*firstVertex->adj).push_back(indexSecond);
@@ -221,6 +224,7 @@ void BucketGraph::initActiveList(std::vector<std::pair<std::string, std::string>
             Vertex* secondVertex = new Vertex(new std::vector<int>(), edges[k].second, indexSecond, maxDegSecond);
             vertexReferences[indexSecond] = secondVertex;
             //insert
+            activeList.push_back(*secondVertex);
             if (maxDegSecond > 0)
             {
                 (*secondVertex->adj).push_back(indexFirst);
@@ -237,26 +241,34 @@ void BucketGraph::initBucketQueue()
 {
     // init bucketQueue
     bucketQueue = list<Bucket>();
+    bool inserted = false;
     int maxDeg = -1;
-    for (auto elem : activeList)
+    for (auto vertex = activeList.begin(); vertex != activeList.end(); ++vertex)
     {
-        if(elem.degree > maxDeg)
+        inserted = false;
+        if(vertex->degree > maxDeg)
         {
-            maxDeg = elem.degree;
+            maxDeg = vertex->degree;
         }
 
         for (auto bucket = bucketQueue.begin(); bucket != bucketQueue.end(); ++bucket)
         {
-            if(elem.degree == bucket->degree)
+            if(vertex->degree == bucket->degree)
             {
-                bucket->insert({elem.bucketVertex});
+                bucket->insert({vertex->bucketVertex});
+                inserted = true;
                 break;
             }
-            else if(elem.degree < bucket->degree)
+            else if(vertex->degree < bucket->degree)
             {
-                bucketQueue.insert(bucket, Bucket(elem.degree, {elem.bucketVertex}));
+                bucketQueue.insert(bucket, *(new Bucket(vertex->degree, {vertex->bucketVertex})));
+                inserted = true;
                 break;
             }
+        }
+        if(!inserted)
+        {
+            bucketQueue.insert(bucketQueue.end(), *(new Bucket(vertex->degree, {vertex->bucketVertex})));
         }
     }
 
@@ -281,17 +293,6 @@ void BucketGraph::removeFromBucketQueue(int degree, std::vector<BucketVertex*> v
     if(bucketReferences[degree]->vertices.size() == 0) {
         bucketQueue.erase(bucketQueue.iterator_to(*bucketReferences[degree]));
     }
-    /* for(Bucket bucket : bucketQueue)
-    {
-        if(bucket.degree == degree)
-        {
-            bucket.remove(vertices);
-            if(bucket.vertices.size() == 0) {
-                bucketQueue.erase(bucketQueue.iterator_to(bucket));
-            }
-            break;
-        }
-    } */
 }
 
 // TODO: extend bucketReferences if necessary
@@ -302,45 +303,6 @@ void BucketGraph::addToBucketQueue(int degree, std::vector<BucketVertex*> vertic
         bucketQueue.insert(bucketQueue.iterator_to(*bucketReferences[degree+1]), *bucketReferences[degree]);
     }
     bucketReferences[degree]->insert(vertices);
-    /* for(Bucket bucket : bucketQueue)
-    {
-        if(bucket.degree == degree)
-        {
-            bucket.insert(vertices);
-            break;
-        }
-        else if(bucket.degree > degree)
-        {
-            bucketQueue.insert(bucketQueue.iterator_to(bucket), Bucket(degree, vertices));
-            break;
-        }
-    } */
-}
-
-void BucketGraph::moveInBucketQueue(int degree, std::vector<BucketVertex*> vertices, int newDegree)
-{
-    /* for(Bucket bucket : bucketQueue)
-    {
-        if(bucket.degree == degree)
-        {
-            bucket.remove(vertices);
-            if(bucket.vertices.size() == 0) {
-                bucketQueue.erase(bucketQueue.iterator_to(bucket));
-            }
-            break;
-        }
-
-        if(bucket.degree == newDegree)
-        {
-            bucket.insert(vertices);
-            break;
-        }
-        else if(bucket.degree > newDegree)
-        {
-            bucketQueue.insert(bucketQueue.iterator_to(bucket), Bucket(newDegree, vertices));
-            break;
-        }
-    } */
 }
 
 /*----------------------------------------------------------*/
@@ -352,12 +314,15 @@ void BucketGraph::print()
     if (vertexReferences.size() > 0)
 	{
 		std::cout << "\n";
+        std::cout << "Graph of size: " << vertexReferences.size() << ", active: " << activeList.size() << std::endl;
+        std::cout << "BucketQueue of size: " << bucketQueue.size() << ", maxDegree: " << getMaxDegree() << std::endl;
+        std::cout << "name <name>, index <index>(<degree>): <neighbours>" << std::endl;
 		for (int i = 0; i < (int) vertexReferences.size(); i++)
 		{
 			if (vertexReferences[i] != nullptr)
             {
-                std::cout << "name " << dye(vertexReferences[i]->strName, 'y') << ", index " <<
-                dye(std::to_string(i), 'g') << "(" << dye(std::to_string(vertexReferences[i]->degree), 'r') << ")" << ": ";
+                std::cout << "name " << cp::dye(vertexReferences[i]->strName, 'y') << ", index " <<
+                cp::dye(std::to_string(i), 'g') << "(" << cp::dye(std::to_string(vertexReferences[i]->degree), 'r') << ")" << ": ";
 
                 //print neighbours
                 if(vertexReferences[i]->adj != nullptr)
@@ -374,7 +339,6 @@ void BucketGraph::print()
                         }
                         std::cout << vertexReferences[i]->adj->at(vertexReferences[i]->adj->size() - 1);
                     }
-
                 }
                 else
                 {
@@ -389,6 +353,27 @@ void BucketGraph::print()
 		}
 		std::cout << "\n";
 	}
+}
+
+void BucketGraph::printActiveList()
+{
+    std::cout << "active vertices: ";
+    for(auto it = activeList.begin(); it != activeList.end(); ++it)
+    {
+        std::cout << it->index << ", ";
+    }
+    if(activeList.size() == 0)
+    {
+        std::cout << "<empty>";
+    }
+    std::cout << std::endl;
+}
+
+void BucketGraph::printBucketQueue()
+{
+    //TODO:
+    std::cout << "BucketQueue of size " << bucketQueue.size() << "with maxDegree: " << getMaxDegree() << std::endl;
+    
 }
 
 void BucketGraph::setActive(int vertexIndex)
@@ -409,7 +394,8 @@ void BucketGraph::setActive(int vertexIndex)
             throw std::invalid_argument("setActive: tried updating degree of vertex pointing to nullptr");
         }
         vertexReferences[(*v->adj)[i]]->degree++;
-        moveInBucketQueue(vertexReferences[(*v->adj)[i]]->degree-1, {vertexReferences[(*v->adj)[i]]->bucketVertex}, vertexReferences[(*v->adj)[i]]->degree);
+        removeFromBucketQueue(vertexReferences[(*v->adj)[i]]->degree-1, {vertexReferences[(*v->adj)[i]]->bucketVertex});
+        addToBucketQueue(vertexReferences[(*v->adj)[i]]->degree, {vertexReferences[(*v->adj)[i]]->bucketVertex});
     }
 }
 
@@ -431,7 +417,8 @@ void BucketGraph::setInactive(int vertexIndex)
             throw std::invalid_argument("setInactive: tried updating degree of vertex pointing to nullptr");
         }
         vertexReferences[(*v->adj)[i]]->degree--;
-        moveInBucketQueue(vertexReferences[(*v->adj)[i]]->degree+1, {vertexReferences[(*v->adj)[i]]->bucketVertex}, vertexReferences[(*v->adj)[i]]->degree);
+        removeFromBucketQueue(vertexReferences[(*v->adj)[i]]->degree+1, {vertexReferences[(*v->adj)[i]]->bucketVertex});
+        addToBucketQueue(vertexReferences[(*v->adj)[i]]->degree, {vertexReferences[(*v->adj)[i]]->bucketVertex});
     }
 }
 
@@ -457,6 +444,12 @@ std::vector<int>* BucketGraph::getNeighbours(int vertexIndex)
     }
     return neighbours;
 }
+
+int BucketGraph::getMaxDegree()
+{
+    return bucketQueue.back().degree;
+}
+
 
 int BucketGraph::getMaxDegreeVertex()
 {

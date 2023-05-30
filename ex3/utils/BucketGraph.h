@@ -37,6 +37,7 @@ public:
      : degree(_degree)
     {
         vertices = list<BucketVertex>();
+        
         for (BucketVertex* vertex : _vertices)
         {
             vertices.push_back(*vertex);
@@ -118,16 +119,18 @@ public:
     /* creates and initialises a graph from standard input */
     static BucketGraph* readStandardInput();
 
-    void setActive(int vertexIndex); //TODO: buckets
-    void setInactive(int vertexIndex); //TODO: buckets
+    void setActive(int vertexIndex);
+    void setInactive(int vertexIndex);
 
     std::vector<int>* getNeighbours(int vertexIndex);
 
-    int getMaxDegreeVertex(); //TODO:
+    int getMaxDegree();
+    int getMaxDegreeVertex();
     int getVertexDegree(int vertexIndex);
     int getVerticesOfDegree(int degree); //TODO:
 
     void print();
+    void printActiveList();
     void printBucketQueue(); //TODO:
 
     int getLowerBoundVC();
@@ -141,13 +144,12 @@ private:
 	static bool isVertexCharacter(char c);
 
     void initActiveList(std::vector<std::pair<std::string, std::string>> edges);
-    void initBucketQueue(); // TODO: implement bucketReferences and use it to speed up all bucketQueue operations
-
+    void initBucketQueue();
+    
     //------------------------ Graph Utility ------------------------
 
-    void addToBucketQueue(int degree, std::vector<BucketVertex*> vertices); // TODO: extend bucketReferences if necessary
+    void addToBucketQueue(int degree, std::vector<BucketVertex*> vertices);
     void removeFromBucketQueue(int degree, std::vector<BucketVertex*> vertices);
-    void moveInBucketQueue(int degree, std::vector<BucketVertex*> vertices, int newDegree);
 
     //------------------------ Bounds ------------------------
 
