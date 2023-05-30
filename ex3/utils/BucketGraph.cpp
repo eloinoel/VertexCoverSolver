@@ -235,6 +235,7 @@ void BucketGraph::initActiveList(std::vector<std::pair<std::string, std::string>
 
 void BucketGraph::initBucketQueue()
 {
+    bucketQueue = list<Bucket>();
     bool foundDeg;
     
     for (auto elem : activeList)
@@ -255,37 +256,6 @@ void BucketGraph::initBucketQueue()
     }
 }
 
-void BucketGraph::removeFromBucketQueue(int degree, std::vector<BucketVertex*> vertices)
-{
-    for(Bucket bucket : bucketQueue)
-    {
-        if(bucket.degree == degree)
-        {
-            bucket.remove(vertices);
-            if(bucket.vertices.size() == 0) {
-                bucketQueue.erase(bucketQueue.iterator_to(bucket));
-            }
-            break;
-        }
-    }
-}
-
-void BucketGraph::addToBucketQueue(int degree, std::vector<BucketVertex*> vertices)
-{
-    for(Bucket bucket : bucketQueue)
-    {
-        if(bucket.degree == degree)
-        {
-            bucket.insert(vertices);
-            break;
-        }
-        else if(bucket.degree > degree)
-        {
-            bucketQueue.insert(bucketQueue.iterator_to(bucket), Bucket(degree, vertices));
-            break;
-        }
-    }
-}
 
 /*----------------------------------------------------------*/
 /*-------------------   Graph Utility   --------------------*/
@@ -300,7 +270,7 @@ void BucketGraph::print()
 		{
 			if (vertexReferences[i] != nullptr)
             {
-                std::cout << "name " << dye(vertexReferences[i]->strName, 'y') << ", index " << 
+                std::cout << "name " << dye(vertexReferences[i]->strName, 'y') << ", index " <<
                 dye(std::to_string(i), 'g') << "(" << dye(std::to_string(vertexReferences[i]->degree), 'r') << ")" << ": ";
 
                 //print neighbours
@@ -422,6 +392,37 @@ int BucketGraph::getVerticesOfDegree(int degree)
     //TODO: get from bucket queue
 }
 
+void BucketGraph::removeFromBucketQueue(int degree, std::vector<BucketVertex*> vertices)
+{
+    for(Bucket bucket : bucketQueue)
+    {
+        if(bucket.degree == degree)
+        {
+            bucket.remove(vertices);
+            if(bucket.vertices.size() == 0) {
+                bucketQueue.erase(bucketQueue.iterator_to(bucket));
+            }
+            break;
+        }
+    }
+}
+
+void BucketGraph::addToBucketQueue(int degree, std::vector<BucketVertex*> vertices)
+{
+    for(Bucket bucket : bucketQueue)
+    {
+        if(bucket.degree == degree)
+        {
+            bucket.insert(vertices);
+            break;
+        }
+        else if(bucket.degree > degree)
+        {
+            bucketQueue.insert(bucketQueue.iterator_to(bucket), Bucket(degree, vertices));
+            break;
+        }
+    }
+}
 
 /*----------------------------------------------------------*/
 /*------------------   Calculate Bounds   ------------------*/

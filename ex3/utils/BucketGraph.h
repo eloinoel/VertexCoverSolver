@@ -5,13 +5,14 @@
 #include <vector>
 #include <queue>
 #include <functional>
-#include <boost/intrusive/list.hpp>
 #include <limits.h>
 
 
 #include <unordered_map> //O(1) for insert and access instead of O(log n) for ordered maps
 
 #include <algorithm>
+
+#include "boost/intrusive/list.hpp"
 
 using namespace boost::intrusive;
 
@@ -25,7 +26,7 @@ public:
     { }
 };
 
-class Bucket
+class Bucket : public list_base_hook<>
 {
 public:
     int degree;
@@ -40,6 +41,16 @@ public:
         {
             vertices.push_back(*vertex);
         }
+    }
+
+    inline void insert(BucketVertex* vertex)
+    {
+        vertices.push_back(*vertex);
+    }
+
+    inline void remove(BucketVertex* vertex)
+    {
+        vertices.erase(vertices.iterator_to(*vertex));
     }
 
     inline void insert(std::vector<BucketVertex*> _vertices)
@@ -92,12 +103,6 @@ private:
     /* doubly linked list, that acts as a list of active vertices, O(1) access, deletion and insertion */
     list<Vertex> activeList;
 
-    /* compare buckets for bucketQueue ordering (Returns true if the first element is smaller or equal) */
-    /* static bool bucketComparator(Bucket& bucket1, Bucket& bucket2) {
-        return bucket1.degree <= bucket2.degree;
-    } */
-    /* priority queue of buckets that contain vertices of a certain degree (largest ) */
-    //std::priority_queue<Bucket, std::vector<Bucket>, std::function<bool(Bucket&, Bucket&)>> bucketQueue;
     /* priority queue of buckets that contain vertices of a certain degree (buckets are ordered after their degree ascendingly from front() to back()) */
     list<Bucket> bucketQueue;
 
@@ -106,45 +111,47 @@ private:
 
 //functions
 public:
-    inline BucketGraph() {
-        bucketQueue = list<Bucket>();//std::priority_queue<Bucket, std::vector<Bucket>, std::function<bool(Bucket&, Bucket&)>>(bucketComparator);
-    }
+    inline BucketGraph() {  }
+
+    /* creates and initialises a graph from standard input */
+    static BucketGraph* readStandardInput();
+
+    void setActive(int vertexIndex); //TODO: buckets
+    void setInactive(int vertexIndex); //TODO: buckets
+
+    std::vector<int>* getNeighbours(int vertexIndex);
+
+    int getMaxDegreeVertex(); //TODO:
+    int getVertexDegree(int vertexIndex);
+    int getVerticesOfDegree(int degree); //TODO:
+
+    void print();
+    void printBucketQueue(); //TODO:
+
+    int getLowerBoundVC();
+
 private:
 
     //------------------------ Graph Construction ------------------------
-    
-    /* creates and initialises a graph from standard input */
-    static BucketGraph* readStandardInput();
+
     static std::string eraseLeadingTrailingWhitespacesFromString(std::string str);
     /* tests whether a char fulfills vertex naming format*/
 	static bool isVertexCharacter(char c);
 
     void initActiveList(std::vector<std::pair<std::string, std::string>> edges);
     void initBucketQueue();
-    void removeBucket(int degree); // TODO: implement
-    void addBucket(int degree, std::vector<BucketVertex*> vertices); // TODO: Use binary search
-    void removeFromBucketQueue(int degree, std::vector<BucketVertex*> vertices);
+
     void addToBucketQueue(int degree, std::vector<BucketVertex*> vertices);
 
     //------------------------ Graph Utility ------------------------
 
-    void print();
-    void printBucketQueue(); //TODO:
+    void addBucket(int degree, std::vector<BucketVertex*> vertices); // TODO: Use binary search
+    void removeFromBucketQueue(int degree, std::vector<BucketVertex*> vertices);
 
-    void setActive(int vertexIndex);
-    void setInactive(int vertexIndex);
-
-    std::vector<int>* getNeighbours(int vertexIndex);
-    
-    int getMaxDegreeVertex(); //TODO:
-    int getVertexDegree(int vertexIndex);
-    int getVerticesOfDegree(int degree); //TODO:
-    
     //------------------------ Bounds ------------------------
 
-    int getLowerBoundVC();
     int getCliqueBound(int k = INT_MAX);
-    bool BucketGraph::vertexCanBeAddedToClique(int vertex, std::vector<int>* clique);
+    bool vertexCanBeAddedToClique(int vertex, std::vector<int>* clique);
 
     //------------------------ Data Reduction ------------------------
     //TODO: apply data reduction to input graph and return output graph

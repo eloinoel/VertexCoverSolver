@@ -1,6 +1,6 @@
 #include <iostream> //output streams
 #include <fstream>  //ifstream file opening
-#include <cmath> //ceil 
+#include <cmath> //ceil
 #include <algorithm> //ceil
 #include <stack>          // std::stack
 

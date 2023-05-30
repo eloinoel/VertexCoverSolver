@@ -91,8 +91,11 @@ endif()
 #    add_subdirectory(${matplotplusplus_SOURCE_DIR} ${matplotplusplus_BINARY_DIR} EXCLUDE_FROM_ALL)
 #endif()
 
+set(BOOST_ROOT "../boost_1_82_0")
+include_directories(${INCLUDE_DIRECTORIES} ${BOOST_ROOT} include)
+
 # Create an executable
-add_executable(VertexCoverSolver VertexCoverSolver.cpp utils/ArrayGraph.cpp utils/BipartiteArrayGraph.cpp)
+add_executable(VertexCoverSolver VertexCoverSolver.cpp utils/ArrayGraph.cpp utils/BipartiteArrayGraph.cpp utils/BucketGraph.cpp)
 
 # Add header-only dependencies
 #target_include_directories(ex2 PRIVATE "${polyscope_SOURCE_DIR}/deps/args")

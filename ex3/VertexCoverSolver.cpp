@@ -5,6 +5,7 @@
 #include <math.h>          // INFINITY
 #include "utils/ArrayGraph.h"
 #include "utils/ColorPrint.h"
+#include "utils/BucketGraph.h"
 
 using namespace std;
 
@@ -35,7 +36,7 @@ vector<int>* vcVertexBranchingRecursive(ArrayGraph* G, int k, int* numRec)
         return new vector<int>();
     }
 
-    int vertexDeg = G->getVertexDegree(vertex); 
+    int vertexDeg = G->getVertexDegree(vertex);
 	//graph has no edges left
 	if (vertexDeg == 0)
 	{
@@ -44,12 +45,12 @@ vector<int>* vcVertexBranchingRecursive(ArrayGraph* G, int k, int* numRec)
 
     //================================================================
     // Reduction Rules
-    vector<ReductionVertices>* reductionVertices = new vector<ReductionVertices>;
+    /* vector<ReductionVertices>* reductionVertices = new vector<ReductionVertices>;
 
     if(!G->applyBounds(k, reductionVertices)) {
         delete reductionVertices;
         return nullptr;
-    }
+    } */
     //================================================================
 
 	//delete first vertex from graph and explore solution
@@ -60,8 +61,8 @@ vector<int>* vcVertexBranchingRecursive(ArrayGraph* G, int k, int* numRec)
 		//return results
 
         // Add Reduced Vertices to Vertex Cover
-        G->addReducedVertices(S, merged, deletedReduced);
-        delete reductionVertices;
+        /* G->addReducedVertices(S, merged, deletedReduced);
+        delete reductionVertices; */
 
 		S->push_back(vertex);
 		return S;
@@ -73,7 +74,7 @@ vector<int>* vcVertexBranchingRecursive(ArrayGraph* G, int k, int* numRec)
 	}
 
 	//cannot fully explore neighbours
-    if (vertexDeg > k) 
+    if (vertexDeg > k)
     {
         return nullptr;
     }
@@ -90,8 +91,8 @@ vector<int>* vcVertexBranchingRecursive(ArrayGraph* G, int k, int* numRec)
         }
 
         // Add Reduced Vertices to Vertex Cover
-        G->addReducedVertices(S, merged, deletedReduced);
-        delete reductionVertices;
+        /* G->addReducedVertices(S, merged, deletedReduced);
+        delete reductionVertices; */
 
         return S;
 	}
@@ -103,8 +104,8 @@ vector<int>* vcVertexBranchingRecursive(ArrayGraph* G, int k, int* numRec)
 
     //================================================================
     // Reverse Data Reduction
-    G->addBackReducedVertices(k, reductionVertices);
-    delete reductionVertices;
+    /* G->addBackReducedVertices(k, reductionVertices);
+    delete reductionVertices; */
     //================================================================
 
 	return nullptr;
@@ -112,8 +113,8 @@ vector<int>* vcVertexBranchingRecursive(ArrayGraph* G, int k, int* numRec)
 
 vector<int>* vertexBranchingSolverRecursive(ArrayGraph* G, int* numRec)
 {
-//	int k = G->getLowerBoundVC();
-	int k = 1;
+	int k = G->getLowerBoundVC();
+//  int k = 1;
 //	int k = 2;
 //	int k = 3;
 //	int k = 4;
@@ -121,7 +122,7 @@ vector<int>* vertexBranchingSolverRecursive(ArrayGraph* G, int* numRec)
 	vector<int> *vc;
 
     // Apply Reduction Rules for the first time
-    if(G->applyReductionRules(&k, numRec))
+    //if(G->applyReductionRules(&k, numRec))
 
 	while (true)
 	{
@@ -158,13 +159,12 @@ void writeSolutionToConsole(vector<string>* vc)
 
 /** Execute specific version of program with optional arguments for more prints
  * version
- * 0: ArrayGraph, iterative
- * 1: ArrayGraph, recursive
- * 2: Arraygraph, Exercise 1 Branching
- * 3: Graph, Exercise 1 Branching with Hashmap graph
+ * 0: ArrayGraph, recursive
+ * 1: Bucketgraph
+
  * ....
 */
-void chooseImplementationAndOutput(int version = 0, bool printGraph = false, bool printMappings = false, bool printDebug = false, bool printVCSize = false, bool printVC = true, bool printBounds = false)
+void chooseImplementationAndOutput(int version = 1, bool printGraph = false, bool printMappings = false, bool printDebug = false, bool printVCSize = false, bool printVC = true, bool printBounds = false)
 {
     if(version == 0)
     {
@@ -189,7 +189,13 @@ void chooseImplementationAndOutput(int version = 0, bool printGraph = false, boo
         if (printVCSize)
             cout << "VC size: " << vc->size() << endl;
     }
-    else 
+    else if(version == 1)
+    {
+        BucketGraph* G = BucketGraph::readStandardInput();
+        if (G == nullptr)
+            throw invalid_argument("Error constructing graph from input file.");
+    }
+    else
     {
         cout << "Select correct version please.";
     }
@@ -203,7 +209,8 @@ int main(int argc, char* argv[]) {
 
 	try
 	{
-        chooseImplementationAndOutput(0, false, false, false, false, true, false);
+        //chooseImplementationAndOutput(0, false, false, false, false, true, false);
+        chooseImplementationAndOutput(1);
 	}
 	catch (const exception& e)
 	{
