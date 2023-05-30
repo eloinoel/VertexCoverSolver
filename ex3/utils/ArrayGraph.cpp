@@ -735,14 +735,14 @@ bool ArrayGraph::contains(std::vector<int>* vertexIndices, int vertexIndex)
 bool ArrayGraph::applyReductionRules(int* k, std::vector<ReductionVertices>* reductionArray)
 {
     // if both rules are not applicable
-    if(!rule_HighDegree(k, reductionArray)) && !rule_DegreeZero(reductionArray))
+    if(!rule_HighDegree(k, reductionArray) && !rule_DegreeZero(reductionArray))
         //if Buss rule == true => no vertex cover
         if(rule_Buss(k))
             return false;
 
     // TODO: Apply rule 0, 1 & 2 at every deactivation?
-//    rule_DegreeOne();
-//    rule_DegreeTwo();
+    rule_DegreeOne(k, reductionArray);
+    rule_DegreeTwo(k, reductionArray);
 
     return true;
 }
@@ -753,12 +753,12 @@ bool ArrayGraph::rule_HighDegree(int *k, std::vector<ReductionVertices>* reducti
 
     int maxDegIdx = getMaxDegreeVertex();
     int maxDeg = getVertexDegree(maxDegIdx);
-    while(maxDeg > k)
+    while(maxDeg > (*k))
     {
         std::vector<int> tooHighToHandle = *getVerticesDegree(maxDeg);
         if(!tooHighToHandle.empty())
         {
-            for (int i = 0; i < tooHighToHandle.size(); ++i) {
+            for (auto i = 0; i < (int)  tooHighToHandle.size(); ++i) {
                 cnt++;
                 int vertexID = tooHighToHandle.at(i);
 
@@ -767,7 +767,7 @@ bool ArrayGraph::rule_HighDegree(int *k, std::vector<ReductionVertices>* reducti
                 delVer.rule = 3;
                 delVer.deletedVertices.push_back(vertexID);
                 delVer.kDecrement = 1;
-                delVer.savedAdjacency->push_back(getNeighbours(vertexID));
+                delVer.savedAdjacency = getNeighbours(vertexID);
                 reductionArray->push_back(delVer);
 
                 setInactive(vertexID);
@@ -786,12 +786,12 @@ bool ArrayGraph::rule_HighDegree(int *k, std::vector<ReductionVertices>* reducti
 
 bool ArrayGraph::rule_DegreeZero(std::vector<ReductionVertices>* reductionArray)
 {
-    std::vector<int> zeroDegree = *getVerticesDegree(maxDeg);
+    std::vector<int> zeroDegree = *getVerticesDegree(0);
 
     if(zeroDegree.empty())
         return false;
 
-    for (int i = 0; i < zeroDegree.size(); ++i) {
+    for (auto i = 0; i < (int)  zeroDegree.size(); ++i) {
         int vertexID = zeroDegree.at(i);
 
         // save deleted vertex
@@ -810,10 +810,10 @@ bool ArrayGraph::rule_DegreeZero(std::vector<ReductionVertices>* reductionArray)
 
 bool ArrayGraph::rule_Buss(int* k)
 {
-    int k_square = std::pow(k, 2);
+    int k_square = std::pow((*k), 2);
 
     // If |V| > k^2 + k || |E|>k^2 => no vertex cover
-    if((numberOfVertices > k_square + k) || (numberOfEdges > k_square))
+    if((numberOfVertices > k_square + (*k)) || (numberOfEdges > k_square))
         return true;
     return false;
 }
@@ -821,12 +821,12 @@ bool ArrayGraph::rule_Buss(int* k)
 
 void ArrayGraph::rule_DegreeOne(int* k, std::vector<ReductionVertices>* reductionArray)
 {
-    std::vector<int> degreeOne = *getVerticesDegree(maxDeg);
+    std::vector<int> degreeOne = *getVerticesDegree(1);
 
     if(degreeOne.empty())
         return;
 
-    for (int i = 0; i < degreeOne.size(); ++i) {
+    for (auto i = 0; i < (int)  degreeOne.size(); ++i) {
         int vertexID = degreeOne.at(i);
 
         // THIS SHOULD HOLD THROUGH
@@ -838,7 +838,8 @@ void ArrayGraph::rule_DegreeOne(int* k, std::vector<ReductionVertices>* reductio
         delVer.kDecrement = 1;
         delVer.deletedVertices.push_back(neighbour);
         delVer.deletedVertices.push_back(vertexID);
-        delVer.savedAdjacency->push_back(getNeighbours(neighbour));
+        delVer.savedAdjacency = getNeighbours(neighbour);
+//        ->push_back(getNeighbours(neighbour));
         reductionArray->push_back(delVer);
 
         setInactive(neighbour);
@@ -849,21 +850,14 @@ void ArrayGraph::rule_DegreeOne(int* k, std::vector<ReductionVertices>* reductio
 }
 
 
-//void ArrayGraph::mergeVertices(std::vector<int> listOfVerticesToMerge)
-//{
-//    // add a vertex x to G with edges to the union of all the merged neighbors
-//    // remove listOfVerticesToMerge from the graph
-//}
-
-
 void ArrayGraph::rule_DegreeTwo(int* k, std::vector<ReductionVertices>* reductionArray)
 {
-    std::vector<int> degreeTwo = *getVerticesDegree(maxDeg);
+    std::vector<int> degreeTwo = *getVerticesDegree(2);
 
     if(degreeTwo.empty())
         return;
 
-    for (int i = 0; i < degreeTwo.size(); ++i) {
+    for (auto i = 0; i < (int) degreeTwo.size(); ++i) {
         int vertexID = degreeTwo.at(i);
 
         std::vector<int>* neighbours = getNeighbours(vertexID);
@@ -894,7 +888,8 @@ void ArrayGraph::rule_DegreeTwo(int* k, std::vector<ReductionVertices>* reductio
         delVer.deletedVertices.push_back(shortestNeighbourhoodIdx);     // at (1)
         delVer.deletedVertices.push_back(vertexID);                     // at (2)
 
-        delVer.savedAdjacency->push_back(getNeighbours(vertexID));
+        delVer.savedAdjacency = getNeighbours(vertexID);
+//        ->push_back(getNeighbours(vertexID));
 
         // CASE The neighbours know each other
         if(contains(shortestNeighbourhood,otherNeighbourIdx))
@@ -929,7 +924,7 @@ void ArrayGraph::addReducedVertices(std::vector<int>* S, std::vector<ReductionVe
     if(reductionArray->empty())
         return;
 
-    for (int i = 0; i < reductionArray->size(); ++i) {
+    for (auto i = 0; i < (int) reductionArray->size(); ++i) {
         ReductionVertices curReduction = reductionArray->at(i);
         int curAddition = curReduction.deletedVertices.at(0);
         switch (curReduction.rule) {
@@ -957,7 +952,7 @@ void ArrayGraph::addReducedVertices(std::vector<int>* S, std::vector<ReductionVe
 
                 break;
             default:
-                std::cout<< "There shouldn't be this rule"
+                std::cout<< "There shouldn't be this rule";
                 break;
         }
     }
@@ -972,7 +967,7 @@ void ArrayGraph::addBackReducedVertices(int *k, std::vector<ReductionVertices>* 
     if(reductionArray->empty())
         return;
 
-    for (int i = 0; i < reductionArray->size(); ++i) {
+    for (auto i = 0; i < (int) reductionArray->size(); ++i) {
         ReductionVertices curReduction = reductionArray->at(i);
         int curVertex = curReduction.deletedVertices.at(0);
         switch (curReduction.rule) {
@@ -1004,7 +999,7 @@ void ArrayGraph::addBackReducedVertices(int *k, std::vector<ReductionVertices>* 
 
                 break;
             default:
-                std::cout<< "There shouldn't be this rule"
+                std::cout<< "There shouldn't be this rule";
                 break;
         }
         (*k) += curReduction.kDecrement;
