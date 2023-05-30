@@ -443,7 +443,7 @@ bool ArrayGraph::isVertexCoverFound()
     return true;
 }
 /*
- * Iterate through graph and find first still active edge 
+ * Iterate through graph and find first still active edge
 */
 std::pair<int, int>* ArrayGraph::getFirstValidEdge()
 {

@@ -241,11 +241,11 @@ void BucketGraph::initBucketQueue()
     for (auto elem : activeList)
     {
         foundDeg = false;
-        for (Bucket bucket : bucketQueue)
+        for (auto bucket = bucketQueue.begin(); bucket != bucketQueue.end(); ++bucket)
         {
-            if(elem.degree == bucket.degree)
+            if(elem.degree == bucket->degree)
             {
-                bucket.insert({elem.bucketVertex});
+                bucket->insert({elem.bucketVertex});
                 foundDeg = true;
             }
         }
@@ -375,6 +375,7 @@ std::vector<int>* BucketGraph::getNeighbours(int vertexIndex)
 int BucketGraph::getMaxDegreeVertex()
 {
     //TODO: get from bucket queue
+    return 0;
 }
 
 int BucketGraph::getVertexDegree(int vertexIndex)
@@ -390,17 +391,18 @@ int BucketGraph::getVertexDegree(int vertexIndex)
 int BucketGraph::getVerticesOfDegree(int degree)
 {
     //TODO: get from bucket queue
+    return 0;
 }
 
 void BucketGraph::removeFromBucketQueue(int degree, std::vector<BucketVertex*> vertices)
 {
-    for(Bucket bucket : bucketQueue)
+    for(auto bucket = bucketQueue.begin(); bucket != bucketQueue.end(); ++bucket)
     {
-        if(bucket.degree == degree)
+        if(bucket->degree == degree)
         {
-            bucket.remove(vertices);
-            if(bucket.vertices.size() == 0) {
-                bucketQueue.erase(bucketQueue.iterator_to(bucket));
+            bucket->remove(vertices);
+            if(bucket->vertices.size() == 0) {
+                bucketQueue.erase(bucketQueue.iterator_to(*bucket));
             }
             break;
         }
@@ -409,14 +411,14 @@ void BucketGraph::removeFromBucketQueue(int degree, std::vector<BucketVertex*> v
 
 void BucketGraph::addToBucketQueue(int degree, std::vector<BucketVertex*> vertices)
 {
-    for(Bucket bucket : bucketQueue)
+    for(auto bucket = bucketQueue.begin(); bucket != bucketQueue.end(); ++bucket)
     {
-        if(bucket.degree == degree)
+        if(bucket->degree == degree)
         {
-            bucket.insert(vertices);
+            bucket->insert(vertices);
             break;
         }
-        else if(bucket.degree > degree)
+        else if(bucket->degree > degree)
         {
             bucketQueue.insert(bucketQueue.iterator_to(bucket), Bucket(degree, vertices));
             break;
@@ -438,7 +440,7 @@ int BucketGraph::getLowerBoundVC() {
 * Calculates clique cover with greedy heuristic
 * @param k: stop calculating cliques if bound already surpasses k
 */
-int BucketGraph::getCliqueBound(int k = INT_MAX)
+int BucketGraph::getCliqueBound(int k)
 {
     std::vector<std::vector<int>*> cliques = std::vector<std::vector<int>*>();
     int cliqueBound = 0;
