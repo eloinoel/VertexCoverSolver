@@ -16,6 +16,7 @@ enum RULES{
 };
 
 class ReductionVertices{
+public:
     int rule;
     int kDecrement;
     std::vector<int> deletedVertices; // First idx is always to add in VC if(rule!=0)
@@ -70,7 +71,7 @@ protected:
     bool rule_DegreeZero(std::vector<ReductionVertices>* reductionArray);
 
     // TODO: Check that numberOfVertices & numberOfEdges are up to date
-    void rule_Buss(int* k);
+    bool rule_Buss(int* k);
 
     void rule_DegreeOne(int* k, std::vector<ReductionVertices>* reductionArray);
     void rule_DegreeTwo(int* k, std::vector<ReductionVertices>* reductionArray);
@@ -160,7 +161,7 @@ public:
     void addBackReducedVertices(int *k, std::vector<ReductionVertices>* reductionArray);
 
     //TODO: ------------Functions that need implementation-------------
-    
+
     /* Get list of vertices of degree d*/
     std::vector<int>* getVerticesDegree(int d);
 

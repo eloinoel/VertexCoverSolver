@@ -46,7 +46,7 @@ vector<int>* vcVertexBranchingRecursive(ArrayGraph* G, int k, int* numRec)
     // Reduction Rules
     vector<ReductionVertices>* reductionVertices = new vector<ReductionVertices>;
 
-    if(!G->applyBounds(k, reductionVertices)) {
+    if(!G->applyReductionRules(&k, reductionVertices)) {
         delete reductionVertices;
         return nullptr;
     }
@@ -60,7 +60,7 @@ vector<int>* vcVertexBranchingRecursive(ArrayGraph* G, int k, int* numRec)
 		//return results
 
         // Add Reduced Vertices to Vertex Cover
-        G->addReducedVertices(S, merged, deletedReduced);
+        G->addReducedVertices(S, reductionVertices);
         delete reductionVertices;
 
 		S->push_back(vertex);
@@ -90,7 +90,7 @@ vector<int>* vcVertexBranchingRecursive(ArrayGraph* G, int k, int* numRec)
         }
 
         // Add Reduced Vertices to Vertex Cover
-        G->addReducedVertices(S, merged, deletedReduced);
+        G->addReducedVertices(S, reductionVertices);
         delete reductionVertices;
 
         return S;
@@ -103,7 +103,7 @@ vector<int>* vcVertexBranchingRecursive(ArrayGraph* G, int k, int* numRec)
 
     //================================================================
     // Reverse Data Reduction
-    G->addBackReducedVertices(k, reductionVertices);
+    G->addBackReducedVertices(&k, reductionVertices);
     delete reductionVertices;
     //================================================================
 
@@ -120,17 +120,31 @@ vector<int>* vertexBranchingSolverRecursive(ArrayGraph* G, int* numRec)
 
 	vector<int> *vc;
 
-    // Apply Reduction Rules for the first time
-    if(G->applyReductionRules(&k, numRec))
+
 
 	while (true)
 	{
+        // Reduction Rules
+        vector<ReductionVertices>* reductionVertices = new vector<ReductionVertices>;
+
+        // Apply Reduction Rules for the first time
+        if(G->applyReductionRules(&k, reductionVertices))
+            return nullptr;
+
 		vc = vcVertexBranchingRecursive(G, k, numRec);
 		if (vc != nullptr)
 		{
+            // Add Reduced Vertices to Vertex Cover
+            G->addReducedVertices(vc, reductionVertices);
+            delete reductionVertices;
+
 			return vc;
 		}
-		k++;
+
+        G->addBackReducedVertices(&k, reductionVertices);
+        delete reductionVertices;
+
+        k++;
 	}
 }
 
