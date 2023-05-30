@@ -112,15 +112,9 @@ vector<int>* vcVertexBranchingRecursive(ArrayGraph* G, int k, int* numRec)
 
 vector<int>* vertexBranchingSolverRecursive(ArrayGraph* G, int* numRec)
 {
-//	int k = G->getLowerBoundVC();
-	int k = 1;
-//	int k = 2;
-//	int k = 3;
-//	int k = 4;
+	int k = G->getLowerBoundVC();
 
 	vector<int> *vc;
-
-
 
 	while (true)
 	{
