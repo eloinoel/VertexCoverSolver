@@ -145,7 +145,7 @@ private:
 
     //------------------------ Graph Utility ------------------------
 
-    void addToBucketQueue(int degree, std::vector<BucketVertex*> vertices);
+    void addToBucketQueue(int degree, std::vector<BucketVertex*> vertices); // TODO: extend bucketReferences if necessary
     void removeFromBucketQueue(int degree, std::vector<BucketVertex*> vertices);
     void moveInBucketQueue(int degree, std::vector<BucketVertex*> vertices, int newDegree);
 
