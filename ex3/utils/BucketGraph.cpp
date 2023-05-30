@@ -458,7 +458,7 @@ std::vector<int>* BucketGraph::getNeighbours(int vertexIndex)
 
 int BucketGraph::getMaxDegreeVertex()
 {
-    return bucketQueue.back().vertices[0];
+    return bucketQueue.back().vertices.front().index;
 }
 
 int BucketGraph::getVertexDegree(int vertexIndex)
@@ -475,38 +475,6 @@ int BucketGraph::getVerticesOfDegree(int degree)
 {
     //TODO: get from bucket queue
     return 0;
-}
-
-void BucketGraph::removeFromBucketQueue(int degree, std::vector<BucketVertex*> vertices)
-{
-    for(auto bucket = bucketQueue.begin(); bucket != bucketQueue.end(); ++bucket)
-    {
-        if(bucket->degree == degree)
-        {
-            bucket->remove(vertices);
-            if(bucket->vertices.size() == 0) {
-                bucketQueue.erase(bucketQueue.iterator_to(*bucket));
-            }
-            break;
-        }
-    }
-}
-
-void BucketGraph::addToBucketQueue(int degree, std::vector<BucketVertex*> vertices)
-{
-    for(auto bucket = bucketQueue.begin(); bucket != bucketQueue.end(); ++bucket)
-    {
-        if(bucket->degree == degree)
-        {
-            bucket->insert(vertices);
-            break;
-        }
-        else if(bucket->degree > degree)
-        {
-            bucketQueue.insert(bucketQueue.iterator_to(bucket), Bucket(degree, vertices));
-            break;
-        }
-    }
 }
 
 /*----------------------------------------------------------*/
@@ -529,11 +497,10 @@ int BucketGraph::getCliqueBound(int k)
     int cliqueBound = 0;
 
     //iterate through vertices in ascending order of degrees (buckets)
-    for(auto it = bucketQueue.begin(); it != bucketQueue.end(); ++it)
+    for(auto bucket = bucketQueue.begin(); bucket != bucketQueue.end(); ++bucket)
     {
-        Bucket bucket = *it;
         //for each vertex in bucket
-        for(auto jt = bucket.vertices.begin(); jt != bucket.vertices.end(); ++jt)
+        for(auto jt = bucket->vertices.begin(); jt != bucket->vertices.end(); ++jt)
         {
             int curVertex = jt->index;
             int cliqueIndex = -1;
