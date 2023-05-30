@@ -103,6 +103,8 @@ private:
     /* doubly linked list, that acts as a list of active vertices, O(1) access, deletion and insertion */
     list<Vertex> activeList;
 
+    /* each index represents a degree, that maps to a Bucket object that may be contained in the bucketQueue */
+    std::vector<Bucket*> bucketReferences;
     /* priority queue of buckets that contain vertices of a certain degree (buckets are ordered after their degree ascendingly from front() to back()) */
     list<Bucket> bucketQueue;
 
@@ -139,14 +141,13 @@ private:
 	static bool isVertexCharacter(char c);
 
     void initActiveList(std::vector<std::pair<std::string, std::string>> edges);
-    void initBucketQueue();
-
-    void addToBucketQueue(int degree, std::vector<BucketVertex*> vertices);
+    void initBucketQueue(); // TODO: implement bucketReferences and use it to speed up all bucketQueue operations
 
     //------------------------ Graph Utility ------------------------
 
-    void addBucket(int degree, std::vector<BucketVertex*> vertices); // TODO: Use binary search
+    void addToBucketQueue(int degree, std::vector<BucketVertex*> vertices);
     void removeFromBucketQueue(int degree, std::vector<BucketVertex*> vertices);
+    void moveInBucketQueue(int degree, std::vector<BucketVertex*> vertices, int newDegree);
 
     //------------------------ Bounds ------------------------
 
