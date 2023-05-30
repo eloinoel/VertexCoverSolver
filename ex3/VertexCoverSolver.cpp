@@ -206,6 +206,7 @@ void chooseImplementationAndOutput(int version = 1, bool printGraph = false, boo
         {
             G->print();
             G->printActiveList();
+            G->printBucketQueue();
         }
 
     }

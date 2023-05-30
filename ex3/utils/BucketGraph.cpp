@@ -369,11 +369,54 @@ void BucketGraph::printActiveList()
     std::cout << std::endl;
 }
 
+std::string tileStr(std::string toTile, int n) {
+	std::string tiling = "";
+	for (int i=0; i<n; i++)
+	{
+		tiling += toTile;
+	}
+	return tiling;
+}
+
+int strRepSize(int n) {
+	int spaces = 1;
+	while (n > 9)
+	{
+        n /= 10;
+		spaces++;
+	}
+	return spaces;
+}
+
 void BucketGraph::printBucketQueue()
 {
-    //TODO:
-    std::cout << "BucketQueue of size " << bucketQueue.size() << "with maxDegree: " << getMaxDegree() << std::endl;
-    
+    int fieldSize = 4;
+    int rowMin = 3;
+    int rowMax = 7;
+    int row;
+    std::cout << "BucketQueue of size " << cp::dye(std::to_string(bucketQueue.size()), 'y') << " with maxDegree: " << getMaxDegree() << std::endl;
+    for(auto bucket = bucketQueue.begin(); bucket != bucketQueue.end(); ++bucket)
+    {
+        row = std::min(rowMax, std::max((int) bucket->vertices.size(), rowMin));
+        std::cout << "/-" << cp::dye("Bucket " + std::to_string(bucket->degree), 'w') << tileStr("-", (2+fieldSize)*row-8-strRepSize(bucket->degree)) << "\\" << std::endl;
+        for (auto vertex = bucket->vertices.begin(); vertex != bucket->vertices.end();)
+        {
+            int offs = 0;
+
+            std::cout << "| " << cp::dye(std::to_string(vertex->index), 'w');
+            offs = fieldSize-strRepSize(vertex->index);
+            ++vertex;
+            int i = 1;
+            for (; i < row && vertex != bucket->vertices.end(); i++, ++vertex)
+            {
+                std::cout << ", " << tileStr(" ", offs) << cp::dye(std::to_string(vertex->index), 'w');
+                offs = fieldSize-strRepSize(vertex->index);
+            }
+            std::cout << tileStr(" ", (2+fieldSize)*(row-i));
+            std::cout << tileStr(" ", offs) << " |" << std::endl;
+        }
+        std::cout << "\\" << tileStr("-", (2+fieldSize)*row) << "/" << std::endl << std::endl;
+    }
 }
 
 void BucketGraph::setActive(int vertexIndex)

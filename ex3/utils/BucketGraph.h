@@ -131,7 +131,7 @@ public:
 
     void print();
     void printActiveList();
-    void printBucketQueue(); //TODO:
+    void printBucketQueue();
 
     int getLowerBoundVC();
 
