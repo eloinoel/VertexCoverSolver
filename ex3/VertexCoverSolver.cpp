@@ -35,7 +35,7 @@ vector<int>* vcVertexBranchingRecursive(ArrayGraph* G, int k, int* numRec)
         return new vector<int>();
     }
 
-    int vertexDeg = G->getVertexDegree(vertex); 
+    int vertexDeg = G->getVertexDegree(vertex);
 	//graph has no edges left
 	if (vertexDeg == 0)
 	{

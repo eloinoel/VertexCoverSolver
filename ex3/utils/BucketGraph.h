@@ -92,12 +92,8 @@ private:
     /* doubly linked list, that acts as a list of active vertices, O(1) access, deletion and insertion */
     list<Vertex> activeList;
 
-    /* compare buckets for bucketQueue ordering (Returns true if the first element is smaller or equal) */
-    /* static bool bucketComparator(Bucket& bucket1, Bucket& bucket2) {
-        return bucket1.degree <= bucket2.degree;
-    } */
-    /* priority queue of buckets that contain vertices of a certain degree (largest ) */
-    //std::priority_queue<Bucket, std::vector<Bucket>, std::function<bool(Bucket&, Bucket&)>> bucketQueue;
+    /* each index represents a degree, that maps to a Bucket object that may be contained in the bucketQueue */
+    std::vector<Bucket*> bucketReferences;
     /* priority queue of buckets that contain vertices of a certain degree (buckets are ordered after their degree ascendingly from front() to back()) */
     list<Bucket> bucketQueue;
 
@@ -120,11 +116,12 @@ private:
 	static bool isVertexCharacter(char c);
 
     void initActiveList(std::vector<std::pair<std::string, std::string>> edges);
-    void initBucketQueue();
+    void initBucketQueue(); // TODO: implement bucketReferences and use it to speed up all bucketQueue operations
     void removeBucket(int degree); // TODO: implement
     void addBucket(int degree, std::vector<BucketVertex*> vertices); // TODO: Use binary search
     void removeFromBucketQueue(int degree, std::vector<BucketVertex*> vertices);
     void addToBucketQueue(int degree, std::vector<BucketVertex*> vertices);
+    void moveInBucketQueue(int degree, std::vector<BucketVertex*> vertices, int newDegree);
 
     //------------------------ Graph Utility ------------------------
 
