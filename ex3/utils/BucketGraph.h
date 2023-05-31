@@ -66,7 +66,8 @@ public:
     {
         for(BucketVertex* vertex : _vertices)
         {
-            vertices.erase(vertices.iterator_to(*vertex));
+            auto it = vertices.iterator_to(*vertex);
+            vertices.erase(it);
         }
     }
 };
@@ -159,6 +160,8 @@ private:
 
     int getCliqueBound(int k = INT_MAX);
     bool vertexCanBeAddedToClique(int vertex, std::vector<int>* clique);
+
+    int getLPBound();
 
     //------------------------ Data Reduction ------------------------
     //TODO: apply data reduction to input graph and return output graph

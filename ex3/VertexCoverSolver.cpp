@@ -30,7 +30,8 @@ vector<int>* vcVertexBranchingRecursive(BucketGraph* G, int k, int* numRec)
         return new vector<int>();
     }
 
-    //cout << "before getVertexDegree" << endl;
+    //G->printBucketQueue();
+    //cout << "before getVertexDegree: " << vertex << endl;
     int vertexDeg = G->getVertexDegree(vertex);
 	//graph has no edges left
 	if (vertexDeg == 0)
@@ -62,6 +63,7 @@ vector<int>* vcVertexBranchingRecursive(BucketGraph* G, int k, int* numRec)
         return nullptr;
     }
 
+    //cout << "before getNeighbours" << endl;
     vector<int>* neighbours = G->getNeighbours(vertex);
     G->setInactive(neighbours);
 	S = vcVertexBranchingRecursive(G, k - neighbours->size(), numRec);
@@ -309,13 +311,20 @@ void chooseImplementationAndOutput(int version = 1, bool printGraph = false, boo
             G->printBucketQueue();
         }
 
-        int numRecursiveSteps = 0;
-        std::vector<int>* vc = vcSolverRecursive(G, &numRecursiveSteps);
+
 
         if(printVC)
         {
+            int numRecursiveSteps = 0;
+            std::vector<int>* vc = vcSolverRecursive(G, &numRecursiveSteps);
             writeSolutionToConsole(G->getStringsFromVertexIndices(vc));
             cout << "#recursive steps: " << numRecursiveSteps << endl;
+        }
+
+        if(printBounds)
+        {
+            int bound = G->getLowerBoundVC();
+            cout << "#recursive steps: " << bound << endl;
         }
 
     }
@@ -334,7 +343,7 @@ int main(int argc, char* argv[]) {
 	try
 	{
         //chooseImplementationAndOutput(0, false, false, false, false, true, false);
-        chooseImplementationAndOutput(1, false, false, false, false, true, false);
+        chooseImplementationAndOutput(1, false, false, false, false, false, false);
 	}
 	catch (const exception& e)
 	{

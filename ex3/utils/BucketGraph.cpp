@@ -4,6 +4,7 @@
 
 #include "BucketGraph.h"
 #include "ColorPrint.h"
+#include "BipartiteArrayGraph.h"
 
 typedef ColorPrint cp;
 
@@ -285,61 +286,7 @@ void BucketGraph::initBucketQueue()
     }
 }
 
-void BucketGraph::removeFromBucketQueue(int degree, std::vector<BucketVertex*> vertices)
-{
-    bucketReferences[degree]->remove(vertices);
-    if(bucketReferences[degree]->vertices.size() == 0) {
-        bucketQueue.erase(bucketQueue.iterator_to(*bucketReferences[degree]));
-    }
-}
 
-
-void BucketGraph::addToBucketQueue(int degree, std::vector<BucketVertex*> vertices)
-{
-    // extend bucketReferences
-    if(degree > (int) bucketReferences.size()-1)
-    {
-        for (int i=bucketReferences.size(); i<=degree; i++)
-        {
-            bucketReferences.push_back(new Bucket(i, {}));
-        }
-    }
-    //std::cout << "post bucketRef extension" << std::endl;
-
-    // insert bucket into queue
-    if((int) bucketReferences[degree]->vertices.size() == 0)
-    {
-        // search larger non-empty bucket in bucketQueue
-        auto it = bucketQueue.begin();
-        for(; it != bucketQueue.end(); ++it)
-        {
-            if(it->degree > degree) {
-                //std::cout << "bucket insertion in the middle with degree " << degree << std::endl;
-                bucketQueue.insert(it, *bucketReferences[degree]);
-                break;
-            }
-        }
-        if(it == bucketQueue.end())
-        {
-            //std::cout << "bucket insertion at end" << std::endl;
-            bucketQueue.insert(bucketQueue.end(), *bucketReferences[degree]);
-        }
-
-        /* std::cout << "bucket is empty" << std::endl;
-        if(degree == (int) bucketReferences.size()-1)
-        {
-            std::cout << "bucket insertion at end" << std::endl;
-            bucketQueue.insert(bucketQueue.end(), *bucketReferences[degree]);
-        }
-        else if (degree < (int) bucketReferences.size()-1)
-        {
-            std::cout << "bucket insertion in the middle with degree " << degree << std::endl;
-            bucketQueue.insert(bucketQueue.iterator_to(*bucketReferences[degree+1]), *bucketReferences[degree]);
-        } */
-    }
-    //std::cout << "post bucket insertion" << std::endl;
-    bucketReferences[degree]->insert(vertices);
-}
 
 /*----------------------------------------------------------*/
 /*-------------------   Graph Utility   --------------------*/
@@ -466,6 +413,59 @@ std::vector<std::string>* BucketGraph::getStringsFromVertexIndices(std::vector<i
     return solution;
 }
 
+void BucketGraph::removeFromBucketQueue(int degree, std::vector<BucketVertex*> vertices)
+{
+    bucketReferences[degree]->remove(vertices);
+    if(bucketReferences[degree]->vertices.size() == 0) {
+        bucketQueue.erase(bucketQueue.iterator_to(*bucketReferences[degree]));
+    }
+}
+
+void BucketGraph::addToBucketQueue(int degree, std::vector<BucketVertex*> vertices)
+{
+    // extend bucketReferences
+    if(degree > (int) bucketReferences.size()-1)
+    {
+        for (int i=bucketReferences.size(); i<=degree; i++)
+        {
+            bucketReferences.push_back(new Bucket(i, {}));
+        }
+    }
+    // insert bucket into queue
+    if((int) bucketReferences[degree]->vertices.size() == 0)
+    {
+        // search larger non-empty bucket in bucketQueue
+        auto it = bucketQueue.begin();
+        for(; it != bucketQueue.end(); ++it)
+        {
+            if(it->degree > degree) {
+                bucketQueue.insert(it, *bucketReferences[degree]);
+                break;
+            }
+        }
+
+        if(it == bucketQueue.end())
+        {
+            bucketQueue.insert(bucketQueue.end(), *bucketReferences[degree]);
+        }
+        // ---------------------------------------------
+        /* auto it = *bucketReferences[degree];
+        for(; it != bucketQueue.end(); ++it)
+        {
+            if(it->degree > degree) {
+                bucketQueue.insert(it, *bucketReferences[degree]);
+                break;
+            }
+        }
+
+        if(it == bucketQueue.end())
+        {
+            bucketQueue.insert(bucketQueue.end(), *bucketReferences[degree]);
+        } */
+    }
+    bucketReferences[degree]->insert(vertices);
+}
+
 void BucketGraph::setActive(int vertexIndex)
 {
     Vertex* v = vertexReferences[vertexIndex];
@@ -484,6 +484,7 @@ void BucketGraph::setActive(int vertexIndex)
             throw std::invalid_argument("setActive: tried updating degree of vertex pointing to nullptr");
         }
         vertexReferences[(*v->adj)[i]]->degree++;
+        if(!vertexReferences[(*v->adj)[i]]->isActive) { continue; }
         removeFromBucketQueue(vertexReferences[(*v->adj)[i]]->degree-1, {vertexReferences[(*v->adj)[i]]->bucketVertex});
         addToBucketQueue(vertexReferences[(*v->adj)[i]]->degree, {vertexReferences[(*v->adj)[i]]->bucketVertex});
     }
@@ -507,6 +508,7 @@ void BucketGraph::setInactive(int vertexIndex)
             throw std::invalid_argument("setInactive: tried updating degree of vertex pointing to nullptr");
         }
         vertexReferences[(*v->adj)[i]]->degree--;
+        if(!vertexReferences[(*v->adj)[i]]->isActive) { continue; }
         removeFromBucketQueue(vertexReferences[(*v->adj)[i]]->degree+1, {vertexReferences[(*v->adj)[i]]->bucketVertex});
         addToBucketQueue(vertexReferences[(*v->adj)[i]]->degree, {vertexReferences[(*v->adj)[i]]->bucketVertex});
     }
@@ -609,11 +611,11 @@ int BucketGraph::getCliqueBound(int k)
         {
             int curVertex = jt->index;
             int cliqueIndex = -1;
-            for(int k = 0; k < (int) cliques.size(); k++)
+            for(int l = 0; l < (int) cliques.size(); l++)
             {
-                if(vertexCanBeAddedToClique(curVertex, cliques.at(k)))
+                if(vertexCanBeAddedToClique(curVertex, cliques.at(l)))
                 {
-                    cliqueIndex = k;
+                    cliqueIndex = l;
                     break;
                 }
 
@@ -639,6 +641,17 @@ int BucketGraph::getCliqueBound(int k)
     }
     return cliqueBound;
 }
+
+int BucketGraph::getLPBound()
+{
+    //generate bipartite graph that splits vertices into left and right
+    BipartiteArrayGraph* bipartiteGraph = BipartiteArrayGraph::createBipartiteGraphByVertexSplit(this);
+
+    //execute Hopcroft Karp to the maximum matching size
+    int maximumMatchingSize = bipartiteGraph->getMaximumMatching();
+
+    return maximumMatchingSize/2;
+};
 
 bool BucketGraph::vertexCanBeAddedToClique(int vertex, std::vector<int>* clique)
 {
