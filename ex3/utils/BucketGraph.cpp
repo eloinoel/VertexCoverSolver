@@ -298,9 +298,25 @@ void BucketGraph::removeFromBucketQueue(int degree, std::vector<BucketVertex*> v
 // TODO: extend bucketReferences if necessary
 void BucketGraph::addToBucketQueue(int degree, std::vector<BucketVertex*> vertices)
 {
+    // extend bucketReferences if necessary
+    if(degree > bucketReferences.size()-1)
+    {
+        for (int i=bucketReferences.size(); i<=degree; i++)
+        {
+            bucketReferences.push_back(new Bucket(i, {}));
+        }
+    }
+    // insert bucket into queue
     if(bucketReferences[degree]->vertices.size() == 0)
     {
-        bucketQueue.insert(bucketQueue.iterator_to(*bucketReferences[degree+1]), *bucketReferences[degree]);
+        if(degree == bucketReferences.size()-1)
+        {
+            bucketQueue.insert(bucketQueue.end(), *bucketReferences[degree]);
+        }
+        else if (degree < bucketReferences.size()-1)
+        {
+            bucketQueue.insert(bucketQueue.iterator_to(*bucketReferences[degree+1]), *bucketReferences[degree]);
+        }
     }
     bucketReferences[degree]->insert(vertices);
 }
