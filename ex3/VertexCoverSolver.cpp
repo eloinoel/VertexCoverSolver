@@ -21,7 +21,7 @@ vector<int>* vcVertexBranchingRecursive(BucketGraph* G, int k, int* numRec)
 		return nullptr;
 	}
 
-    cout << "before getMaxDegreeVertex" << endl;
+    //cout << "before getMaxDegreeVertex" << endl;
 	int vertex = G->getMaxDegreeVertex();
     
     //no vertices left
@@ -30,7 +30,7 @@ vector<int>* vcVertexBranchingRecursive(BucketGraph* G, int k, int* numRec)
         return new vector<int>();
     }
 
-    cout << "before getVertexDegree" << endl;
+    //cout << "before getVertexDegree" << endl;
     int vertexDeg = G->getVertexDegree(vertex);
 	//graph has no edges left
 	if (vertexDeg == 0)
@@ -38,10 +38,10 @@ vector<int>* vcVertexBranchingRecursive(BucketGraph* G, int k, int* numRec)
 		return new vector<int>();
 	}
 
-    cout << "before setInactive" << endl;
+    //cout << "before setInactive" << endl;
 	//delete first vertex from graph and explore solution
     G->setInactive(vertex);
-    cout << "before branching" << endl;
+    //cout << "before branching" << endl;
 	vector<int>* S = vcVertexBranchingRecursive(G, k - 1, numRec);
 	if (S != nullptr)
 	{
@@ -51,7 +51,7 @@ vector<int>* vcVertexBranchingRecursive(BucketGraph* G, int k, int* numRec)
 	}
 	else
 	{
-        cout << "before setActive" << endl;
+        //cout << "before setActive" << endl;
 		//revert changes to graph
 		G->setActive(vertex);
 	}
