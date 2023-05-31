@@ -243,13 +243,11 @@ void BucketGraph::initBucketQueue()
     bucketQueue = list<Bucket>();
     bool inserted = false;
     int maxDeg = -1;
+    // add activeList vertices
     for (auto vertex = activeList.begin(); vertex != activeList.end(); ++vertex)
     {
         inserted = false;
-        if(vertex->degree > maxDeg)
-        {
-            maxDeg = vertex->degree;
-        }
+        if(vertex->degree > maxDeg) { maxDeg = vertex->degree; }
 
         for (auto bucket = bucketQueue.begin(); bucket != bucketQueue.end(); ++bucket)
         {
@@ -295,29 +293,51 @@ void BucketGraph::removeFromBucketQueue(int degree, std::vector<BucketVertex*> v
     }
 }
 
-// TODO: extend bucketReferences if necessary
+
 void BucketGraph::addToBucketQueue(int degree, std::vector<BucketVertex*> vertices)
 {
-    // extend bucketReferences if necessary
-    if(degree > bucketReferences.size()-1)
+    // extend bucketReferences
+    if(degree > (int) bucketReferences.size()-1)
     {
         for (int i=bucketReferences.size(); i<=degree; i++)
         {
             bucketReferences.push_back(new Bucket(i, {}));
         }
     }
+    //std::cout << "post bucketRef extension" << std::endl;
+
     // insert bucket into queue
-    if(bucketReferences[degree]->vertices.size() == 0)
+    if((int) bucketReferences[degree]->vertices.size() == 0)
     {
-        if(degree == bucketReferences.size()-1)
+        // search larger non-empty bucket in bucketQueue
+        auto it = bucketQueue.begin();
+        for(; it != bucketQueue.end(); ++it)
         {
+            if(it->degree > degree) {
+                //std::cout << "bucket insertion in the middle with degree " << degree << std::endl;
+                bucketQueue.insert(it, *bucketReferences[degree]);
+                break;
+            }
+        }
+        if(it == bucketQueue.end())
+        {
+            //std::cout << "bucket insertion at end" << std::endl;
             bucketQueue.insert(bucketQueue.end(), *bucketReferences[degree]);
         }
-        else if (degree < bucketReferences.size()-1)
+
+        /* std::cout << "bucket is empty" << std::endl;
+        if(degree == (int) bucketReferences.size()-1)
         {
-            bucketQueue.insert(bucketQueue.iterator_to(*bucketReferences[degree+1]), *bucketReferences[degree]);
+            std::cout << "bucket insertion at end" << std::endl;
+            bucketQueue.insert(bucketQueue.end(), *bucketReferences[degree]);
         }
+        else if (degree < (int) bucketReferences.size()-1)
+        {
+            std::cout << "bucket insertion in the middle with degree " << degree << std::endl;
+            bucketQueue.insert(bucketQueue.iterator_to(*bucketReferences[degree+1]), *bucketReferences[degree]);
+        } */
     }
+    //std::cout << "post bucket insertion" << std::endl;
     bucketReferences[degree]->insert(vertices);
 }
 

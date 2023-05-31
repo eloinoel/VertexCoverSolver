@@ -108,6 +108,7 @@ private:
     std::vector<Bucket*> bucketReferences;
     /* priority queue of buckets that contain vertices of a certain degree (buckets are ordered after their degree ascendingly from front() to back()) */
     list<Bucket> bucketQueue;
+    std::pair<int, int> degreeLimits; //bucketQueue empty: minDeg = INT32_MAX, maxDeg = -1
 
     /* used for reading in data, maps from original vertex name from input data to index and degree */
     std::unordered_map<std::string, std::pair<int, int>> originalVertexNames;
