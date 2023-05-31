@@ -9,18 +9,118 @@
 
 using namespace std;
 
-//enum VCDebugMode {
-//	ExecutionTranscript,
-//	StackAccessTranscript,
-//	IterationsTaken,
-//	NoDebug
-//};
+/*----------------------------------------------------------*/
+/*---------------   Exercise 3 Solver Code   ---------------*/
+/*----------------------------------------------------------*/
+
+vector<int>* vcVertexBranchingRecursive(BucketGraph* G, int k, int* numRec)
+{
+    (*numRec)++;
+	if (k < 0)
+    {
+		return nullptr;
+	}
+
+    cout << "before getMaxDegreeVertex" << endl;
+	int vertex = G->getMaxDegreeVertex();
+    
+    //no vertices left
+    if (vertex == -1)
+    {
+        return new vector<int>();
+    }
+
+    cout << "before getVertexDegree" << endl;
+    int vertexDeg = G->getVertexDegree(vertex);
+	//graph has no edges left
+	if (vertexDeg == 0)
+	{
+		return new vector<int>();
+	}
+
+    cout << "before setInactive" << endl;
+	//delete first vertex from graph and explore solution
+    G->setInactive(vertex);
+    cout << "before branching" << endl;
+	vector<int>* S = vcVertexBranchingRecursive(G, k - 1, numRec);
+	if (S != nullptr)
+	{
+		//return results
+		S->push_back(vertex);
+		return S;
+	}
+	else
+	{
+        cout << "before setActive" << endl;
+		//revert changes to graph
+		G->setActive(vertex);
+	}
+
+	//cannot fully explore neighbours
+    if (vertexDeg > k)
+    {
+        return nullptr;
+    }
+
+    vector<int>* neighbours = G->getNeighbours(vertex);
+    G->setInactive(neighbours);
+	S = vcVertexBranchingRecursive(G, k - neighbours->size(), numRec);
+	if (S != nullptr)
+	{
+		//return results
+        for (int i = 0; i < (int) neighbours->size(); i++)
+        {
+            S->push_back(neighbours->at(i));
+        }
+        return S;
+	}
+	else
+	{
+		//revert changes to graph
+		G->setActive(neighbours);
+	}
+
+	return nullptr;
+}
+
+vector<int>* vcSolverRecursive(BucketGraph* G, int* numRec)
+{
+	int k = G->getLowerBoundVC();
+
+	vector<int> *vc;
+
+	while (true)
+	{
+        // Reduction Rules
+        //vector<ReductionVertices>* reductionVertices = new vector<ReductionVertices>;
+
+        // Apply Reduction Rules for the first time
+       /*  if(G->applyReductionRules(&k, reductionVertices))
+            return nullptr; */
+
+		vc = vcVertexBranchingRecursive(G, k, numRec);
+		if (vc != nullptr)
+		{
+            // Add Reduced Vertices to Vertex Cover
+            /* G->addReducedVertices(vc, reductionVertices);
+            delete reductionVertices; */
+
+			return vc;
+		}
+
+        /* G->addBackReducedVertices(&k, reductionVertices);
+        delete reductionVertices; */
+
+        k++;
+	}
+}
+
 
 /*----------------------------------------------------------*/
 /*---------------   Exercise 2 Solver Code   ---------------*/
 /*----------------------------------------------------------*/
 
-vector<int>* vcVertexBranchingRecursive(ArrayGraph* G, int k, int* numRec)
+vector<int>* vcVertexBranchingRecursiveEx2(ArrayGraph* G, int k, int* numRec)
 {
     (*numRec)++;
 	if (k < 0)
@@ -55,7 +155,7 @@ vector<int>* vcVertexBranchingRecursive(ArrayGraph* G, int k, int* numRec)
 
 	//delete first vertex from graph and explore solution
     G->setInactive(vertex);
-	vector<int>* S = vcVertexBranchingRecursive(G, k - 1, numRec);
+	vector<int>* S = vcVertexBranchingRecursiveEx2(G, k - 1, numRec);
 	if (S != nullptr)
 	{
 		//return results
@@ -81,7 +181,7 @@ vector<int>* vcVertexBranchingRecursive(ArrayGraph* G, int k, int* numRec)
 
     vector<int>* neighbours = G->getNeighbours(vertex);
     G->setInactive(neighbours);
-	S = vcVertexBranchingRecursive(G, k - neighbours->size(), numRec);
+	S = vcVertexBranchingRecursiveEx2(G, k - neighbours->size(), numRec);
 	if (S != nullptr)
 	{
 		//return results
@@ -111,7 +211,7 @@ vector<int>* vcVertexBranchingRecursive(ArrayGraph* G, int k, int* numRec)
 	return nullptr;
 }
 
-vector<int>* vertexBranchingSolverRecursive(ArrayGraph* G, int* numRec)
+vector<int>* vertexBranchingSolverRecursiveEx2(ArrayGraph* G, int* numRec)
 {
 	int k = G->getLowerBoundVC();
 
@@ -126,7 +226,7 @@ vector<int>* vertexBranchingSolverRecursive(ArrayGraph* G, int* numRec)
        /*  if(G->applyReductionRules(&k, reductionVertices))
             return nullptr; */
 
-		vc = vcVertexBranchingRecursive(G, k, numRec);
+		vc = vcVertexBranchingRecursiveEx2(G, k, numRec);
 		if (vc != nullptr)
 		{
             // Add Reduced Vertices to Vertex Cover
@@ -184,7 +284,7 @@ void chooseImplementationAndOutput(int version = 1, bool printGraph = false, boo
             G->print();
 
         int numRecursiveSteps = 0;
-        vc = vertexBranchingSolverRecursive(G, &numRecursiveSteps);
+        vc = vertexBranchingSolverRecursiveEx2(G, &numRecursiveSteps);
 		if(printVC)
         {
             writeSolutionToConsole(G->getStringsFromVertexIndices(vc));
@@ -209,6 +309,15 @@ void chooseImplementationAndOutput(int version = 1, bool printGraph = false, boo
             G->printBucketQueue();
         }
 
+        int numRecursiveSteps = 0;
+        std::vector<int>* vc = vcSolverRecursive(G, &numRecursiveSteps);
+
+        if(printVC)
+        {
+            writeSolutionToConsole(G->getStringsFromVertexIndices(vc));
+            cout << "#recursive steps: " << numRecursiveSteps << endl;
+        }
+
     }
     else
     {
@@ -225,7 +334,7 @@ int main(int argc, char* argv[]) {
 	try
 	{
         //chooseImplementationAndOutput(0, false, false, false, false, true, false);
-        chooseImplementationAndOutput(1, true);
+        chooseImplementationAndOutput(1, false, false, false, false, true, false);
 	}
 	catch (const exception& e)
 	{

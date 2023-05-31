@@ -419,6 +419,17 @@ void BucketGraph::printBucketQueue()
     }
 }
 
+std::vector<std::string>* BucketGraph::getStringsFromVertexIndices(std::vector<int>* vertices)
+{
+    std::vector<std::string>* solution = new std::vector<std::string>();
+    for (int i = 0; i < (int) vertices->size(); i++)
+    {
+        std::string stringcpy = vertexReferences[vertices->at(i)]->strName;
+        solution->push_back(stringcpy);
+    }
+    return solution;
+}
+
 void BucketGraph::setActive(int vertexIndex)
 {
     Vertex* v = vertexReferences[vertexIndex];
@@ -465,6 +476,22 @@ void BucketGraph::setInactive(int vertexIndex)
     }
 }
 
+void BucketGraph::setActive(std::vector<int>* vertexIndices)
+{
+    for(int i = 0; i < (int) vertexIndices->size(); i++)
+    {
+        setActive(vertexIndices->at(i));
+    }
+}
+
+void BucketGraph::setInactive(std::vector<int>* vertexIndices)
+{
+    for(int i = 0; i < (int) vertexIndices->size(); i++)
+    {
+        setInactive(vertexIndices->at(i));
+    }
+}
+
 std::vector<int>* BucketGraph::getNeighbours(int vertexIndex)
 {
     std::vector<int>* neighbours = new std::vector<int>();
@@ -490,12 +517,16 @@ std::vector<int>* BucketGraph::getNeighbours(int vertexIndex)
 
 int BucketGraph::getMaxDegree()
 {
+    if(bucketQueue.empty())
+        return -1;
     return bucketQueue.back().degree;
 }
 
 
 int BucketGraph::getMaxDegreeVertex()
 {
+    if(bucketQueue.empty())
+        return -1;
     return bucketQueue.back().vertices.front().index;
 }
 

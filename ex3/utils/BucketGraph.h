@@ -118,9 +118,12 @@ public:
 
     /* creates and initialises a graph from standard input */
     static BucketGraph* readStandardInput();
+    std::vector<std::string>* getStringsFromVertexIndices(std::vector<int>* vertices);
 
     void setActive(int vertexIndex);
+    void setActive(std::vector<int>* vertexIndices);
     void setInactive(int vertexIndex);
+    void setInactive(std::vector<int>* vertexIndices);
 
     std::vector<int>* getNeighbours(int vertexIndex);
 
