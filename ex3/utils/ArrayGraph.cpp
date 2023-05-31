@@ -3,6 +3,8 @@
 #include <cmath> //ceil
 #include <algorithm> //ceil
 #include <stack>          // std::stack
+#include <chrono>
+using namespace std::chrono;
 
 #include "ArrayGraph.h"
 #include "BipartiteArrayGraph.h"
@@ -540,8 +542,8 @@ void ArrayGraph::setActive(std::vector<int>* vertexIndices)
 
 int ArrayGraph::getLowerBoundVC() {
 
-    //return getCliqueBound();
-    return getLPBound();
+    return getCliqueBound();
+    //return getLPBound();
     //return getLPCycleBound(); //TODO: doesn't work, cycle bound should be higher than LP bound but isn't the case
 }
 
@@ -594,17 +596,24 @@ bool ArrayGraph::vertexCanBeAddedToClique(int vertex, std::vector<int>* clique)
 */
 int ArrayGraph::getCliqueBound()
 {
+    //TODO:delete time debug
+    //auto start = high_resolution_clock::now();
+
     std::vector<int>* sorted_vertices = getVerticesSortedByDegree();
     std::vector<std::vector<int>*> cliques = std::vector<std::vector<int>*>();
 
+    //int iterations = 0;
+    //int cliqueIterations = 0;
     //for each vertex
     for(int i = 0; i < (int) sorted_vertices->size(); i++)
     {
+        //iterations++;
         int curVertex = sorted_vertices->at(i);
         //search for clique to add to
         std::pair<int, int> maxClique = std::pair<int, int>({-1, -1}); //clique index, clique size
         for(int j = 0; j < (int) cliques.size(); j++)
         {
+            //cliqueIterations++;
             bool canBeAdded = vertexCanBeAddedToClique(curVertex, cliques.at(j));
             if(canBeAdded && (int) cliques.at(j)->size() > maxClique.second)
             {
@@ -632,6 +641,10 @@ int ArrayGraph::getCliqueBound()
     {
         cliqueBound += cliques.at(i)->size() - 1;
     }
+
+    //auto stop = std::chrono::high_resolution_clock::now();
+    //auto duration = duration_cast<milliseconds>(stop - start);
+    //std::cout << "numIterations: " << iterations << ", numCliqueIterations: " << cliqueIterations << ", duration: " << duration.count() << std::endl;
     return cliqueBound;
 }
 

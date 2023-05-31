@@ -285,12 +285,19 @@ void chooseImplementationAndOutput(int version = 1, bool printGraph = false, boo
         if (printGraph)
             G->print();
 
-        int numRecursiveSteps = 0;
-        vc = vertexBranchingSolverRecursiveEx2(G, &numRecursiveSteps);
+
 		if(printVC)
         {
+            int numRecursiveSteps = 0;
+            vc = vertexBranchingSolverRecursiveEx2(G, &numRecursiveSteps);
             writeSolutionToConsole(G->getStringsFromVertexIndices(vc));
             cout << "#recursive steps: " << numRecursiveSteps << endl;
+        }
+
+        if(printBounds)
+        {
+            int bound = G->getLowerBoundVC();
+            cout << "#recursive steps: " << bound << endl;
         }
 
 
@@ -310,8 +317,6 @@ void chooseImplementationAndOutput(int version = 1, bool printGraph = false, boo
             G->printActiveList();
             G->printBucketQueue();
         }
-
-
 
         if(printVC)
         {
@@ -343,7 +348,7 @@ int main(int argc, char* argv[]) {
 	try
 	{
         //chooseImplementationAndOutput(0, false, false, false, false, true, false);
-        chooseImplementationAndOutput(1, false, false, false, false, false, false);
+        chooseImplementationAndOutput(1, false, false, false, false, false, true);
 	}
 	catch (const exception& e)
 	{

@@ -75,6 +75,7 @@ public:
 class Vertex : public list_base_hook<>
 {
     std::vector<int>* adj;
+    //list adj_refs; TODO:
     std::string strName;
     int index;
 

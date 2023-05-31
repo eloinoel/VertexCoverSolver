@@ -79,3 +79,11 @@ password: 9b5MEDypeZPf
 scp -r ./vc-data-students/ algeng-ss23-team6@aba01.akt.tu-berlin.de:./local/
 scp ./VertexCoverSolver algeng-ss23-team6@aba01.akt.tu-berlin.de:./local/src
 
+
+# execute gprof profiling
+cmake . -B build -DCMAKE_CXX_FLAGS=-pg -DCMAKE_EXE_LINKER_FLAGS=-pg -DCMAKE_SHARED_LINKER_FLAGS=-pg
+
+cd ..; cmake --build build; cd logs; ../build/bin/VertexCoverSolver < ./../../vc-data-students/1-random/000600_000000003600.dimacs
+
+gprof ../build/bin/VertexCoverSolver gmon.out > results.txt
+

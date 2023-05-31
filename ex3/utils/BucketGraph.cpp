@@ -1,6 +1,8 @@
 #include <iostream> //output streams
 #include <fstream>  //ifstream file opening
 #include <math.h>
+#include <chrono>
+using namespace std::chrono;
 
 #include "BucketGraph.h"
 #include "ColorPrint.h"
@@ -600,8 +602,14 @@ int BucketGraph::getLowerBoundVC() {
 */
 int BucketGraph::getCliqueBound(int k)
 {
+    //TODO:delete time debug
+    //auto start = high_resolution_clock::now();
+
     std::vector<std::vector<int>*> cliques = std::vector<std::vector<int>*>();
     int cliqueBound = 0;
+
+    //int iterations = 0;
+    //int cliqueIterations = 0;
 
     //iterate through vertices in ascending order of degrees (buckets)
     for(auto bucket = bucketQueue.begin(); bucket != bucketQueue.end(); ++bucket)
@@ -609,16 +617,17 @@ int BucketGraph::getCliqueBound(int k)
         //for each vertex in bucket
         for(auto jt = bucket->vertices.begin(); jt != bucket->vertices.end(); ++jt)
         {
+            //iterations++;
             int curVertex = jt->index;
             int cliqueIndex = -1;
             for(int l = 0; l < (int) cliques.size(); l++)
             {
+                //cliqueIterations++;
                 if(vertexCanBeAddedToClique(curVertex, cliques.at(l)))
                 {
                     cliqueIndex = l;
                     break;
                 }
-
             }
             //found clique
             if(cliqueIndex >= 0)
@@ -639,10 +648,14 @@ int BucketGraph::getCliqueBound(int k)
             }
         }
     }
+
+    //auto stop = std::chrono::high_resolution_clock::now();
+    //auto duration = duration_cast<milliseconds>(stop - start);
+    //std::cout << "numIterations: " << iterations << ", numCliqueIterations: " << cliqueIterations << ", duration: " << duration.count() << std::endl;
     return cliqueBound;
 }
 
-int BucketGraph::getLPBound()
+/* int BucketGraph::getLPBound()
 {
     //generate bipartite graph that splits vertices into left and right
     BipartiteArrayGraph* bipartiteGraph = BipartiteArrayGraph::createBipartiteGraphByVertexSplit(this);
@@ -651,7 +664,7 @@ int BucketGraph::getLPBound()
     int maximumMatchingSize = bipartiteGraph->getMaximumMatching();
 
     return maximumMatchingSize/2;
-};
+} */
 
 bool BucketGraph::vertexCanBeAddedToClique(int vertex, std::vector<int>* clique)
 {
@@ -660,10 +673,10 @@ bool BucketGraph::vertexCanBeAddedToClique(int vertex, std::vector<int>* clique)
     {
         //is a neighbour of vertex
         bool isNeighbour = false;
-        std::vector<int>* neighbours = getNeighbours(vertex);
-        for(int j = 0; j < (int) neighbours->size(); j++)
+        std::vector<int>* adj = vertexReferences[vertex]->adj;
+        for(int j = 0; j < (int) adj->size(); j++)
         {
-            if (neighbours->at(j) == clique->at(i))
+            if (adj->at(j) == clique->at(i))
             {
                 isNeighbour = true;
                 break;
