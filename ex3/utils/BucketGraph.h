@@ -196,33 +196,7 @@ private:
     bool matchingBFS(std::vector<int>* pairU, std::vector<int>* pairV, std::vector<int>* dist, int NIL);
     bool matchingDFS(std::vector<int>* pairU, std::vector<int>* pairV, std::vector<int>* dist, int u, int NIL);
     int hopcroftKarpMatchingSize();
-
-    /* void hopcroftKarpMatching(std::vector<std::pair<int, int>>* matching)
-    {
-        // clear matching
-        if(!matching->empty()) { matching->clear(); }
-        // initialize pairU/pairV
-        std::vector<int>* pairU = new std::vector<int>(vertexReferences.size());
-        std::vector<int>* pairV = new std::vector<int>(vertexReferences.size());
-        for(int i=0; i<(int) pairU->size(); i++)
-        {
-            pairU[i] = NIL;
-            pairV[i] = NIL;
-        }
-        while (BFS() == true)
-        {
-            for (int i=0; i<(int) pairU->size(); i++)
-            {
-                if (Pair_U[u] == NIL)
-                {
-                    if (DFS(u) == true)
-                    {
-                        matching := matching + 1
-                    }
-                }
-            }
-        }
-    } */
+    std::vector<int>* hopcroftKarpMatching();
 
     int edmondsKarp()
     {
@@ -235,6 +209,7 @@ private:
     bool vertexCanBeAddedToClique(int vertex, std::vector<int>* clique);
 
     int getLPBound();
+    int getLPCycleBound();
 
     //------------------------ Data Reduction ------------------------
     //TODO: apply data reduction to input graph and return output graph

@@ -611,8 +611,8 @@ int ArrayGraph::getLowerBoundVC() {
 
     //return getCliqueBound();
     //return getCycleBound();
-    return getLPCycleBound();
-    //return getLPCycleBound(); //TODO: doesn't work, cycle bound should be higher than LP bound but isn't the case, no time to debug this
+    //return getLPCycleBound();
+    return getLPBound(); //TODO: doesn't work, cycle bound should be higher than LP bound but isn't the case, no time to debug this
 }
 
 std::vector<int> ArrayGraph::getAllLowerBounds() {

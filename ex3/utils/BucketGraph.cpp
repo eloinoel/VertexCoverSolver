@@ -652,7 +652,7 @@ bool BucketGraph::matchingBFS(std::vector<int>* pairU, std::vector<int>* pairV, 
         int NIL = vertexReferences.size();
         int matching = 0;
         // initialize pairU/pairV
-        std::vector<int> pairU = std::vector<int>(vertexReferences.size()); // TODO: needs to be allocated?
+        std::vector<int> pairU = std::vector<int>(vertexReferences.size());
         std::vector<int> pairV = std::vector<int>(vertexReferences.size());
         std::vector<int> dist = std::vector<int>(vertexReferences.size()+1);
         for(int i=0; i<(int) pairU.size(); i++)
@@ -676,6 +676,31 @@ bool BucketGraph::matchingBFS(std::vector<int>* pairU, std::vector<int>* pairV, 
         return matching;
     }
 
+    std::vector<int>* BucketGraph::hopcroftKarpMatching()
+    {
+        int NIL = vertexReferences.size();
+        // initialize pairU/pairV
+        std::vector<int> pairU = std::vector<int>(vertexReferences.size()); // TODO: needs to be allocated?
+        std::vector<int> pairV = std::vector<int>(vertexReferences.size());
+        std::vector<int> dist = std::vector<int>(vertexReferences.size()+1);
+        for(int i=0; i<(int) pairU.size(); i++)
+        {
+            pairU[i] = NIL;
+            pairV[i] = NIL;
+        }
+        while (matchingBFS(&pairU, &pairV, &dist, NIL))
+        {
+            for (int i=0; i<(int) pairU.size(); i++)
+            {
+                if (pairU[i] == NIL)
+                {
+                    matchingDFS(&pairU, &pairV, &dist, i, NIL);
+                }
+            }
+        }
+        return &pairU;
+    }
+
 /*----------------------------------------------------------*/
 /*------------------   Calculate Bounds   ------------------*/
 /*----------------------------------------------------------*/
@@ -689,6 +714,78 @@ int BucketGraph::getLowerBoundVC() {
 int BucketGraph::getLPBound()
 {
     return hopcroftKarpMatchingSize()/2;
+}
+
+int BucketGraph::getLPCycleBound()
+{
+    std::vector<int>* matching = hopcroftKarpMatching();
+    std::vector<int> pairU = *matching;
+    int LPCyclebound = 0;
+
+    std::vector<int> currentCycle = std::vector<int>();
+    bool foundCycle;
+    int current;
+    while(true)
+    {
+        // find uncovered vertex index
+        current = -1;
+        foundCycle = false;
+        for(int i=0; i<(int) matching->size(); i++)
+        {
+            if((*matching)[i] != -1)
+            {
+                current = i;
+                break;
+            }
+        }
+        if(current == -1) break;
+        //std::cout << "found uncovered vertex: " << current << "\n";
+
+        // determine cycle
+        while(current != -1 && current != 0/* leftMatches[current] != -1 && leftMatches[current] != 0 */)
+        {
+            if(currentCycle.size() > 2 && currentCycle.front() == current)
+            {
+                foundCycle = true;
+                break;
+            }
+            //std::cout << "adding " << current << " to cycle\n";
+            currentCycle.push_back(current);
+            (*matching)[current] = -1;
+            current = pairU[current];
+        }
+
+        if(foundCycle)
+        {
+            // attempt to subdivide the cycle
+            if(currentCycle.size() >= 6)
+            {
+                for(int c=1; (int) currentCycle.size() >= c + 4; c += 2) {
+                    for(int i=0; i<(int) currentCycle.size(); i++)
+                    {
+                        vertexReferences[i]->adj->at
+                        if(areADJ(currentCycle[i], currentCycle[i+3+c])
+                        && areADJ(currentCycle[i+1], currentCycle[i+2+c]))
+                        {
+                            LPCyclebound += 1 + c;
+                            // TODO: cull i+1 -> i+2+c from currentCycle
+                            currentCycle.erase(currentCycle.begin()+i+1, currentCycle.begin()+i+2+c+1);
+                            i -= (2 + c); 
+                            if((int) currentCycle.size() < c + 4) break;
+                        }
+                    }
+                }
+            }
+            //std::cout << "found cycle of size: " << currentCycle.size() << "\n";
+            // calculate
+            LPCyclebound += std::ceil((double) currentCycle.size() / (double) 2);
+        }
+        else if(currentCycle.size() == 2)
+        {
+            LPCyclebound++;
+        }
+        currentCycle.clear();
+    }
 }
 
 /*

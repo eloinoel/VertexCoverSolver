@@ -970,15 +970,16 @@ void chooseImplementationAndOutput(int version = 0, bool printGraph = false, boo
         }
 
 		int numRecursiveSteps = 0;
-		vc = vertexBranchingSolverIterative(G, true, &numRecursiveSteps, NoDebug);
-		//vc = new std::vector<int>();
+		//vc = vertexBranchingSolverIterative(G, false, &numRecursiveSteps, NoDebug);
+		vc = new std::vector<int>();
 		
 		if(printVC)
 		{
 			writeSolutionToConsole(G->getStringsFromVertexIndices(vc));
 			//vector<int> bounds = G->getAllLowerBounds();
 			//cout << "#recursive steps: " << 100 + G->getCliqueBound() - G->getLPCycleBound()/* G->getLowerBoundVC() *//* bounds[3] - bounds[1] + 1 */ << endl;
-			cout << "#recursive steps: " << numRecursiveSteps << endl;
+			cout << "#recursive steps: " << G->getLPBound() << endl;
+			//cout << "#recursive steps: " << numRecursiveSteps << endl;
 		}
 		if (printMappings)
 			G->printMappings(vc);
@@ -1055,7 +1056,7 @@ int main(int argc, char* argv[]) {
 
 	try
 	{
-        chooseImplementationAndOutput(2, false, false, false, false, true, false);
+        chooseImplementationAndOutput(0, false, false, false, false, true, false);
         //chooseImplementationAndOutput(3);
 	}
 	catch (const exception& e)
