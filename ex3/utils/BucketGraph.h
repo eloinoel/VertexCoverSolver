@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <queue>
+#include <utility>
 #include <functional>
 #include <limits.h>
 
@@ -152,12 +153,83 @@ private:
     void initActiveList(std::vector<std::pair<std::string, std::string>> edges);
     void initBucketQueue();
     
-    //------------------------ Graph Utility ------------------------
+    //-------------------------- Graph Utility --------------------------
 
     void addToBucketQueue(int degree, std::vector<BucketVertex*> vertices);
     void removeFromBucketQueue(int degree, std::vector<BucketVertex*> vertices);
 
-    //------------------------ Bounds ------------------------
+    //------------------------ Virtual Flow Graph ------------------------
+    /* create a mapping between the virtual flow graph and the bucket graph
+    * in order to simulate the flow graph without instantiating it.
+    * The mapping is in ascending order -> left vertices | right vertices | source | target
+    */
+    // Note: if the number of vertices changes all previously calculated mappings are invalid
+    // Thus storing mapped indices for a period of time where this may occur is not very wise
+
+    int virtualToRealIndex(int virtualIndex) {
+        if (virtualIndex > (int) vertexReferences.size()*2-1) {
+            throw std::invalid_argument("virtualToRealIndex: no real counterpart vertex exists!");
+        }
+        return virtualIndex % vertexReferences.size();
+    }
+
+    int realToVirtualIndex(int realIndex, bool toLeftSide) {
+        if (realIndex < 0 || realIndex > (int) vertexReferences.size()-1) {
+            throw std::invalid_argument("realToVirtualIndex: no real vertex with this index exists!");
+        }
+        if(!toLeftSide) {
+            return realIndex+vertexReferences.size();
+        }
+        return realIndex;
+    }
+
+    std::vector<int>* getVirtualBipartitionEdges(int virtualIndex)
+    {
+        return {};
+    }
+
+    std::vector<int>* getVirtualFlowEdges(int virtualIndex)
+    {
+        return {};
+    }
+
+    bool matchingBFS(std::vector<int>* pairU, std::vector<int>* pairV, std::vector<int>* dist, int NIL);
+    bool matchingDFS(std::vector<int>* pairU, std::vector<int>* pairV, std::vector<int>* dist, int u, int NIL);
+    int hopcroftKarpMatchingSize();
+
+    /* void hopcroftKarpMatching(std::vector<std::pair<int, int>>* matching)
+    {
+        // clear matching
+        if(!matching->empty()) { matching->clear(); }
+        // initialize pairU/pairV
+        std::vector<int>* pairU = new std::vector<int>(vertexReferences.size());
+        std::vector<int>* pairV = new std::vector<int>(vertexReferences.size());
+        for(int i=0; i<(int) pairU->size(); i++)
+        {
+            pairU[i] = NIL;
+            pairV[i] = NIL;
+        }
+        while (BFS() == true)
+        {
+            for (int i=0; i<(int) pairU->size(); i++)
+            {
+                if (Pair_U[u] == NIL)
+                {
+                    if (DFS(u) == true)
+                    {
+                        matching := matching + 1
+                    }
+                }
+            }
+        }
+    } */
+
+    int edmondsKarp()
+    {
+        return -1;
+    }
+
+    //------------------------------ Bounds ------------------------------
 
     int getCliqueBound(int k = INT_MAX);
     bool vertexCanBeAddedToClique(int vertex, std::vector<int>* clique);
