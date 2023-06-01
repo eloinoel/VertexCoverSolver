@@ -274,7 +274,8 @@ void writeSolutionToConsole(vector<string>* vc)
 
  * ....
 */
-void chooseImplementationAndOutput(int version = 1, bool printGraph = false, bool printMappings = false, bool printDebug = false, bool printVCSize = false, bool printVC = true, bool printBounds = false)
+void chooseImplementationAndOutput(int version = 1, bool printGraph = false, bool printMappings = false, 
+bool printDebug = false, bool printVCSize = false, bool printVC = true, bool printBounds = false)
 {
     if(version == 0)
     {
@@ -318,6 +319,8 @@ void chooseImplementationAndOutput(int version = 1, bool printGraph = false, boo
             G->printBucketQueue();
         }
 
+        //G->getNumEdges();
+
         if(printVC)
         {
             int numRecursiveSteps = 0;
@@ -348,7 +351,7 @@ int main(int argc, char* argv[]) {
 	try
 	{
         //chooseImplementationAndOutput(0, false, false, false, false, true, false);
-        chooseImplementationAndOutput(1, false, false, false, false, true, false);
+        chooseImplementationAndOutput(1, false, false, false, false, false, true);
 	}
 	catch (const exception& e)
 	{
