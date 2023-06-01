@@ -13,15 +13,6 @@ using namespace std;
 /*---------------   Exercise 3 Solver Code   ---------------*/
 /*----------------------------------------------------------*/
 
-std::string tileStrt(std::string toTile, int n) {
-	std::string tiling = "";
-	for (int i=0; i<n; i++)
-	{
-		tiling += toTile;
-	}
-	return tiling;
-}
-
 vector<int>* vcVertexBranchingRecursive(BucketGraph* G, int k, int lastBound, int* numRec)
 {
     (*numRec)++;
@@ -30,7 +21,7 @@ vector<int>* vcVertexBranchingRecursive(BucketGraph* G, int k, int lastBound, in
 		return nullptr;
 	}
 
-    /* std::cout << tileStrt("-", k) << "> calculated LPBound: " << G->getLPBound() << " with k=" << k << std::endl;
+    /* std::cout << "> calculated LPBound: " << G->getLPBound() << " with k=" << k << std::endl;
     G->printMatching(); */
     //lastBound = std::max(G->getLPBound(), lastBound);
     if (k < G->getLPBound()) { return nullptr; }
