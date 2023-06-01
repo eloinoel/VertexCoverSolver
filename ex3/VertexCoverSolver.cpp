@@ -21,7 +21,7 @@ vector<int>* vcVertexBranchingRecursive(BucketGraph* G, int k, int* numRec)
 		return nullptr;
 	}
 
-    G->print(); //TODO: remove debug
+    //G->print(); //TODO: remove debug
 
     //cout << "before getMaxDegreeVertex" << endl;
 	int vertex = G->getMaxDegreeVertex();
@@ -380,7 +380,7 @@ int main(int argc, char* argv[]) {
 	try
 	{
         //chooseImplementationAndOutput(0, false, false, false, false, true, false);
-        chooseImplementationAndOutput(5, false, false, false, false, true, false);
+        chooseImplementationAndOutput(1, false, false, false, false, true, false);
 	}
 	catch (const exception& e)
 	{

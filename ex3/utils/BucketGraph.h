@@ -35,7 +35,7 @@ public:
     list<BucketVertex> vertices;
 
 public:
-    Bucket(int _degree, std::vector<BucketVertex*> _vertices)
+    Bucket(int _degree, std::vector<BucketVertex*>& _vertices)
      : degree(_degree)
     {
         vertices = list<BucketVertex>();
@@ -124,6 +124,7 @@ private:
 
     /* used for reading in data, maps from original vertex name from input data to index and degree */
     std::unordered_map<std::string, std::pair<int, int>> originalVertexNames;
+    std::vector<std::pair<std::string, std::string>> edges;
 
 //functions
 public:
@@ -132,6 +133,7 @@ public:
     /* creates and initialises a graph from standard input */
     static BucketGraph* readStandardInput();
     std::vector<std::string>* getStringsFromVertexIndices(std::vector<int>* vertices);
+    void copy();
 
     bool vertexHasEdgeTo(int vertex, int secondVertex); //O(1)
     int getNumVertices();
@@ -146,6 +148,8 @@ public:
 
     int getMaxDegree();
     int getMaxDegreeVertex();
+    /* heuristic from paper which generally worsens performance a bit but reduces number of recursive steps */
+    int getMaxDegreeVertexMinimisingNeighbourEdges();
     int getVertexDegree(int vertexIndex);
     list<BucketVertex>* getVerticesOfDegree(int degree);
     /* returns -1 if no vertex of degree */
@@ -170,9 +174,9 @@ private:
     /* tests whether a char fulfills vertex naming format*/
 	static bool isVertexCharacter(char c);
 
-    void initActiveList(std::vector<std::pair<std::string, std::string>> edges); //--|
-    void initAdjMap();                                                          //----> should be called in this order
-    void initBucketQueue();                                                      //--|
+    void initActiveList();  //--|
+    void initAdjMap();      //----> should be called in this order
+    void initBucketQueue(); //--|
     bool isAdjMapConsistent();
 
     //-------------------------- Graph Utility --------------------------
