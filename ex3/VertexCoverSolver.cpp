@@ -21,6 +21,7 @@ vector<int>* vcVertexBranchingRecursive(BucketGraph* G, int k, int* numRec)
 		return nullptr;
 	}
 
+    G->getNumEdges();
     //cout << "before getMaxDegreeVertex" << endl;
 	int vertex = G->getMaxDegreeVertex();
     
@@ -319,7 +320,7 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
             G->printBucketQueue();
         }
 
-        //G->getNumEdges();
+        
 
         if(printVC)
         {

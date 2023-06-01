@@ -693,9 +693,10 @@ int BucketGraph::getNumVertices()
 
 int BucketGraph::getNumEdges()
 {
-    if(numEdges != bruteForceCalculateNumEdges()) //TODO: delete debug
+    int bruteForce = bruteForceCalculateNumEdges();
+    if(numEdges != bruteForce) //TODO: delete debug
     {
-        throw std::invalid_argument("getNumEdges: inconsistency: wrong number");
+        throw std::invalid_argument("getNumEdges: inconsistency: wrong number: " + std::to_string(numEdges) + " " + std::to_string(bruteForce));
     }
     return numEdges;
 }
@@ -707,7 +708,7 @@ int BucketGraph::bruteForceCalculateNumEdges()
     {
         edgeCount += bucketReferences[i]->degree * bucketReferences[i]->vertices.size();
     }
-    return edgeCount;
+    return edgeCount/2;
 }
 
 
@@ -806,8 +807,8 @@ bool BucketGraph::matchingBFS(std::vector<int>* pairU, std::vector<int>* pairV, 
 /*----------------------------------------------------------*/
 
 int BucketGraph::getLowerBoundVC() {
-    //return getCliqueBound();
-    return getLPBound();
+    return getCliqueBound();
+    //return getLPBound();
     //return getLPCycleBound();
 }
 
