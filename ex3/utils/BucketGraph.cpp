@@ -125,6 +125,7 @@ BucketGraph*  BucketGraph::readStandardInput()
         std::pair<std::string, std::string> edge_pair = std::pair<std::string, std::string>({vertex0, vertex1});
         edges.push_back(edge_pair);
     }
+    G->numEdges = edges.size();
 
     G->initActiveList(edges); //sets vertex references and generates activeList
     G->initAdjMap(); //sets references in adjacency lists of vertices
@@ -562,6 +563,7 @@ void BucketGraph::setActive(int vertexIndex)
         }
         vertexReferences[(*v->adj)[i]]->degree++;
         if(!vertexReferences[(*v->adj)[i]]->isActive) { continue; }
+        numEdges++;
         removeFromBucketQueue(vertexReferences[(*v->adj)[i]]->degree-1, {vertexReferences[(*v->adj)[i]]->bucketVertex});
         addToBucketQueue(vertexReferences[(*v->adj)[i]]->degree, {vertexReferences[(*v->adj)[i]]->bucketVertex});
     }
@@ -586,6 +588,7 @@ void BucketGraph::setInactive(int vertexIndex)
         }
         vertexReferences[(*v->adj)[i]]->degree--;
         if(!vertexReferences[(*v->adj)[i]]->isActive) { continue; }
+        numEdges--;
         removeFromBucketQueue(vertexReferences[(*v->adj)[i]]->degree+1, {vertexReferences[(*v->adj)[i]]->bucketVertex});
         addToBucketQueue(vertexReferences[(*v->adj)[i]]->degree, {vertexReferences[(*v->adj)[i]]->bucketVertex});
     }
@@ -666,6 +669,43 @@ list<BucketVertex>* BucketGraph::getVerticesOfDegree(int degree)
         throw std::invalid_argument("getVerticesOfDegree: degree goes out of bounds");
     }
 }
+
+int BucketGraph::getFirstVertexOfDegree(int degree)
+{
+    if(degree < (int) bucketReferences.size())
+    {
+        if(bucketReferences[degree]->vertices.size() > 0)
+        {
+            return bucketReferences[degree]->vertices.front().index;
+        }
+    }
+    else
+    {
+        throw std::invalid_argument("getVerticesOfDegree: degree goes out of bounds");
+    }
+    return -1;
+}
+
+int BucketGraph::getNumVertices()
+{
+    return activeList.size();
+}
+
+int BucketGraph::getNumEdges()
+{
+    return numEdges;
+}
+
+int BucketGraph::bruteForceCalculateNumEdges()
+{
+    int edgeCount = 0;
+    for(int i = 0; i < (int) bucketReferences.size(); i++)
+    {
+        edgeCount += bucketReferences[i]->degree * bucketReferences[i]->vertices.size();
+    }
+    return edgeCount/2;
+}
+
 
 /*----------------------------------------------------------*/
 /*--------------   Virtual Matching & Flow   ---------------*/
@@ -762,8 +802,8 @@ bool BucketGraph::matchingBFS(std::vector<int>* pairU, std::vector<int>* pairV, 
 /*----------------------------------------------------------*/
 
 int BucketGraph::getLowerBoundVC() {
-    //return getCliqueBound();
-    return getLPBound();
+    return getCliqueBound();
+    //return getLPBound();
     //return getLPCycleBound();
 }
 

@@ -127,6 +127,8 @@ private:
     /* doubly linked list, that acts as a list of active vertices, O(1) access, deletion and insertion */
     list<Vertex> activeList;
 
+    int numEdges;
+
     /* each index represents a degree, that maps to a Bucket object that may be contained in the bucketQueue */
     std::vector<Bucket*> bucketReferences;
     /* priority queue of buckets that contain vertices of a certain degree (buckets are ordered after their degree ascendingly from front() to back()) */
@@ -147,6 +149,8 @@ public:
     std::vector<std::string>* getStringsFromVertexIndices(std::vector<int>* vertices);
 
     bool vertexHasEdgeTo(int vertex, int secondVertex); //O(1)
+    int getNumVertices();
+    int getNumEdges();
 
     void setActive(int vertexIndex);
     void setActive(std::vector<int>* vertexIndices);
@@ -158,7 +162,9 @@ public:
     int getMaxDegree();
     int getMaxDegreeVertex();
     int getVertexDegree(int vertexIndex);
-    list<BucketVertex>* getVerticesOfDegree(int degree); //TODO:
+    list<BucketVertex>* getVerticesOfDegree(int degree);
+    /* returns -1 if no vertex of degree */
+    int getFirstVertexOfDegree(int degree);
 
     void print();
     void printActiveList();
@@ -184,6 +190,7 @@ private:
 
     //-------------------------- Graph Utility --------------------------
 
+    int bruteForceCalculateNumEdges();
     void addToBucketQueue(int degree, std::vector<BucketVertex*> vertices);
     void removeFromBucketQueue(int degree, std::vector<BucketVertex*> vertices);
 
