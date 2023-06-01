@@ -629,13 +629,108 @@ int BucketGraph::getVerticesOfDegree(int degree)
 }
 
 /*----------------------------------------------------------*/
+/*--------------   Virtual Matching & Flow   ---------------*/
+/*----------------------------------------------------------*/
+
+bool BucketGraph::matchingBFS(std::vector<int>* pairU, std::vector<int>* pairV, std::vector<int>* dist, int NIL)
+    {
+        std::queue<int> Q = std::queue<int>();
+        for (int i=0; i<(int) pairU->size(); i++)
+        {
+            if ((*pairU)[i] == NIL)
+            {
+                (*dist)[i] = 0;
+                Q.push(i);
+            }
+            else
+            {
+                (*dist)[i] = INT32_MAX;
+            }
+        }
+        (*dist)[NIL] = INT32_MAX;
+        while(!Q.empty())
+        {
+            int u = Q.front(); // TODO: check if correct side to peek
+            Q.pop();
+            if ((*dist)[u] < (*dist)[NIL])
+            {
+                for (auto v = vertexReferences[u]->adj->begin(); v != vertexReferences[u]->adj->end(); ++v)
+                {
+                    if ((*dist)[(*pairV)[*v]] == INT32_MAX)
+                    {
+                        (*dist)[(*pairV)[*v]] = (*dist)[u] + 1;
+                        Q.push((*pairV)[*v]);
+                    }
+                }
+            }
+        }
+        return (*dist)[NIL] != INT32_MAX;
+    }
+
+    bool BucketGraph::matchingDFS(std::vector<int>* pairU, std::vector<int>* pairV, std::vector<int>* dist, int u, int NIL)
+    {
+        if (u != NIL)
+        {
+            for (auto v = vertexReferences[u]->adj->begin(); v != vertexReferences[u]->adj->end(); ++v)
+            {
+                if ((*dist)[pairV->at(*v)] == (*dist)[u] + 1)
+                {
+                    if (matchingDFS(pairU, pairV, dist, pairV->at(*v), NIL))
+                    {
+                        (*pairV)[*v] = u;
+                        (*pairU)[u] = *v;
+                        return true;
+                    }
+                }
+            }
+            (*dist)[u] = INT32_MAX;
+            return false;
+        }
+        return true;
+    }
+
+    int BucketGraph::hopcroftKarpMatchingSize()
+    {
+        int NIL = vertexReferences.size();
+        int matching = 0;
+        // initialize pairU/pairV
+        std::vector<int> pairU = std::vector<int>(vertexReferences.size()); // TODO: needs to be allocated?
+        std::vector<int> pairV = std::vector<int>(vertexReferences.size());
+        std::vector<int> dist = std::vector<int>(vertexReferences.size()+1);
+        for(int i=0; i<(int) pairU.size(); i++)
+        {
+            pairU[i] = NIL;
+            pairV[i] = NIL;
+        }
+        while (matchingBFS(&pairU, &pairV, &dist, NIL))
+        {
+            for (int i=0; i<(int) pairU.size(); i++)
+            {
+                if (pairU[i] == NIL)
+                {
+                    if (matchingDFS(&pairU, &pairV, &dist, i, NIL))
+                    {
+                        matching++;
+                    }
+                }
+            }
+        }
+        return matching;
+    }
+
+/*----------------------------------------------------------*/
 /*------------------   Calculate Bounds   ------------------*/
 /*----------------------------------------------------------*/
 
 int BucketGraph::getLowerBoundVC() {
-    return getCliqueBound();
-    //return getLPBound();
+    //return getCliqueBound();
+    return getLPBound();
     //return getLPCycleBound();
+}
+
+int BucketGraph::getLPBound()
+{
+    return hopcroftKarpMatchingSize()/2;
 }
 
 /*
