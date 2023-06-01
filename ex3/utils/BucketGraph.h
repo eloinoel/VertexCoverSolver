@@ -131,7 +131,6 @@ public:
     std::vector<std::string>* getStringsFromVertexIndices(std::vector<int>* vertices);
 
     bool vertexHasEdgeTo(int vertex, int secondVertex); //O(1)
-    bool isAdjMapConsistent();
 
     void setActive(int vertexIndex);
     void setActive(std::vector<int>* vertexIndices);
@@ -143,7 +142,7 @@ public:
     int getMaxDegree();
     int getMaxDegreeVertex();
     int getVertexDegree(int vertexIndex);
-    int getVerticesOfDegree(int degree); //TODO:
+    list<BucketVertex>* getVerticesOfDegree(int degree); //TODO:
 
     void print();
     void printActiveList();
@@ -162,7 +161,8 @@ private:
     void initActiveList(std::vector<std::pair<std::string, std::string>> edges); //--|
     void initAdjMap();                                                          //----> should be called in this order
     void initBucketQueue();                                                      //--|
-    
+    bool isAdjMapConsistent();
+
     //-------------------------- Graph Utility --------------------------
 
     void addToBucketQueue(int degree, std::vector<BucketVertex*> vertices);

@@ -317,7 +317,40 @@ void BucketGraph::initBucketQueue()
     }
 }
 
+bool BucketGraph::isAdjMapConsistent()
+{
+    for(int i = 0; i < (int) vertexReferences.size(); i++)
+    {
+        //check map map entries
+        for(int j = 0; j < (int) vertexReferences[i]->adj->size(); j++)
+        {
 
+            auto find = vertexReferences[i]->adj_map->find(vertexReferences[i]->adj->at(j));
+            if(find == vertexReferences[i]->adj_map->end())
+            {
+                return false;
+            }
+        }
+        //check adj vector entries
+        for(auto it = vertexReferences[i]->adj_map->begin(); it != vertexReferences[i]->adj_map->end(); ++it)
+        {
+            bool found = false;
+            for(int j = 0; j < (int) vertexReferences[i]->adj->size(); j++)
+            {
+                if(it->first == vertexReferences[i]->adj->at(j))
+                {
+                    found = true;
+                    break;
+                }
+            }
+            if(!found)
+            {
+                return false;
+            }
+        }
+    }
+    return true;
+}
 
 /*----------------------------------------------------------*/
 /*-------------------   Graph Utility   --------------------*/
@@ -622,10 +655,16 @@ int BucketGraph::getVertexDegree(int vertexIndex)
     return v->degree;
 }
 
-int BucketGraph::getVerticesOfDegree(int degree)
+list<BucketVertex>* BucketGraph::getVerticesOfDegree(int degree)
 {
-    //TODO: get from bucket queue
-    return 0;
+    if(degree < (int) bucketReferences.size())
+    {
+        return &(bucketReferences[degree]->vertices);
+    }
+    else
+    {
+        throw std::invalid_argument("getVerticesOfDegree: degree goes out of bounds");
+    }
 }
 
 /*----------------------------------------------------------*/
@@ -827,40 +866,7 @@ int BucketGraph::getCliqueBound(int k)
     return maximumMatchingSize/2;
 } */
 
-bool BucketGraph::isAdjMapConsistent()
-{
-    for(int i = 0; i < (int) vertexReferences.size(); i++)
-    {
-        //check map map entries
-        for(int j = 0; j < (int) vertexReferences[i]->adj->size(); j++)
-        {
 
-            auto find = vertexReferences[i]->adj_map->find(vertexReferences[i]->adj->at(j));
-            if(find == vertexReferences[i]->adj_map->end())
-            {
-                return false;
-            }
-        }
-        //check adj vector entries
-        for(auto it = vertexReferences[i]->adj_map->begin(); it != vertexReferences[i]->adj_map->end(); ++it)
-        {
-            bool found = false;
-            for(int j = 0; j < (int) vertexReferences[i]->adj->size(); j++)
-            {
-                if(it->first == vertexReferences[i]->adj->at(j))
-                {
-                    found = true;
-                    break;
-                }
-            }
-            if(!found)
-            {
-                return false;
-            }
-        }
-    }
-    return true;
-}
 
 bool BucketGraph::vertexCanBeAddedToClique(int vertex, std::vector<int>* clique)
 {
@@ -872,20 +878,6 @@ bool BucketGraph::vertexCanBeAddedToClique(int vertex, std::vector<int>* clique)
         {
             return false;
         }
-
-        /* bool isNeighbour = false;
-        for(int j = 0; j < (int) vertexReferences[vertex]->adj->size(); j++) // TODO: add condition whether vertex is active if needed
-        {
-            if (vertexReferences[vertex]->adj->at(j) == clique->at(i))
-            {
-                isNeighbour = true;
-                break;
-            }
-        }
-        if(!isNeighbour)
-        {
-            return false;
-        } */
     }
     return true;
 }
