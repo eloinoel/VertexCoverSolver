@@ -75,8 +75,14 @@ public:
 
 class Vertex : public list_base_hook<>
 {
+public:
+    list_member_hook<> member_hook_; //for adj_refs
+
+private:
     std::vector<int>* adj;
-    //list adj_refs; TODO:
+    //list<Vertex, member_hook<Vertex, list_member_hook<>, &Vertex::member_hook_>> adj_refs; //for O(1) check if has edge to specific vertex
+    std::unordered_map<int, bool>* adj_map;
+
     std::string strName;
     int index;
 
@@ -88,6 +94,7 @@ class Vertex : public list_base_hook<>
 
     friend class BucketGraph;
 public:
+
     Vertex(std::vector<int>* adjVertices, std::string orginalName, int _index, int startingDegree)
      : adj(adjVertices), strName(orginalName), index(_index), degree(startingDegree)
     {
@@ -111,7 +118,6 @@ private:
     std::vector<Bucket*> bucketReferences;
     /* priority queue of buckets that contain vertices of a certain degree (buckets are ordered after their degree ascendingly from front() to back()) */
     list<Bucket> bucketQueue;
-    std::pair<int, int> degreeLimits; //bucketQueue empty: minDeg = INT32_MAX, maxDeg = -1
 
     /* used for reading in data, maps from original vertex name from input data to index and degree */
     std::unordered_map<std::string, std::pair<int, int>> originalVertexNames;
@@ -123,6 +129,9 @@ public:
     /* creates and initialises a graph from standard input */
     static BucketGraph* readStandardInput();
     std::vector<std::string>* getStringsFromVertexIndices(std::vector<int>* vertices);
+
+    bool vertexHasEdgeTo(int vertex, int secondVertex); //O(1)
+    bool isAdjMapConsistent();
 
     void setActive(int vertexIndex);
     void setActive(std::vector<int>* vertexIndices);
@@ -150,8 +159,9 @@ private:
     /* tests whether a char fulfills vertex naming format*/
 	static bool isVertexCharacter(char c);
 
-    void initActiveList(std::vector<std::pair<std::string, std::string>> edges);
-    void initBucketQueue();
+    void initActiveList(std::vector<std::pair<std::string, std::string>> edges); //--|
+    void initAdjMap();                                                          //----> should be called in this order
+    void initBucketQueue();                                                      //--|
     
     //-------------------------- Graph Utility --------------------------
 
