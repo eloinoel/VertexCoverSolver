@@ -30,7 +30,7 @@ private:
     /* each index represents a vertex, the content of each index represents the adjacent vertices' indices */
     std::vector<std::vector<int>*> adjacencyList;
 
-    /* contains meta information about the graph's vertices: 
+    /* contains meta information about the graph's vertices:
     * 0: True = vertex in graph
     * 1: degree of vertex
     */
