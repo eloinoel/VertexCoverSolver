@@ -125,8 +125,9 @@ BucketGraph*  BucketGraph::readStandardInput()
         std::pair<std::string, std::string> edge_pair = std::pair<std::string, std::string>({vertex0, vertex1});
         edges.push_back(edge_pair);
     }
-    
+
     G->initActiveList(edges); //sets vertex references and generates activeList
+    G->initAdjMap(); //sets references in adjacency lists of vertices
     G->initBucketQueue(); // initialise bucket queue
 
     return G;
@@ -236,6 +237,34 @@ void BucketGraph::initActiveList(std::vector<std::pair<std::string, std::string>
             {
                 throw std::invalid_argument("readStandardInput: trying to insert edge but maxDegFirst is 0");
             }
+        }
+    }
+}
+
+void BucketGraph::initAdjMap()
+{
+    for(int i = 0; i < (int) vertexReferences.size(); i++)
+    {
+        if(vertexReferences[i] != nullptr)
+        {
+            /* vertexReferences[i]->adj_refs = list<Vertex, member_hook<Vertex, list_member_hook<>, &Vertex::member_hook_>>();
+            //copy adj list
+            for(int j = 0; j < (int) vertexReferences[i]->adj->size(); j++)
+            {
+                Vertex* v = vertexReferences[vertexReferences[i]->adj->at(j)];
+                std::cout << i << " insert: "<< v->index << std::endl;
+                vertexReferences[i]->adj_refs.push_back(*v);
+                //vertexReferences[i]->adj_refs.push_back(*vertexReferences[vertexReferences[i]->adj->at(j)]);
+            }*/
+            vertexReferences[i]->adj_map = new std::unordered_map<int, bool>();
+            for(int j = 0; j < (int) vertexReferences[i]->adj->size(); j++)
+            {
+                vertexReferences[i]->adj_map->insert({vertexReferences[i]->adj->at(j), true});
+            }
+        }
+        else
+        {
+            throw std::invalid_argument("initAdjRefs: at least one vertex refence is nullptr");
         }
     }
 }
@@ -413,6 +442,19 @@ std::vector<std::string>* BucketGraph::getStringsFromVertexIndices(std::vector<i
         solution->push_back(stringcpy);
     }
     return solution;
+}
+
+bool BucketGraph::vertexHasEdgeTo(int vertex, int secondVertex)
+{
+    if(vertex >= (int) vertexReferences.size() || secondVertex >= (int) vertexReferences.size())
+    {
+        throw std::invalid_argument("vertexHasEdgeTo: given vertices do not exist");
+    }
+    if(vertexReferences[vertex]->adj_map->find(secondVertex) != vertexReferences[vertex]->adj_map->end())
+    {
+        return true;
+    }
+    return false;
 }
 
 void BucketGraph::removeFromBucketQueue(int degree, std::vector<BucketVertex*> vertices)
@@ -612,7 +654,8 @@ int BucketGraph::getCliqueBound(int k)
     //int cliqueIterations = 0;
 
     //iterate through vertices in ascending order of degrees (buckets)
-    for(auto bucket = bucketQueue.begin(); bucket != bucketQueue.end(); ++bucket)
+    auto bucket = bucketQueue.begin();
+    while(bucket != bucketQueue.end())
     {
         //for each vertex in bucket
         for(auto jt = bucket->vertices.begin(); jt != bucket->vertices.end(); ++jt)
@@ -620,6 +663,7 @@ int BucketGraph::getCliqueBound(int k)
             //iterations++;
             int curVertex = jt->index;
             int cliqueIndex = -1;
+            std::pair<int, int> maxClique = std::pair<int, int>({-1, -1}); //clique index, clique size
             for(int l = 0; l < (int) cliques.size(); l++)
             {
                 //cliqueIterations++;
@@ -628,7 +672,24 @@ int BucketGraph::getCliqueBound(int k)
                     cliqueIndex = l;
                     break;
                 }
+                /* if(vertexCanBeAddedToClique(curVertex, cliques.at(l)) && (int) cliques.at(l)->size() > maxClique.second)
+                {
+                    maxClique.first = l;
+                    maxClique.second = cliques.at(l)->size();
+                } */
             }
+            //no clique found
+            /* if(maxClique.first == -1)
+            {
+                //create clique
+                std::vector<int>* newClique = new std::vector<int>();
+                newClique->push_back(curVertex);
+                cliques.push_back(newClique);
+            }
+            else
+            {
+                cliques[maxClique.first]->push_back(curVertex);
+            } */
             //found clique
             if(cliqueIndex >= 0)
             {
@@ -647,8 +708,13 @@ int BucketGraph::getCliqueBound(int k)
                 cliques.push_back(newClique);
             }
         }
+        ++bucket;
     }
 
+    /* for(int i = 0; i < (int) cliques.size(); i++)
+    {
+        cliqueBound += cliques.at(i)->size() - 1;
+    } */
     //auto stop = std::chrono::high_resolution_clock::now();
     //auto duration = duration_cast<milliseconds>(stop - start);
     //std::cout << "numIterations: " << iterations << ", numCliqueIterations: " << cliqueIterations << ", duration: " << duration.count() << std::endl;
@@ -666,17 +732,56 @@ int BucketGraph::getCliqueBound(int k)
     return maximumMatchingSize/2;
 } */
 
+bool BucketGraph::isAdjMapConsistent()
+{
+    for(int i = 0; i < (int) vertexReferences.size(); i++)
+    {
+        //check map map entries
+        for(int j = 0; j < (int) vertexReferences[i]->adj->size(); j++)
+        {
+
+            auto find = vertexReferences[i]->adj_map->find(vertexReferences[i]->adj->at(j));
+            if(find == vertexReferences[i]->adj_map->end())
+            {
+                return false;
+            }
+        }
+        //check adj vector entries
+        for(auto it = vertexReferences[i]->adj_map->begin(); it != vertexReferences[i]->adj_map->end(); ++it)
+        {
+            bool found = false;
+            for(int j = 0; j < (int) vertexReferences[i]->adj->size(); j++)
+            {
+                if(it->first == vertexReferences[i]->adj->at(j))
+                {
+                    found = true;
+                    break;
+                }
+            }
+            if(!found)
+            {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 bool BucketGraph::vertexCanBeAddedToClique(int vertex, std::vector<int>* clique)
 {
     //for each vertex in clique
     for (int i = 0; i < (int) clique->size(); i++)
     {
         //is a neighbour of vertex
-        bool isNeighbour = false;
-        std::vector<int>* adj = vertexReferences[vertex]->adj;
-        for(int j = 0; j < (int) adj->size(); j++)
+        if(!vertexHasEdgeTo(vertex, clique->at(i)))
         {
-            if (adj->at(j) == clique->at(i))
+            return false;
+        }
+
+        /* bool isNeighbour = false;
+        for(int j = 0; j < (int) vertexReferences[vertex]->adj->size(); j++) // TODO: add condition whether vertex is active if needed
+        {
+            if (vertexReferences[vertex]->adj->at(j) == clique->at(i))
             {
                 isNeighbour = true;
                 break;
@@ -685,7 +790,7 @@ bool BucketGraph::vertexCanBeAddedToClique(int vertex, std::vector<int>* clique)
         if(!isNeighbour)
         {
             return false;
-        }
+        } */
     }
     return true;
 }

@@ -318,6 +318,8 @@ void chooseImplementationAndOutput(int version = 1, bool printGraph = false, boo
             G->printBucketQueue();
         }
 
+        cout << G->isAdjMapConsistent() << endl;
+
         if(printVC)
         {
             int numRecursiveSteps = 0;
