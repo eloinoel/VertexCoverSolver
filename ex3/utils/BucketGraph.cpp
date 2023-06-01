@@ -689,3 +689,310 @@ bool BucketGraph::vertexCanBeAddedToClique(int vertex, std::vector<int>* clique)
     }
     return true;
 }
+
+
+/*----------------------------------------------------------*/
+/*------------------   Reduction Rules   -------------------*/
+/*----------------------------------------------------------*/
+
+
+bool ArrayGraph::applyReductionRules(int* k, std::vector<ReductionVertices>* reductionArray)
+{
+    // if both rules are not applicable
+    if(!rule_HighDegree(k, reductionArray) && !rule_DegreeZero(reductionArray))
+        //if Buss rule == true => no vertex cover
+        if(rule_Buss(k))
+            return false;
+
+    // Apply rule 0, 1 & 2 at every deactivation?
+//    rule_DegreeOne(k, reductionArray);
+//    rule_DegreeTwo(k, reductionArray);
+
+    return true;
+}
+
+bool ArrayGraph::rule_HighDegree(int *k, std::vector<ReductionVertices>* reductionArray)
+{
+    int cnt = 0;
+
+    int maxDegIdx = getMaxDegreeVertex();
+    int maxDeg = getVertexDegree(maxDegIdx);
+
+    if (maxDegIdx == -1 || maxDeg == -1)
+        return false;
+
+    while(maxDeg > (*k))
+    {
+        std::vector<int> tooHighToHandle = *getVerticesDegree(maxDeg);
+        maxDeg--;
+        if(tooHighToHandle.empty())
+            continue;
+
+        for (auto i = 0; i < (int)  tooHighToHandle.size(); ++i) {
+            cnt++;
+            int vertexID = tooHighToHandle.at(i);
+
+            // save deleted vertex
+            ReductionVertices delVer;
+            delVer.rule = 3;
+            delVer.deletedVertices.push_back(vertexID);
+            delVer.kDecrement = 1;
+            delVer.savedAdjacency = getNeighbours(vertexID);
+            reductionArray->push_back(delVer);
+
+            setInactive(vertexID);
+            (*k)--;
+        }
+
+    }
+
+    if(cnt == 0)
+        return false;
+    return true;
+}
+
+
+bool ArrayGraph::rule_DegreeZero(std::vector<ReductionVertices>* reductionArray)
+{
+    std::vector<int> zeroDegree = *getVerticesDegree(0);
+
+    if(zeroDegree.empty())
+        return false;
+
+    for (auto i = 0; i < (int)  zeroDegree.size(); ++i) {
+        int vertexID = zeroDegree.at(i);
+
+        // save deleted vertex
+        ReductionVertices delVer;
+        delVer.rule = 0;
+        delVer.kDecrement = 0;
+        delVer.deletedVertices.push_back(vertexID);
+        reductionArray->push_back(delVer);
+
+        setInactive(vertexID);
+    }
+
+    return true;
+}
+
+
+bool ArrayGraph::rule_Buss(int* k)
+{
+    int k_square = std::pow((*k), 2);
+
+    // If |V| > k^2 + k || |E|>k^2 => no vertex cover
+    if((numberOfVertices > k_square + (*k)) || (numberOfEdges > k_square))
+        return true;
+    return false;
+}
+
+
+void ArrayGraph::rule_DegreeOne(int* k, std::vector<ReductionVertices>* reductionArray)
+{
+    std::vector<int> degreeOne = *getVerticesDegree(1);
+
+    if(degreeOne.empty())
+        return;
+
+    for (auto i = 0; i < (int)  degreeOne.size(); ++i) {
+        int vertexID = degreeOne.at(i);
+
+        // THIS SHOULD HOLD THROUGH
+        int neighbour = getNeighbours(vertexID)->at(0);
+
+        // save deleted vertex
+        ReductionVertices delVer;
+        delVer.rule = 1;
+        delVer.kDecrement = 1;
+        delVer.deletedVertices.push_back(neighbour);
+        delVer.deletedVertices.push_back(vertexID);
+        delVer.savedAdjacency = getNeighbours(neighbour);
+//        ->push_back(getNeighbours(neighbour));
+        reductionArray->push_back(delVer);
+
+        setInactive(neighbour);
+        setInactive(vertexID);
+        (*k)--;
+    }
+
+}
+
+
+void ArrayGraph::rule_DegreeTwo(int* k, std::vector<ReductionVertices>* reductionArray)
+{
+    std::vector<int> degreeTwo = *getVerticesDegree(2);
+
+    if(degreeTwo.empty())
+        return;
+
+    for (auto i = 0; i < (int) degreeTwo.size(); ++i) {
+        int vertexID = degreeTwo.at(i);
+
+        std::vector<int>* neighbours = getNeighbours(vertexID);
+        int neighbourOne = neighbours->at(0);
+        int neighbourTwo = neighbours->at(1);
+
+        // Get shortest Neighbourhood to go through less to check for connection
+        int shortestNeighbourhoodIdx;
+        int otherNeighbourIdx;
+        if(getVertexDegree(neighbourOne) > getVertexDegree(neighbourTwo) )
+        {
+            shortestNeighbourhoodIdx = neighbourTwo;
+            otherNeighbourIdx = neighbourOne;
+        }
+        else
+        {
+            shortestNeighbourhoodIdx = neighbourOne;
+            otherNeighbourIdx = neighbourTwo;
+        }
+
+        std::vector<int>* shortestNeighbourhood = getNeighbours(shortestNeighbourhoodIdx);
+        std::vector<int>* otherNeighbour = getNeighbours(otherNeighbourIdx);
+
+        // save deleted vertex
+        ReductionVertices delVer;
+        delVer.rule = 2;
+        delVer.deletedVertices.push_back(otherNeighbourIdx);            // at (0)
+        delVer.deletedVertices.push_back(shortestNeighbourhoodIdx);     // at (1)
+        delVer.deletedVertices.push_back(vertexID);                     // at (2)
+
+        delVer.savedAdjacency = getNeighbours(vertexID);
+//        ->push_back(getNeighbours(vertexID));
+
+        // CASE The neighbours know each other
+        if(contains(shortestNeighbourhood,otherNeighbourIdx))
+        {
+            delVer.kDecrement = 2;
+//            setInactive(otherNeighbourIdx);
+//            setInactive(shortestNeighbourhoodIdx);
+            setInactive(vertexID);
+            (*k)-=2;
+        }
+        // CASE Neighbours don't know each other => setInactive or do that in addReducedVertices?
+        else
+        {
+            delVer.kDecrement = 1;
+            setVertexAdjacency(vertexID, putAdjacencyTogether(shortestNeighbourhood, otherNeighbour));
+//            setInactive(otherNeighbourIdx);
+//            setInactive(shortestNeighbourhoodIdx);
+            (*k)--;
+        }
+        setInactive(otherNeighbourIdx);
+        setInactive(shortestNeighbourhoodIdx);
+
+        reductionArray->push_back(delVer);
+    }
+}
+
+void ArrayGraph::rule_Domination(int* k, std::vector<ReductionVertices>* reductionArray)
+{
+    int maxDegIdx = getMaxDegreeVertex();
+    int maxDeg = getVertexDegree(maxDegIdx);
+
+    if (maxDegIdx == -1 || maxDeg == -1)
+        return false;
+
+    // for now degree 2
+    while(maxDeg > 2) {
+        std::vector<int> vertices = *getVerticesDegree(maxDeg);
+        maxDeg--;
+        if(vertices.empty())
+            continue;
+
+        for(auto v: vertices)
+        {
+
+        }
+
+    }
+}
+
+void ArrayGraph::addReducedVertices(std::vector<int>* S, std::vector<ReductionVertices>* reductionArray)
+{
+    if(reductionArray->empty())
+        return;
+
+    for (auto i = 0; i < (int) reductionArray->size(); ++i) {
+        ReductionVertices curReduction = reductionArray->at(i);
+        int curAddition = curReduction.deletedVertices.at(0);
+        switch (curReduction.rule) {
+            // Degree Zero Rule
+            case 0:
+                break;
+            // Degree One Rule
+            case 1:
+                S->push_back(curAddition);
+                break;
+            // Degree Two Rule
+            case 2:
+                if (curReduction.kDecrement == 2)
+                {
+                   S->push_back(curReduction.deletedVertices.at(1));
+                }
+                S->push_back(curAddition);
+                break;
+            // High Degree Rule
+            case 3:
+                S->push_back(curAddition);
+                break;
+            // Domination Rule
+            case 4:
+
+                break;
+            default:
+                std::cout<< "There shouldn't be this rule";
+                break;
+        }
+    }
+
+    // TODO: Eventually slow, especially if pointer is getting deleted later
+    reductionArray->clear();
+}
+
+
+void ArrayGraph::addBackReducedVertices(int *k, std::vector<ReductionVertices>* reductionArray)
+{
+    if(reductionArray->empty())
+        return;
+
+    for (auto i = 0; i < (int) reductionArray->size(); ++i) {
+        ReductionVertices curReduction = reductionArray->at(i);
+        int curVertex = curReduction.deletedVertices.at(0);
+        switch (curReduction.rule) {
+            // Degree Zero
+            case 0:
+                setActive(curVertex);
+                break;
+                // Degree One
+            case 1:
+                setActive(curVertex);
+                setActive(curReduction.deletedVertices.at(1));
+//                (*k)++;
+                break;
+            case 2:
+                if (curReduction.kDecrement == 2)
+                {
+                    setActive(curReduction.deletedVertices.at(2));
+                }
+                setActive(curReduction.deletedVertices.at(1));
+                setActive(curVertex);
+                break;
+            // High Degree Rule
+            case 3:
+                setVertexAdjacencyBack(curVertex, curReduction.savedAdjacency);
+                setActive(curVertex);
+//                (*k)++;
+                break;
+            case 4:
+
+                break;
+            default:
+                std::cout<< "There shouldn't be this rule";
+                break;
+        }
+        (*k) += curReduction.kDecrement;
+    }
+
+    // TODO: Eventually slow, especially if pointer is getting deleted later
+    reductionArray->clear();
+}

@@ -21,6 +21,13 @@ vector<int>* vcVertexBranchingRecursive(BucketGraph* G, int k, int* numRec)
 		return nullptr;
 	}
 
+    // Reduction Rules
+    //vector<ReductionVertices>* reductionVertices = new vector<ReductionVertices>;
+
+    // Apply Reduction Rules for the first time
+      if(G->applyReductionRules(&k, reductionVertices))
+         return nullptr;
+
     //cout << "before getMaxDegreeVertex" << endl;
 	int vertex = G->getMaxDegreeVertex();
     

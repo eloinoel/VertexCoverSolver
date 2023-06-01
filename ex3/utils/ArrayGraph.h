@@ -65,7 +65,6 @@ protected:
     bool contains(std::vector<int>* vertexIndices, int vertexIndex);
 
     //================================================================
-    // TODO: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAH
     // Reduction Rules
     bool rule_HighDegree(int *k, std::vector<ReductionVertices>* reductionVertices);
     bool rule_DegreeZero(std::vector<ReductionVertices>* reductionArray);
