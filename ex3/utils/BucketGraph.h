@@ -14,6 +14,7 @@
 #include <algorithm>
 
 #include "boost/intrusive/list.hpp"
+#include <boost/functional/hash.hpp>
 
 using namespace boost::intrusive;
 
@@ -34,7 +35,7 @@ public:
     list<BucketVertex> vertices;
 
 public:
-    Bucket(int _degree, std::vector<BucketVertex*> _vertices)
+    Bucket(int _degree, std::vector<BucketVertex*>& _vertices)
      : degree(_degree)
     {
         vertices = list<BucketVertex>();
@@ -114,6 +115,8 @@ private:
     /* doubly linked list, that acts as a list of active vertices, O(1) access, deletion and insertion */
     list<Vertex> activeList;
 
+    int numEdges;
+
     /* each index represents a degree, that maps to a Bucket object that may be contained in the bucketQueue */
     std::vector<Bucket*> bucketReferences;
     /* priority queue of buckets that contain vertices of a certain degree (buckets are ordered after their degree ascendingly from front() to back()) */
@@ -121,6 +124,7 @@ private:
 
     /* used for reading in data, maps from original vertex name from input data to index and degree */
     std::unordered_map<std::string, std::pair<int, int>> originalVertexNames;
+    std::vector<std::pair<std::string, std::string>> edges;
 
     /* Current Matching */
     std::vector<int> pairU;
@@ -139,9 +143,11 @@ public:
     /* creates and initialises a graph from standard input */
     static BucketGraph* readStandardInput();
     std::vector<std::string>* getStringsFromVertexIndices(std::vector<int>* vertices);
+    void copy();
 
     bool vertexHasEdgeTo(int vertex, int secondVertex); //O(1)
-    bool isAdjMapConsistent();
+    int getNumVertices();
+    int getNumEdges();
 
     void setActive(int vertexIndex);
     void setActive(std::vector<int>* vertexIndices);
@@ -152,18 +158,28 @@ public:
 
     int getMaxDegree();
     int getMaxDegreeVertex();
+    /* heuristic from paper which generally worsens performance a bit but reduces number of recursive steps */
+    int getMaxDegreeVertexMinimisingNeighbourEdges();
     int getVertexDegree(int vertexIndex);
-    int getVerticesOfDegree(int degree); //TODO:
+    list<BucketVertex>* getVerticesOfDegree(int degree);
     inline list<Vertex>* getActiveList() { return &activeList; }
+    /* returns -1 if no vertex of degree */
+    int getFirstVertexOfDegree(int degree);
 
     void print();
     void printActiveList();
     void printBucketQueue();
+    void printEdgesToConsole();
     void printMatching();
 
     int getLowerBoundVC();
     int getCliqueBound(int k = INT_MAX);
     int getLPBound();
+
+    void resetLPBoundDataStructures(); //TODO: BRUNO IMPLEMENT THIS PLEASE
+
+    /* apply data reduction rules to graph */
+    void reduce();
 
 private:
 
@@ -173,13 +189,15 @@ private:
     /* tests whether a char fulfills vertex naming format*/
 	static bool isVertexCharacter(char c);
 
-    void initActiveList(std::vector<std::pair<std::string, std::string>> edges); //--|
-    void initAdjMap();                                                          //----> should be called in this order
-    void initBucketQueue();                                                      //--|
+    void initActiveList();  //--|
+    void initAdjMap();      //----> should be called in this order
+    void initBucketQueue(); //--|
     void initMatching();
-    
+    bool isAdjMapConsistent();
+
     //-------------------------- Graph Utility --------------------------
 
+    int bruteForceCalculateNumEdges();
     void addToBucketQueue(int degree, std::vector<BucketVertex*> vertices);
     void removeFromBucketQueue(int degree, std::vector<BucketVertex*> vertices);
 

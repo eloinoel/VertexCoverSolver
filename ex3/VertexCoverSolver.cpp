@@ -51,6 +51,8 @@ vector<int>* vcVertexBranchingRecursive(BucketGraph* G, int k, int lastBound, in
 	vector<int>* S = vcVertexBranchingRecursive(G, k - 1, lastBound - 1, numRec);
 	if (S != nullptr)
 	{
+        //revert changes for multiple executions of the algorithm
+        G->setActive(vertex);//TODO: dont revert in recursion
 		//return results
 		S->push_back(vertex);
 		return S;
@@ -74,6 +76,8 @@ vector<int>* vcVertexBranchingRecursive(BucketGraph* G, int k, int lastBound, in
 	S = vcVertexBranchingRecursive(G, k - neighbours->size(), lastBound - neighbours->size(), numRec);
 	if (S != nullptr)
 	{
+        //revert changes for multiple executions of the algorithm
+        G->setActive(neighbours); //TODO: dont revert in recursion
 		//return results
         for (int i = 0; i < (int) neighbours->size(); i++)
         {
@@ -270,14 +274,21 @@ void writeSolutionToConsole(vector<string>* vc)
 	}
 }
 
+/*----------------------------------------------------------*/
+/*-------------------   Data Reduction   -------------------*/
+/*----------------------------------------------------------*/
+
+
+
 /** Execute specific version of program with optional arguments for more prints
  * version
  * 0: ArrayGraph, recursive
  * 1: Bucketgraph
-
+ * 5: (b) apply data reduction and output smaller graph and diff in vc size
  * ....
 */
-void chooseImplementationAndOutput(int version = 1, bool printGraph = false, bool printMappings = false, bool printDebug = false, bool printVCSize = false, bool printVC = true, bool printBounds = false)
+void chooseImplementationAndOutput(int version = 1, bool printGraph = false, bool printMappings = false, 
+bool printDebug = false, bool printVCSize = false, bool printVC = true, bool printBounds = false)
 {
     if(version == 0)
     {
@@ -321,8 +332,6 @@ void chooseImplementationAndOutput(int version = 1, bool printGraph = false, boo
             G->printBucketQueue();
         }
 
-        //cout << G->isAdjMapConsistent() << endl;
-
         if(printVC)
         {
             int numRecursiveSteps = 0;
@@ -337,6 +346,23 @@ void chooseImplementationAndOutput(int version = 1, bool printGraph = false, boo
             cout << "#recursive steps: " << bound << endl;
         }
 
+    }
+    else if(version == 5)
+    {
+        BucketGraph* G = BucketGraph::readStandardInput();
+        if (G == nullptr)
+            throw invalid_argument("Error constructing graph from input file.");
+
+        //G->print();
+        int numRecursiveSteps = 0;
+        std::vector<int>* vc = vcSolverRecursive(G, &numRecursiveSteps);
+
+        G->reduce();
+        G->printEdgesToConsole();
+
+        G->resetLPBoundDataStructures(); //TODO: BRUNO IMPLEMENT THIS PLEASE
+        std::vector<int>* reducedVc = vcSolverRecursive(G, &numRecursiveSteps);
+        cout << "#difference: " << to_string((vc->size() - reducedVc->size())) << endl;
     }
     else
     {
