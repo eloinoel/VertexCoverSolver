@@ -122,6 +122,16 @@ private:
     /* used for reading in data, maps from original vertex name from input data to index and degree */
     std::unordered_map<std::string, std::pair<int, int>> originalVertexNames;
 
+    /* Current Matching */
+    std::vector<int> pairU;
+    std::vector<int> pairV;
+    std::vector<int> dist;
+    std::vector<int>* unmatched;
+    std::vector<int>* next_unmatched;
+    int NIL;
+    int currentLPBound;
+    bool didInitialMatchingCalculation = false;
+
 //functions
 public:
     inline BucketGraph() {  }
@@ -144,12 +154,16 @@ public:
     int getMaxDegreeVertex();
     int getVertexDegree(int vertexIndex);
     int getVerticesOfDegree(int degree); //TODO:
+    inline list<Vertex>* getActiveList() { return &activeList; }
 
     void print();
     void printActiveList();
     void printBucketQueue();
+    void printMatching();
 
     int getLowerBoundVC();
+    int getCliqueBound(int k = INT_MAX);
+    int getLPBound();
 
 private:
 
@@ -162,6 +176,7 @@ private:
     void initActiveList(std::vector<std::pair<std::string, std::string>> edges); //--|
     void initAdjMap();                                                          //----> should be called in this order
     void initBucketQueue();                                                      //--|
+    void initMatching();
     
     //-------------------------- Graph Utility --------------------------
 
@@ -203,10 +218,10 @@ private:
         return {};
     }
 
-    bool matchingBFS(std::vector<int>* pairU, std::vector<int>* pairV, std::vector<int>* dist, int NIL);
-    bool matchingDFS(std::vector<int>* pairU, std::vector<int>* pairV, std::vector<int>* dist, int u, int NIL);
+    bool matchingBFS();
+    bool matchingDFS(int u);
     int hopcroftKarpMatchingSize();
-    std::vector<int>* hopcroftKarpMatching();
+    std::pair<int, std::pair<std::vector<int>*, std::vector<int>*>> hopcroftKarpMatching();
 
     int edmondsKarp()
     {
@@ -215,11 +230,10 @@ private:
 
     //------------------------------ Bounds ------------------------------
 
-    int getCliqueBound(int k = INT_MAX);
     bool vertexCanBeAddedToClique(int vertex, std::vector<int>* clique);
 
-    int getLPBound();
-    int getLPCycleBound();
+    //int getLPBound();
+    int getLPCycleBound();  // TODO: this is still trash
 
     //------------------------ Data Reduction ------------------------
     //TODO: apply data reduction to input graph and return output graph

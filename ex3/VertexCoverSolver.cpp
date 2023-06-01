@@ -13,7 +13,16 @@ using namespace std;
 /*---------------   Exercise 3 Solver Code   ---------------*/
 /*----------------------------------------------------------*/
 
-vector<int>* vcVertexBranchingRecursive(BucketGraph* G, int k, int* numRec)
+std::string tileStrt(std::string toTile, int n) {
+	std::string tiling = "";
+	for (int i=0; i<n; i++)
+	{
+		tiling += toTile;
+	}
+	return tiling;
+}
+
+vector<int>* vcVertexBranchingRecursive(BucketGraph* G, int k, int lastBound, int* numRec)
 {
     (*numRec)++;
 	if (k < 0)
@@ -21,18 +30,23 @@ vector<int>* vcVertexBranchingRecursive(BucketGraph* G, int k, int* numRec)
 		return nullptr;
 	}
 
+    /* std::cout << tileStrt("-", k) << "> calculated LPBound: " << G->getLPBound() << " with k=" << k << std::endl;
+    G->printMatching(); */
+    //lastBound = std::max(G->getLPBound(), lastBound);
+    if (k < G->getLPBound()) { return nullptr; }
+
     //cout << "before getMaxDegreeVertex" << endl;
 	int vertex = G->getMaxDegreeVertex();
-    
+
     //no vertices left
     if (vertex == -1)
     {
         return new vector<int>();
     }
 
-    //G->printBucketQueue();
     //cout << "before getVertexDegree: " << vertex << endl;
     int vertexDeg = G->getVertexDegree(vertex);
+
 	//graph has no edges left
 	if (vertexDeg == 0)
 	{
@@ -43,7 +57,7 @@ vector<int>* vcVertexBranchingRecursive(BucketGraph* G, int k, int* numRec)
 	//delete first vertex from graph and explore solution
     G->setInactive(vertex);
     //cout << "before branching" << endl;
-	vector<int>* S = vcVertexBranchingRecursive(G, k - 1, numRec);
+	vector<int>* S = vcVertexBranchingRecursive(G, k - 1, lastBound - 1, numRec);
 	if (S != nullptr)
 	{
 		//return results
@@ -66,7 +80,7 @@ vector<int>* vcVertexBranchingRecursive(BucketGraph* G, int k, int* numRec)
     //cout << "before getNeighbours" << endl;
     vector<int>* neighbours = G->getNeighbours(vertex);
     G->setInactive(neighbours);
-	S = vcVertexBranchingRecursive(G, k - neighbours->size(), numRec);
+	S = vcVertexBranchingRecursive(G, k - neighbours->size(), lastBound - neighbours->size(), numRec);
 	if (S != nullptr)
 	{
 		//return results
@@ -100,7 +114,7 @@ vector<int>* vcSolverRecursive(BucketGraph* G, int* numRec)
        /*  if(G->applyReductionRules(&k, reductionVertices))
             return nullptr; */
 
-		vc = vcVertexBranchingRecursive(G, k, numRec);
+		vc = vcVertexBranchingRecursive(G, k, 0, numRec);
 		if (vc != nullptr)
 		{
             // Add Reduced Vertices to Vertex Cover
@@ -109,10 +123,8 @@ vector<int>* vcSolverRecursive(BucketGraph* G, int* numRec)
 
 			return vc;
 		}
-
         /* G->addBackReducedVertices(&k, reductionVertices);
         delete reductionVertices; */
-
         k++;
 	}
 }
@@ -318,7 +330,7 @@ void chooseImplementationAndOutput(int version = 1, bool printGraph = false, boo
             G->printBucketQueue();
         }
 
-        cout << G->isAdjMapConsistent() << endl;
+        //cout << G->isAdjMapConsistent() << endl;
 
         if(printVC)
         {
