@@ -7,7 +7,7 @@
 #include <algorithm>
 #include <list>
 
-enum RULES{
+/*enum RULES{
     DEGREE_ZERO,        // = 0
     DEGREE_ONE,         // = 1
     DEGREE_TWO,         // = 2
@@ -21,7 +21,7 @@ public:
     int kDecrement;
     std::vector<int> deletedVertices; // First idx is always to add in VC if(rule!=0)
     std::vector<int>* savedAdjacency;
-};
+};*/
 
 class ArrayGraph
 {
@@ -64,7 +64,7 @@ protected:
     void quickSort(std::vector<int>* toSort, int low, int high);
     bool contains(std::vector<int>* vertexIndices, int vertexIndex);
 
-    //================================================================
+   /* //================================================================
     // Reduction Rules
     bool rule_HighDegree(int *k, std::vector<ReductionVertices>* reductionVertices);
     bool rule_DegreeZero(std::vector<ReductionVertices>* reductionArray);
@@ -75,7 +75,7 @@ protected:
     void rule_DegreeOne(int* k, std::vector<ReductionVertices>* reductionArray);
     void rule_DegreeTwo(int* k, std::vector<ReductionVertices>* reductionArray);
 //    void rule_Domination(int* k);
-    //================================================================
+    //================================================================*/
 
 public:
     bool isVertexCoverFound();
@@ -150,33 +150,33 @@ public:
     void printMappings(std::vector<int>* vertices);
     void printMappings();
 
-    // return bool indicating if no vertex cover possible
-    bool applyReductionRules(int* k, std::vector<ReductionVertices>* reductionArray);
-
-    // Adds the deleted vertices from the reduction rules to the vertex cover
-    void addReducedVertices(std::vector<int>* S, std::vector<ReductionVertices>* reductionArray);
-
-    // Restores the initial kernel problem
-    void addBackReducedVertices(int *k, std::vector<ReductionVertices>* reductionArray);
-
-    //TODO: ------------Functions that need implementation-------------
-
-    /* Get list of vertices of degree d*/
-    std::vector<int>* getVerticesDegree(int d);
-
-    /* Add 2 Adjacency Lists*/
-    std::vector<int>* putAdjacencyTogether(std::vector<int>* neigh1, std::vector<int>* neigh2);
-
-    /* Changes Adjacency of vertex
-     * update own & neighbours degree here!
-     * => add a degree to new neighbours they will be decreased after again by setInactive in Degree Two Rule
-     * */
-    void setVertexAdjacency(int vertexIndex, std::vector<int>* savedAdjacency);
-
-    /* Restore saved Adjacency of vertex
-     * update neighbours degree will be done in setActive()
-     * */
-    void setVertexAdjacencyBack(int vertexIndex, std::vector<int>* savedAdjacency);
+//   /* // return bool indicating if no vertex cover possible
+//    bool applyReductionRules(int* k, std::vector<ReductionVertices>* reductionArray);
+//
+//    // Adds the deleted vertices from the reduction rules to the vertex cover
+//    void addReducedVertices(std::vector<int>* S, std::vector<ReductionVertices>* reductionArray);
+//
+//    // Restores the initial kernel problem
+//    void addBackReducedVertices(int *k, std::vector<ReductionVertices>* reductionArray);
+//
+//    //TODO: ------------Functions that need implementation-------------
+//
+//    *//* Get list of vertices of degree d*//*
+//    std::vector<int>* getVerticesDegree(int d);
+//
+//    *//* Add 2 Adjacency Lists*//*
+//    std::vector<int>* putAdjacencyTogether(std::vector<int>* neigh1, std::vector<int>* neigh2);
+//
+//    *//* Changes Adjacency of vertex
+//     * update own & neighbours degree here!
+//     * => add a degree to new neighbours they will be decreased after again by setInactive in Degree Two Rule
+//     * *//*
+//    void setVertexAdjacency(int vertexIndex, std::vector<int>* savedAdjacency);
+//
+//    *//* Restore saved Adjacency of vertex
+//     * update neighbours degree will be done in setActive()
+//     * *//*
+//    void setVertexAdjacencyBack(int vertexIndex, std::vector<int>* savedAdjacency);*/
 
 
 

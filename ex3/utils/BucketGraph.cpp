@@ -408,7 +408,7 @@ void BucketGraph::printActiveList()
     std::cout << "active vertices: ";
     for(auto it = activeList.begin(); it != activeList.end(); ++it)
     {
-        std::cout << it->index << ", ";
+        std::cout << it->index+1 << ", ";
     }
     if(activeList.size() == 0)
     {
@@ -451,13 +451,13 @@ void BucketGraph::printBucketQueue()
         {
             int offs = 0;
 
-            std::cout << "| " << cp::dye(std::to_string(vertex->index), 'w');
+            std::cout << "| " << cp::dye(std::to_string(vertex->index+1), 'w');
             offs = fieldSize-strRepSize(vertex->index);
             ++vertex;
             int i = 1;
             for (; i < row && vertex != bucket->vertices.end(); i++, ++vertex)
             {
-                std::cout << ", " << tileStr(" ", offs) << cp::dye(std::to_string(vertex->index), 'w');
+                std::cout << ", " << tileStr(" ", offs) << cp::dye(std::to_string(vertex->index+1), 'w');
                 offs = fieldSize-strRepSize(vertex->index);
             }
             std::cout << tileStr(" ", (2+fieldSize)*(row-i));
@@ -921,31 +921,72 @@ bool BucketGraph::vertexCanBeAddedToClique(int vertex, std::vector<int>* clique)
     }
     return true;
 }
-<<<<<<< HEAD
 
 
 /*----------------------------------------------------------*/
 /*------------------   Reduction Rules   -------------------*/
 /*----------------------------------------------------------*/
-
-
-bool ArrayGraph::applyReductionRules(int* k, std::vector<ReductionVertices>* reductionArray)
+void BucketGraph::printReductionRules(std::vector<ReductionVertices>* reductionArray)
 {
+    if(reductionArray->empty())
+        return;
+
+    for (auto i = 0; i < (int) reductionArray->size(); ++i) {
+        ReductionVertices reductionR = reductionArray->at(i);
+        std::string toPrint =  "Applied Reduction Rule Nr " + std::to_string(reductionR.rule) + ":";
+        std::cout << ColorPrint::dye(toPrint, 'r') << std::endl ;
+
+        std::string deleteV =  "Deleted Vertices are: ";
+        for (int j = 0; j < (int) reductionR.deletedVertices.size(); ++j) {
+            deleteV += std::to_string(reductionR.deletedVertices.at(j)) + ", ";
+        }
+        std::cout << ColorPrint::dye(deleteV, 'c') << std::endl ;
+
+        if(!reductionR.rule == 0)
+        {
+            std::string savedAdj = "Saved Adjacency List: ";
+            for (int k = 0; k < (int) reductionR.savedAdjacency->size(); ++k)
+            {
+                savedAdj += std::to_string(reductionR.savedAdjacency->at(k)) + ", ";
+            }
+            std::cout << ColorPrint::dye(savedAdj, 'c') << std::endl;
+        }
+        std::cout << std::endl;
+    }
+
+}
+
+bool BucketGraph::applyReductionRules(int* k, std::vector<ReductionVertices>* reductionArray)
+{
+//    std::cout << "Applying some reductions" << std::endl;
+
     // if both rules are not applicable
-    if(!rule_HighDegree(k, reductionArray) && !rule_DegreeZero(reductionArray))
+    /*if(!rule_HighDegree(k, reductionArray) && !rule_DegreeZero(reductionArray))
         //if Buss rule == true => no vertex cover
         if(rule_Buss(k))
-            return false;
+            return false;*/
+    printActiveList();
+    printBucketQueue();
+
+    std::cout << rule_HighDegree(k, reductionArray) << std::endl << std::endl;
+    std::cout << rule_DegreeZero(reductionArray) << std::endl << std::endl;
 
     // Apply rule 0, 1 & 2 at every deactivation?
 //    rule_DegreeOne(k, reductionArray);
+//    rule_DegreeZero(k, reductionArray);
 //    rule_DegreeTwo(k, reductionArray);
+
+    printReductionRules(reductionArray);
+    std::cout << "Am I out of Print?" << std::endl ;
 
     return true;
 }
 
-bool ArrayGraph::rule_HighDegree(int *k, std::vector<ReductionVertices>* reductionArray)
+bool BucketGraph::rule_HighDegree(int *k, std::vector<ReductionVertices>* reductionArray)
 {
+    std::string toPrint =  "Arrived in Reduction Rule High Degree";
+    std::cout << ColorPrint::dye(toPrint, 'r') << std::endl ;
+
     int cnt = 0;
 
     int maxDegIdx = getMaxDegreeVertex();
@@ -956,103 +997,136 @@ bool ArrayGraph::rule_HighDegree(int *k, std::vector<ReductionVertices>* reducti
 
     while(maxDeg > (*k))
     {
-        std::vector<int> tooHighToHandle = *getVerticesDegree(maxDeg);
-        maxDeg--;
-        if(tooHighToHandle.empty())
-            continue;
+        int tooHighToHandle = getFirstVertexOfDegree(maxDeg);
 
-        for (auto i = 0; i < (int)  tooHighToHandle.size(); ++i) {
-            cnt++;
-            int vertexID = tooHighToHandle.at(i);
+        while(tooHighToHandle != -1)
+        {
+            std::string appliedOn = "Rule High Degree on Vertex Nr: " + std::to_string(tooHighToHandle+1);
+            std::cout << ColorPrint::dye(appliedOn, 'r') << std::endl ;
 
             // save deleted vertex
             ReductionVertices delVer;
             delVer.rule = 3;
-            delVer.deletedVertices.push_back(vertexID);
+            delVer.deletedVertices.push_back(tooHighToHandle);
             delVer.kDecrement = 1;
-            delVer.savedAdjacency = getNeighbours(vertexID);
+            delVer.savedAdjacency = getNeighbours(tooHighToHandle);
             reductionArray->push_back(delVer);
 
-            setInactive(vertexID);
+            setInactive(tooHighToHandle);
+            rule_3++;
             (*k)--;
-        }
 
+            tooHighToHandle = getFirstVertexOfDegree(maxDeg);
+            cnt++;
+
+            printActiveList();
+            printBucketQueue();
+        }
+        maxDeg--;
     }
+
+    std::string exitRule = "Rule High Degree applied " + std::to_string(rule_3) + " times.";
+    std::cout << ColorPrint::dye(exitRule, 'y') << std::endl ;
 
     if(cnt == 0)
         return false;
     return true;
 }
 
-
-bool ArrayGraph::rule_DegreeZero(std::vector<ReductionVertices>* reductionArray)
+bool BucketGraph::rule_DegreeZero(std::vector<ReductionVertices>* reductionArray)
 {
-    std::vector<int> zeroDegree = *getVerticesDegree(0);
+    std::string toPrint =  "Arrived in Reduction Rule Degree 0";
+    std::cout << ColorPrint::dye(toPrint, 'r') << std::endl ;
 
-    if(zeroDegree.empty())
-        return false;
+    int cnt = 0;
 
-    for (auto i = 0; i < (int)  zeroDegree.size(); ++i) {
-        int vertexID = zeroDegree.at(i);
+    int degreeZeroIdx = getFirstVertexOfDegree(0);
 
+    while(degreeZeroIdx != -1)
+    {
         // save deleted vertex
         ReductionVertices delVer;
         delVer.rule = 0;
         delVer.kDecrement = 0;
-        delVer.deletedVertices.push_back(vertexID);
+        delVer.deletedVertices.push_back(degreeZeroIdx);
         reductionArray->push_back(delVer);
 
-        setInactive(vertexID);
+        setInactive(degreeZeroIdx);
+
+        cnt++;
+        rule_0++;
+
+        degreeZeroIdx = getFirstVertexOfDegree(0);
+
+        std::string appliedOn = "Rule Degree 0 on Vertex Nr: " + std::to_string(degreeZeroIdx+1);
+        std::cout << ColorPrint::dye(appliedOn, 'r') << std::endl ;
+
+        printActiveList();
+        printBucketQueue();
     }
 
+    std::string exitRule = "Rule Degree Zero applied " + std::to_string(rule_0) + " times.";
+    std::cout << ColorPrint::dye(exitRule, 'y') << std::endl ;
+
+    if(cnt == 0)
+        return false;
     return true;
 }
 
+//bool BucketGraph::rule_Buss(int* k)
+//{
+//    int k_square = std::pow((*k), 2);
+//
+//    // If |V| > k^2 + k || |E|>k^2 => no vertex cover
+//    if((numberOfVertices > k_square + (*k)) || (numberOfEdges > k_square))
+//        return true;
+//    return false;
+//}
 
-bool ArrayGraph::rule_Buss(int* k)
+void BucketGraph::rule_DegreeOne(int* k, std::vector<ReductionVertices>* reductionArray)
 {
-    int k_square = std::pow((*k), 2);
+    std::cout << "Arrived in Reduction Rule Degree 1" << std::endl;
 
-    // If |V| > k^2 + k || |E|>k^2 => no vertex cover
-    if((numberOfVertices > k_square + (*k)) || (numberOfEdges > k_square))
-        return true;
-    return false;
-}
+    int degreeOneIdx = getFirstVertexOfDegree(1);
 
-
-void ArrayGraph::rule_DegreeOne(int* k, std::vector<ReductionVertices>* reductionArray)
-{
-    std::vector<int> degreeOne = *getVerticesDegree(1);
-
-    if(degreeOne.empty())
-        return;
-
-    for (auto i = 0; i < (int)  degreeOne.size(); ++i) {
-        int vertexID = degreeOne.at(i);
-
+    while(degreeOneIdx != -1)
+    {
         // THIS SHOULD HOLD THROUGH
-        int neighbour = getNeighbours(vertexID)->at(0);
+        int neighbour = getNeighbours(degreeOneIdx)->at(0);
 
         // save deleted vertex
         ReductionVertices delVer;
         delVer.rule = 1;
         delVer.kDecrement = 1;
         delVer.deletedVertices.push_back(neighbour);
-        delVer.deletedVertices.push_back(vertexID);
+        delVer.deletedVertices.push_back(degreeOneIdx);
         delVer.savedAdjacency = getNeighbours(neighbour);
 //        ->push_back(getNeighbours(neighbour));
         reductionArray->push_back(delVer);
 
         setInactive(neighbour);
-        setInactive(vertexID);
+        setInactive(degreeOneIdx);
         (*k)--;
+
+//        std::cout << "Applying reduction on Vertex Nr: " << degreeOneIdx+1 << std::endl ;
+        std::string appliedOn = "Rule Degree 1 on Vertex Nr: " + std::to_string(degreeOneIdx+1);
+        std::cout << ColorPrint::dye(appliedOn, 'r') << std::endl ;
+
+        printActiveList();
+        printBucketQueue();
+
+        rule_1++;
+        degreeOneIdx = getFirstVertexOfDegree(1);
     }
 
+    std::string toPrint = "Rule Degree One applied " + std::to_string(rule_1) + " times.";
+    std::cout << ColorPrint::dye(toPrint, 'y') << std::endl ;
 }
 
-
-void ArrayGraph::rule_DegreeTwo(int* k, std::vector<ReductionVertices>* reductionArray)
+/*
+void BucketGraph::rule_DegreeTwo(int* k, std::vector<ReductionVertices>* reductionArray)
 {
+ std::cout << "Arrived in Reduction Rule Degree 2" << std::endl;
     std::vector<int> degreeTwo = *getVerticesDegree(2);
 
     if(degreeTwo.empty())
@@ -1117,7 +1191,7 @@ void ArrayGraph::rule_DegreeTwo(int* k, std::vector<ReductionVertices>* reductio
     }
 }
 
-void ArrayGraph::rule_Domination(int* k, std::vector<ReductionVertices>* reductionArray)
+void BucketGraph::rule_Domination(int* k, std::vector<ReductionVertices>* reductionArray)
 {
     int maxDegIdx = getMaxDegreeVertex();
     int maxDeg = getVertexDegree(maxDegIdx);
@@ -1140,7 +1214,7 @@ void ArrayGraph::rule_Domination(int* k, std::vector<ReductionVertices>* reducti
     }
 }
 
-void ArrayGraph::addReducedVertices(std::vector<int>* S, std::vector<ReductionVertices>* reductionArray)
+void BucketGraph::addReducedVertices(std::vector<int>* S, std::vector<ReductionVertices>* reductionArray)
 {
     if(reductionArray->empty())
         return;
@@ -1182,8 +1256,7 @@ void ArrayGraph::addReducedVertices(std::vector<int>* S, std::vector<ReductionVe
     reductionArray->clear();
 }
 
-
-void ArrayGraph::addBackReducedVertices(int *k, std::vector<ReductionVertices>* reductionArray)
+void BucketGraph::addBackReducedVertices(int *k, std::vector<ReductionVertices>* reductionArray)
 {
     if(reductionArray->empty())
         return;
@@ -1229,5 +1302,4 @@ void ArrayGraph::addBackReducedVertices(int *k, std::vector<ReductionVertices>* 
     // TODO: Eventually slow, especially if pointer is getting deleted later
     reductionArray->clear();
 }
-=======
->>>>>>> origin/main
+*/

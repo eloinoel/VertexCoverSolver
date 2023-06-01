@@ -25,8 +25,8 @@ vector<int>* vcVertexBranchingRecursive(BucketGraph* G, int k, int* numRec)
     //vector<ReductionVertices>* reductionVertices = new vector<ReductionVertices>;
 
     // Apply Reduction Rules for the first time
-      if(G->applyReductionRules(&k, reductionVertices))
-         return nullptr;
+//      if(G->applyReductionRules(&k, reductionVertices))
+//         return nullptr;
 
     //cout << "before getMaxDegreeVertex" << endl;
 	int vertex = G->getMaxDegreeVertex();
@@ -98,21 +98,30 @@ vector<int>* vcSolverRecursive(BucketGraph* G, int* numRec)
 
 	vector<int> *vc;
 
+//    std::cout << "Solving Recursively" << std::endl;
+
 	while (true)
 	{
         // Reduction Rules
-        //vector<ReductionVertices>* reductionVertices = new vector<ReductionVertices>;
+        vector<ReductionVertices>* reductionVertices = new std::vector<ReductionVertices>;
+
+        int kBefo = k;
+
 
         // Apply Reduction Rules for the first time
-       /*  if(G->applyReductionRules(&k, reductionVertices))
-            return nullptr; */
+         if(!G->applyReductionRules(&k, reductionVertices))
+            return nullptr;
+        std::string kBefore =  "Before Reduction Ruled after Initialisation k: " + std::to_string(kBefo);
+        std::cout << ColorPrint::dye(kBefore, 'r') << std::endl ;
+        std::string kAfter =  "Reduction Ruled Applied after Initialisation k: " + std::to_string(k);
+        std::cout << ColorPrint::dye(kAfter, 'g') << std::endl ;
 
 		vc = vcVertexBranchingRecursive(G, k, numRec);
 		if (vc != nullptr)
 		{
             // Add Reduced Vertices to Vertex Cover
-            /* G->addReducedVertices(vc, reductionVertices);
-            delete reductionVertices; */
+             G->addReducedVertices(vc, reductionVertices);
+            delete reductionVertices;
 
 			return vc;
 		}
@@ -228,14 +237,8 @@ vector<int>* vertexBranchingSolverRecursiveEx2(ArrayGraph* G, int* numRec)
 
 	while (true)
 	{
-        // Reduction Rules
-        //vector<ReductionVertices>* reductionVertices = new vector<ReductionVertices>;
 
-        // Apply Reduction Rules for the first time
-       /*  if(G->applyReductionRules(&k, reductionVertices))
-            return nullptr; */
-
-		vc = vcVertexBranchingRecursiveEx2(G, k, numRec);
+        vc = vcVertexBranchingRecursiveEx2(G, k, numRec);
 		if (vc != nullptr)
 		{
             // Add Reduced Vertices to Vertex Cover
@@ -317,6 +320,7 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
     else if(version == 1)
     {
         BucketGraph* G = BucketGraph::readStandardInput();
+
         if (G == nullptr)
             throw invalid_argument("Error constructing graph from input file.");
         if (printGraph)
@@ -358,7 +362,7 @@ int main(int argc, char* argv[]) {
 	try
 	{
         //chooseImplementationAndOutput(0, false, false, false, false, true, false);
-        chooseImplementationAndOutput(1, false, false, false, false, false, true);
+        chooseImplementationAndOutput(1, false, false, false, false, true, false);
 	}
 	catch (const exception& e)
 	{

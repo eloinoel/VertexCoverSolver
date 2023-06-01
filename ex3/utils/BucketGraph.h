@@ -8,6 +8,7 @@
 #include <functional>
 #include <limits.h>
 
+#include "ColorPrint.h"
 
 #include <unordered_map> //O(1) for insert and access instead of O(log n) for ordered maps
 
@@ -16,7 +17,12 @@
 #include "boost/intrusive/list.hpp"
 
 /* Rule Codierung:
- *
+ *  1:
+ *  2:
+ *  3:
+ *  4:
+ *  5:
+ *  6:
  * */
 class ReductionVertices{
 public:
@@ -140,6 +146,13 @@ private:
     /* Initialized to 0 and of size Vertex*/
     std::vector<int> neighbourArray;
 
+    int rule_0 = 0;
+    int rule_1 = 0;
+    int rule_2 = 0;
+    int rule_3 = 0;
+    int rule_4 = 0;
+    int rule_5 = 0;
+
 //functions
 public:
     inline BucketGraph() {  }
@@ -174,6 +187,8 @@ public:
 
     // return bool indicating if no vertex cover possible
     bool applyReductionRules(int* k, std::vector<ReductionVertices>* reductionArray);
+
+    void printReductionRules(std::vector<ReductionVertices>* reductionArray);
 
 private:
 
@@ -280,37 +295,37 @@ private:
     bool rule_DegreeZero(std::vector<ReductionVertices>* reductionArray);
 
     // TODO: Check that numberOfVertices & numberOfEdges are up to date
-    bool rule_Buss(int* k);
+//    bool rule_Buss(int* k);
 
     void rule_DegreeOne(int* k, std::vector<ReductionVertices>* reductionArray);
-    void rule_DegreeTwo(int* k, std::vector<ReductionVertices>* reductionArray);
-    void rule_Domination(int* k, std::vector<ReductionVertices>* reductionArray);
+//    void rule_DegreeTwo(int* k, std::vector<ReductionVertices>* reductionArray);
+//    void rule_Domination(int* k, std::vector<ReductionVertices>* reductionArray);
     //================================================================
 
     // Adds the deleted vertices from the reduction rules to the vertex cover
-    void addReducedVertices(std::vector<int>* S, std::vector<ReductionVertices>* reductionArray);
+//    void addReducedVertices(std::vector<int>* S, std::vector<ReductionVertices>* reductionArray);
 
     // Restores the initial kernel problem
-    void addBackReducedVertices(int *k, std::vector<ReductionVertices>* reductionArray);
+//    void addBackReducedVertices(int *k, std::vector<ReductionVertices>* reductionArray);
 
     //TODO: ------------Functions that need implementation-------------
 
     /* Get list of vertices of degree d*/
-    std::vector<int>* getVerticesDegree(int d);
+//    std::vector<int>* getVerticesDegree(int d);
 
     /* Add 2 Adjacency Lists*/
-    std::vector<int>* putAdjacencyTogether(std::vector<int>* neigh1, std::vector<int>* neigh2);
+//    std::vector<int>* putAdjacencyTogether(std::vector<int>* neigh1, std::vector<int>* neigh2);
 
     /* Changes Adjacency of vertex
      * update own & neighbours degree here!
      * => add a degree to new neighbours they will be decreased after again by setInactive in Degree Two Rule
      * */
-    void setVertexAdjacency(int vertexIndex, std::vector<int>* savedAdjacency);
+//    void setVertexAdjacency(int vertexIndex, std::vector<int>* savedAdjacency);
 
     /* Restore saved Adjacency of vertex
      * update neighbours degree will be done in setActive()
      * */
-    void setVertexAdjacencyBack(int vertexIndex, std::vector<int>* savedAdjacency);
+//    void setVertexAdjacencyBack(int vertexIndex, std::vector<int>* savedAdjacency);
 };
 
 #endif
