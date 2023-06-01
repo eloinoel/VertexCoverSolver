@@ -693,11 +693,6 @@ int BucketGraph::getNumVertices()
 
 int BucketGraph::getNumEdges()
 {
-    int bruteForce = bruteForceCalculateNumEdges();
-    if(numEdges != bruteForce) //TODO: delete debug
-    {
-        throw std::invalid_argument("getNumEdges: inconsistency: wrong number: " + std::to_string(numEdges) + " " + std::to_string(bruteForce));
-    }
     return numEdges;
 }
 
