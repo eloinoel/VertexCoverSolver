@@ -369,8 +369,16 @@ void BucketGraph::print()
 		{
 			if (vertexReferences[i] != nullptr)
             {
-                std::cout << "name " << cp::dye(vertexReferences[i]->strName, 'y') << ", index " <<
-                cp::dye(std::to_string(i), 'g') << "(" << cp::dye(std::to_string(vertexReferences[i]->degree), 'r') << ")" << ": ";
+                std::cout << "name " << cp::dye(vertexReferences[i]->strName, 'y') << ", index ";
+                if(vertexReferences[i]->isActive)
+                {
+                    std::cout << cp::dye(std::to_string(i), 'g');
+                }
+                else 
+                {
+                    std::cout << cp::dye(std::to_string(i), 'd');
+                }
+                std::cout << "(" << cp::dye(std::to_string(vertexReferences[i]->degree), 'r') << ")" << ": ";
 
                 //print neighbours
                 if(vertexReferences[i]->adj != nullptr)
@@ -381,11 +389,31 @@ void BucketGraph::print()
                     }
                     else
                     {
-                        for (int j = 0; j < (int) vertexReferences[i]->adj->size() - 1; j++)
+                        std::vector<int> active = std::vector<int>();
+                        std::vector<int> inactive = std::vector<int>();
+                        for(int j = 0; j < (int) vertexReferences[i]->adj->size(); j++)
                         {
-                            std::cout << vertexReferences[i]->adj->at(j) << ", ";
+                            if(vertexReferences[vertexReferences[i]->adj->at(j)]->isActive)
+                            {
+                                active.push_back(vertexReferences[i]->adj->at(j));
+                            }
+                            else 
+                            {
+                                inactive.push_back(vertexReferences[i]->adj->at(j));
+                            }
                         }
-                        std::cout << vertexReferences[i]->adj->at(vertexReferences[i]->adj->size() - 1);
+                        for(int j = 0; j < (int) active.size(); j++)
+                        {
+                            std::cout << active.at(j) << ", ";
+                        }
+                        for(int j = 0; j < (int) inactive.size() - 1; j++)
+                        {
+                            std::cout << cp::dye(std::to_string(inactive.at(j)), 'd') << ", ";
+                        }
+                        if(inactive.size() > 0)
+                            std::cout << cp::dye(std::to_string(inactive.at(inactive.size() - 1)), 'd');
+
+                        //std::cout << vertexReferences[i]->adj->at(vertexReferences[i]->adj->size() - 1);
                     }
                 }
                 else
@@ -576,6 +604,8 @@ void BucketGraph::setActive(int vertexIndex)
     }
 
     v->isActive = true;
+    activeList.push_back(*v);
+
     addToBucketQueue(v->degree, {v->bucketVertex});
     //update degree of all adjacent nodes
     for(int i = 0; i < (int) v->adj->size(); i++)
@@ -601,6 +631,9 @@ void BucketGraph::setInactive(int vertexIndex)
     }
 
     v->isActive = false;
+    auto iter = activeList.iterator_to(*v);
+    activeList.erase(iter);
+
     removeFromBucketQueue(v->degree, {v->bucketVertex});
     //update degree of all adjacent nodes
     for(int i = 0; i < (int) v->adj->size(); i++)

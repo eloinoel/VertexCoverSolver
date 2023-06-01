@@ -19,6 +19,7 @@ private:
     inline static const std::string PURPLE = "\033[0;35m";  // PURPLE
     inline static const std::string CYAN = "\033[0;36m";    // CYAN
     inline static const std::string WHITE = "\033[0;37m";   // WHITE
+    inline static const std::string GRAY = "\033[0;90m";      // GRAY
     //const std::string MAGENTA "\033[4;35m";   // MAGENTA
 
     // Bold
@@ -83,7 +84,7 @@ private:
 
 public:
     /*
-    'r' : red, 'b': blue, 'g': green, 'c': cyan, 'p': purple, 'y': yellow, 'd': reset colors
+    'r' : red, 'b': blue, 'g': green, 'c': cyan, 'p': purple, 'y': yellow, 'd': darker (gray), 'n': reset colors
     */
     static std::string dye(std::string toPaint, char col) {
         switch(col) {
@@ -99,6 +100,8 @@ public:
                 return PURPLE + toPaint + RESET;
             case 'y':
                 return YELLOW + toPaint + RESET;
+            case 'd':
+                return GRAY + toPaint + RESET;
             default:
                 return RESET + toPaint + RESET;
         }

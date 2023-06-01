@@ -21,6 +21,8 @@ vector<int>* vcVertexBranchingRecursive(BucketGraph* G, int k, int* numRec)
 		return nullptr;
 	}
 
+    G->print(); //TODO: remove debug
+
     //cout << "before getMaxDegreeVertex" << endl;
 	int vertex = G->getMaxDegreeVertex();
     
@@ -46,6 +48,8 @@ vector<int>* vcVertexBranchingRecursive(BucketGraph* G, int k, int* numRec)
 	vector<int>* S = vcVertexBranchingRecursive(G, k - 1, numRec);
 	if (S != nullptr)
 	{
+        //revert changes for multiple executions of the algorithm
+        G->setActive(vertex);//TODO: dont revert in recursion
 		//return results
 		S->push_back(vertex);
 		return S;
@@ -69,6 +73,8 @@ vector<int>* vcVertexBranchingRecursive(BucketGraph* G, int k, int* numRec)
 	S = vcVertexBranchingRecursive(G, k - neighbours->size(), numRec);
 	if (S != nullptr)
 	{
+        //revert changes for multiple executions of the algorithm
+        G->setActive(neighbours); //TODO: dont revert in recursion
 		//return results
         for (int i = 0; i < (int) neighbours->size(); i++)
         {
