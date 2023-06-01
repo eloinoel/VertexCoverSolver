@@ -14,6 +14,7 @@
 #include <algorithm>
 
 #include "boost/intrusive/list.hpp"
+#include <boost/functional/hash.hpp>
 
 using namespace boost::intrusive;
 
@@ -153,8 +154,13 @@ public:
     void print();
     void printActiveList();
     void printBucketQueue();
+    void printEdgesToConsole();
 
     int getLowerBoundVC();
+    void resetLPBoundDataStructures(); //TODO: BRUNO IMPLEMENT THIS PLEASE
+
+    /* apply data reduction rules to graph */
+    void reduce();
 
 private:
 

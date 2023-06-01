@@ -362,7 +362,7 @@ void BucketGraph::print()
     if (vertexReferences.size() > 0)
 	{
 		std::cout << "\n";
-        std::cout << "Graph of size: " << vertexReferences.size() << ", active: " << activeList.size() << std::endl;
+        std::cout << "Graph of size: " << vertexReferences.size() << ", active: " << activeList.size() << ", edges: " << numEdges << std::endl;
         std::cout << "BucketQueue of size: " << bucketQueue.size() << ", maxDegree: " << getMaxDegree() << std::endl;
         std::cout << "name <name>, index <index>(<degree>): <neighbours>" << std::endl;
 		for (int i = 0; i < (int) vertexReferences.size(); i++)
@@ -465,6 +465,29 @@ void BucketGraph::printBucketQueue()
         }
         std::cout << "\\" << tileStr("-", (2+fieldSize)*row) << "/" << std::endl << std::endl;
     }
+}
+
+void BucketGraph::printEdgesToConsole()
+{
+    std::unordered_map<std::pair<int, int>, bool, boost::hash<std::pair<int, int>>>* edges = new std::unordered_map<std::pair<int, int>, bool, boost::hash<std::pair<int, int>>>();
+    //for each active vertex
+    for(auto it = activeList.begin(); it != activeList.end(); ++it)
+    {
+        //iterate through edges
+        for(int i = 0; i < (int) it->adj->size(); i++)
+        {
+            //if edge already in edges map, skip
+            auto map_entry = edges->find(std::make_pair(it->index, it->adj->at(i)));
+            if(map_entry != edges->end()) continue;
+            map_entry = edges->find(std::make_pair(it->adj->at(i), it->index));
+            if(map_entry != edges->end()) continue;
+
+            //else insert edge
+            (*edges)[std::make_pair(it->index, it->adj->at(i))] = true;
+            std::cout << it->strName << " " << vertexReferences[it->adj->at(i)]->strName << std::endl;
+        }
+    }
+    //std::cout << edges->size() << std::endl; //debug
 }
 
 std::vector<std::string>* BucketGraph::getStringsFromVertexIndices(std::vector<int>* vertices)
@@ -706,6 +729,15 @@ int BucketGraph::bruteForceCalculateNumEdges()
     return edgeCount/2;
 }
 
+/*----------------------------------------------------------*/
+/*-------------------   Data Reduction   -------------------*/
+/*----------------------------------------------------------*/
+
+void BucketGraph::reduce()
+{
+    //TODO:
+}
+
 
 /*----------------------------------------------------------*/
 /*--------------   Virtual Matching & Flow   ---------------*/
@@ -805,6 +837,11 @@ int BucketGraph::getLowerBoundVC() {
     return getCliqueBound();
     //return getLPBound();
     //return getLPCycleBound();
+}
+
+void BucketGraph::resetLPBoundDataStructures()
+{
+    //TODO: BRUNO IMPLEMENT THIS
 }
 
 int BucketGraph::getLPBound()

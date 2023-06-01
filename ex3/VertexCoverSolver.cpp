@@ -267,11 +267,17 @@ void writeSolutionToConsole(vector<string>* vc)
 	}
 }
 
+/*----------------------------------------------------------*/
+/*-------------------   Data Reduction   -------------------*/
+/*----------------------------------------------------------*/
+
+
+
 /** Execute specific version of program with optional arguments for more prints
  * version
  * 0: ArrayGraph, recursive
  * 1: Bucketgraph
-
+ * 5: (b) apply data reduction and output smaller graph and diff in vc size
  * ....
 */
 void chooseImplementationAndOutput(int version = 1, bool printGraph = false, bool printMappings = false, 
@@ -336,6 +342,23 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
         }
 
     }
+    else if(version == 5)
+    {
+        BucketGraph* G = BucketGraph::readStandardInput();
+        if (G == nullptr)
+            throw invalid_argument("Error constructing graph from input file.");
+
+        //G->print();
+        int numRecursiveSteps = 0;
+        std::vector<int>* vc = vcSolverRecursive(G, &numRecursiveSteps);
+
+        G->reduce();
+        G->printEdgesToConsole();
+
+        G->resetLPBoundDataStructures(); //TODO: BRUNO IMPLEMENT THIS PLEASE
+        std::vector<int>* reducedVc = vcSolverRecursive(G, &numRecursiveSteps);
+        cout << "#difference: " << to_string((vc->size() - reducedVc->size())) << endl;
+    }
     else
     {
         cout << "Select correct version please.";
@@ -351,7 +374,7 @@ int main(int argc, char* argv[]) {
 	try
 	{
         //chooseImplementationAndOutput(0, false, false, false, false, true, false);
-        chooseImplementationAndOutput(1, false, false, false, false, false, true);
+        chooseImplementationAndOutput(5, false, false, false, false, true, false);
 	}
 	catch (const exception& e)
 	{
