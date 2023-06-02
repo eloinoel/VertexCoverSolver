@@ -2,16 +2,10 @@
 #define REDUCTIONS_H
 
 #include <vector>
+#include "ReductionsFwd.h"
 
-#include "BucketGraph.h"
-
-enum RULE{
-    DEGREE_ZERO,        // = 0
-    DEGREE_ONE,         // = 1
-    DEGREE_TWO,         // = 2
-    HIGH_DEGREE,        // = 3
-    DOMINATION          // = 4
-};
+enum RULE;
+class BucketGraph;
 
 class Reduction{
 public:

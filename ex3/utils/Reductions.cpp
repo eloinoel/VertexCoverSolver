@@ -1,5 +1,8 @@
 #include "Reductions.h"
+#include "ReductionsFwd.h"
 #include "boost/intrusive/list.hpp"
+#include "BucketGraph.h"
+
 
 using namespace boost::intrusive;
 
@@ -13,10 +16,11 @@ bool Reductions::rule_HighDegree(BucketGraph* G, int* k)
     //delete vertices that have to be in the vertex cover
     while(G->getMaxDegree() > *k)
     {
+        if(*k == 0) return true; //cannot delete more vertices, no possible vertex cover exists
         int maxDegVertex = G->getMaxDegreeVertex();
         reduction->kDecrement++;
         reduction->deletedVertices->push_back(maxDegVertex);
-        k--;
+        *k = *k - 1;
         G->setInactive(maxDegVertex);
     }
     return true;
@@ -59,10 +63,11 @@ bool Reductions::rule_DegreeOne(BucketGraph* G, int* k)
 
     for(auto it = degOneBucket->begin(); it != degOneBucket->end(); ++it)
     {
+        if(*k == 0) return true; //cannot delete more vertices, no possible vertex cover exists
         int neighbourToDelete = G->getVertex(it->index)->adj->front();
         reduction->deletedVertices->push_back(it->index);
         reduction->kDecrement++;
-        *k--;
+        *k = *k - 1;
         G->setInactive(it->index);
     }
     return true;
