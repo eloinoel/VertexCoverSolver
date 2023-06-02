@@ -15,6 +15,8 @@ using namespace std;
 
 vector<int>* vcVertexBranchingRecursive(BucketGraph* G, int k, int* numRec)
 {
+    //TODO: call data reductions
+
     (*numRec)++;
 	if (k < 0)
     {

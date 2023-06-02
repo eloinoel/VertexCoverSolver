@@ -22,7 +22,7 @@ RULE_APPLICATION_RESULT Reductions::rule_HighDegree(BucketGraph* G, int* k)
         *k = *k - 1;
         G->setInactive(maxDegVertex);
     }
-    return SUCCESSFUL;
+    return APPLICABLE;
 }
 
 RULE_APPLICATION_RESULT Reductions::rule_DegreeZero(BucketGraph* G)
@@ -39,7 +39,7 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeZero(BucketGraph* G)
         reduction->deletedVertices->push_back(it->index);
         G->setInactive(it->index);
     }
-    return SUCCESSFUL;
+    return APPLICABLE;
 }
 
 RULE_APPLICATION_RESULT Reductions::rule_Buss(BucketGraph* G, int* k, int numVertices, int numEdges)
@@ -69,5 +69,5 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeOne(BucketGraph* G, int* k)
         *k = *k - 1;
         G->setInactive(it->index);
     }
-    return SUCCESSFUL;
+    return APPLICABLE;
 }
