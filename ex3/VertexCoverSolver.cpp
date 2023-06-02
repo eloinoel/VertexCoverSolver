@@ -357,7 +357,7 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
         int numRecursiveSteps = 0;
         std::vector<int>* vc = vcSolverRecursive(G, &numRecursiveSteps);
 
-        G->reduce();
+        //G->reduce(); //TODO:
         G->printEdgesToConsole();
 
         G->resetLPBoundDataStructures();

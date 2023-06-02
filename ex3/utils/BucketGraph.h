@@ -16,7 +16,7 @@
 #include <boost/intrusive/list.hpp>
 #include <boost/functional/hash.hpp>
 
-#include "Reductions.h"
+class Reductions;
 
 using namespace boost::intrusive;
 
@@ -173,7 +173,7 @@ public:
     inline list<Vertex>* getActiveList() { return &activeList; }
     /* returns -1 if no vertex of degree */
     int getFirstVertexOfDegree(int degree);
-    inline Vertex* getVertex(int index) { if(index < vertexReferences.size()) return vertexReferences[index]; else return nullptr; }
+    inline Vertex* getVertex(int index) { if(index < (int) vertexReferences.size()) return vertexReferences[index]; else return nullptr; }
 
     void print();
     void printActiveList();
@@ -188,8 +188,8 @@ public:
 
     void resetLPBoundDataStructures();
 
-    /* apply data reduction rules to graph */
-    void reduce();
+    /* apply data reduction rules to graph, returns true if no vertex cover can be found for this k */
+    bool reduce(int* k);
 
 private:
 

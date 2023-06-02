@@ -7,6 +7,7 @@ using namespace std::chrono;
 #include "BucketGraph.h"
 #include "ColorPrint.h"
 #include "BipartiteArrayGraph.h"
+#include "Reductions.h"
 
 typedef ColorPrint cp;
 
@@ -14,7 +15,7 @@ typedef ColorPrint cp;
 /*-----------------   Graph Construction   -----------------*/
 /*----------------------------------------------------------*/
 
-BucketGraph*  BucketGraph::readStandardInput()
+BucketGraph* BucketGraph::readStandardInput()
 {
     //init
 
@@ -996,9 +997,23 @@ int BucketGraph::bruteForceCalculateNumEdges()
 /*-------------------   Data Reduction   -------------------*/
 /*----------------------------------------------------------*/
 
-void BucketGraph::reduce()
+bool BucketGraph::reduce(int* k)
 {
+    bool highDegreeResult = reductions->rule_HighDegree(this, k);
+    if(*k == 0 && getMaxDegree() > *k) return true; //cut
+    bool degreeZeroResult = reductions->rule_DegreeZero(this);
+    if(highDegreeResult && degreeZeroResult)
+    {
+        if(reductions->rule_Buss(this, k, getNumVertices(), getNumEdges()))
+            return true;
+    }
+    bool degreeOneResult = reductions->rule_DegreeOne(this, k);
+    if(!getVerticesOfDegree(1)->empty()) return true; //cut
+    
     //TODO:
+    //bool degreeTwoResult = reductions->rule_DegreeTwo(k);
+    return false;
+
 }
 
 

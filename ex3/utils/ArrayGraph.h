@@ -7,14 +7,6 @@
 #include <algorithm>
 #include <list>
 
-enum RULES{
-    DEGREE_ZERO,        // = 0
-    DEGREE_ONE,         // = 1
-    DEGREE_TWO,         // = 2
-    HIGH_DEGREE,        // = 3
-    DOMINATION          // = 4
-};
-
 class ReductionVertices{
 public:
     int rule;
