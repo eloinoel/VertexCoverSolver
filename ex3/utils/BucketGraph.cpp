@@ -999,7 +999,7 @@ int BucketGraph::bruteForceCalculateNumEdges()
 
 bool BucketGraph::reduce(int* k)
 {
-    bool highDegreeResult = reductions->rule_HighDegree(this, k);
+    /* bool highDegreeResult = reductions->rule_HighDegree(this, k);
     if(*k == 0 && getMaxDegree() > *k) return true; //cut
     bool degreeZeroResult = reductions->rule_DegreeZero(this);
     if(highDegreeResult && degreeZeroResult)
@@ -1008,7 +1008,7 @@ bool BucketGraph::reduce(int* k)
             return true;
     }
     bool degreeOneResult = reductions->rule_DegreeOne(this, k);
-    if(!getVerticesOfDegree(1)->empty()) return true; //cut
+    if(!getVerticesOfDegree(1)->empty()) return true; //cut */
     
     //TODO:
     //bool degreeTwoResult = reductions->rule_DegreeTwo(k);
