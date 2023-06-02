@@ -17,6 +17,7 @@ typedef ColorPrint cp;
 BucketGraph*  BucketGraph::readStandardInput()
 {
     //init
+
 	BucketGraph* G = new BucketGraph();
     int vertexIndex = 0;
     G->originalVertexNames = std::unordered_map<std::string, std::pair<int, int>>();
@@ -126,11 +127,11 @@ BucketGraph*  BucketGraph::readStandardInput()
         G->edges.push_back(edge_pair);
     }
     
-
     G->initActiveList(); //sets vertex references and generates activeList
     G->initAdjMap(); //sets references in adjacency lists of vertices
     G->initBucketQueue(); // initialise bucket queue
     G->initMatching(); // LP Bound matching fields
+    G->reductions = new Reductions();
     return G;
 }
 
@@ -372,15 +373,17 @@ bool BucketGraph::isAdjMapConsistent()
     return true;
 }
 
-void BucketGraph::copy()
+BucketGraph* BucketGraph::resetGraph()
 {
     BucketGraph* G = new BucketGraph();
     G->originalVertexNames = originalVertexNames;
     G->edges = edges;
 
+    reductions = new Reductions();
     G->initActiveList();
     G->initAdjMap();
     G->initBucketQueue();
+    return G;
 }
 
 /*----------------------------------------------------------*/
@@ -642,6 +645,97 @@ void BucketGraph::addToBucketQueue(int degree, std::vector<BucketVertex*> vertic
     bucketReferences[degree]->insert(vertices);
 }
 
+void BucketGraph::moveToBiggerBucket(int degree, int vertex)
+{
+    //remove from current bucket
+    Bucket* previousBucket = bucketReferences[degree];
+    previousBucket->remove(vertexReferences[vertex]->bucketVertex);
+
+    auto previous_bucket_it = bucketQueue.iterator_to(*previousBucket);
+    auto next_bucket = previous_bucket_it;
+    next_bucket++;
+    //list_node<hook_defaults::void_pointer>* next_bucket = nullptr; 
+    if(previousBucket->vertices.size() == 0) {
+        bucketQueue.erase(previous_bucket_it);
+    }
+
+    degree++;
+    //extend bucketReferences if bigger bucket doesnt exist yet
+    if(degree > (int) bucketReferences.size()-1)
+    {
+        for (int i=bucketReferences.size(); i<=degree; i++)
+        {
+            bucketReferences.push_back(new Bucket(i, *(new std::vector<BucketVertex*>({}))));
+        }
+    }
+    // insert bucket into queue
+    if((int) bucketReferences[degree]->vertices.size() == 0) //bucket to insert doesn't exist in queue
+    {
+        //insert bucket into queue
+        //next_bucket cannot be the bucket to insert to
+        if(next_bucket->vertices.empty())
+        {
+            throw std::invalid_argument("moveToBiggerBucket: inconsistency, next bucket to insert is empty but still in bucket queue");
+        }
+        if(next_bucket == bucketQueue.end())
+        {
+            bucketQueue.insert(bucketQueue.end(), *bucketReferences[degree]);
+        }
+        else
+        {
+            bucketQueue.insert(next_bucket, *bucketReferences[degree]);
+        }
+    }
+    bucketReferences[degree]->insert(vertexReferences[vertex]->bucketVertex);
+}
+
+void BucketGraph::moveToSmallerBucket(int degree, int vertex)
+{
+    //remove from current bucket
+    Bucket* curBucket = bucketReferences[degree];
+    curBucket->remove(vertexReferences[vertex]->bucketVertex);
+
+    auto cur_bucket_it = bucketQueue.iterator_to(*curBucket);
+    auto previous_bucket_it = cur_bucket_it;
+    bool curBucketIsBegin = false;
+    if(cur_bucket_it != bucketQueue.begin())
+    {
+        previous_bucket_it--;
+    }
+    else
+    {
+        curBucketIsBegin = true;
+    }
+
+    //list_node<hook_defaults::void_pointer>* next_bucket = nullptr; 
+    if(curBucket->vertices.size() == 0) {
+        bucketQueue.erase(cur_bucket_it);
+    }
+
+    degree--;
+    // insert bucket into queue
+    if((int) bucketReferences[degree]->vertices.size() == 0) //bucket to insert doesn't exist in queue
+    {
+        //previous_bucket cannot be the bucket to insert to
+        if(!curBucketIsBegin && previous_bucket_it->vertices.empty()) //if curBucketIsBegin == true, previous_bucket_it hasn't been decremented
+        {
+            throw std::invalid_argument("moveToSmallerBucket: inconsistency, previous bucket to insert is empty but still in bucket queue");
+        }
+        //insert bucket into queue
+        if(curBucketIsBegin) //beginning of list reached
+        {
+            bucketQueue.insert(bucketQueue.begin(), *bucketReferences[degree]);
+        }
+        else
+        {
+            previous_bucket_it++;
+            bucketQueue.insert(previous_bucket_it, *bucketReferences[degree]);
+        }
+    }
+    bucketReferences[degree]->insert(vertexReferences[vertex]->bucketVertex);
+}
+
+
 void BucketGraph::setActive(int vertexIndex)
 {
     Vertex* v = vertexReferences[vertexIndex];
@@ -655,7 +749,7 @@ void BucketGraph::setActive(int vertexIndex)
     // FIXME: add back if active is needed
     //activeList.push_back(*v);
 
-    addToBucketQueue(v->degree, {v->bucketVertex});
+    addToBucketQueue(v->degree, {v->bucketVertex}); //TODO: optimise this to not loop by storing previous references in recursion
     //update degree of all adjacent nodes
     for(int i = 0; i < (int) v->adj->size(); i++)
     {
@@ -666,8 +760,9 @@ void BucketGraph::setActive(int vertexIndex)
         vertexReferences[(*v->adj)[i]]->degree++;
         if(!vertexReferences[(*v->adj)[i]]->isActive) { continue; }
         numEdges++;
-        removeFromBucketQueue(vertexReferences[(*v->adj)[i]]->degree-1, {vertexReferences[(*v->adj)[i]]->bucketVertex});
-        addToBucketQueue(vertexReferences[(*v->adj)[i]]->degree, {vertexReferences[(*v->adj)[i]]->bucketVertex});
+        //removeFromBucketQueue(vertexReferences[(*v->adj)[i]]->degree-1, {vertexReferences[(*v->adj)[i]]->bucketVertex});
+        //addToBucketQueue(vertexReferences[(*v->adj)[i]]->degree, {vertexReferences[(*v->adj)[i]]->bucketVertex});
+        moveToBiggerBucket(vertexReferences[(*v->adj)[i]]->degree - 1, (*v->adj)[i]);
     }
     unmatched->push_back(vertexIndex);
     //std::cout << "Restored vertex: " << vertexIndex << std::endl;
@@ -698,8 +793,9 @@ void BucketGraph::setInactive(int vertexIndex)
         vertexReferences[(*v->adj)[i]]->degree--;
         if(!vertexReferences[(*v->adj)[i]]->isActive) { continue; }
         numEdges--;
-        removeFromBucketQueue(vertexReferences[(*v->adj)[i]]->degree+1, {vertexReferences[(*v->adj)[i]]->bucketVertex});
-        addToBucketQueue(vertexReferences[(*v->adj)[i]]->degree, {vertexReferences[(*v->adj)[i]]->bucketVertex});
+        //removeFromBucketQueue(vertexReferences[(*v->adj)[i]]->degree+1, {vertexReferences[(*v->adj)[i]]->bucketVertex});
+        //addToBucketQueue(vertexReferences[(*v->adj)[i]]->degree, {vertexReferences[(*v->adj)[i]]->bucketVertex});
+        moveToSmallerBucket(vertexReferences[(*v->adj)[i]]->degree + 1, (*v->adj)[i]);
     }
     // update matching
     //std::cout << "Checking edge (" << vertexIndex << ", " << pairU[vertexIndex] << "), when deleting " << vertexIndex;
@@ -731,6 +827,19 @@ void BucketGraph::setActive(std::vector<int>* vertexIndices)
     }
 }
 
+/* FIXME: delete at the end if not needed
+void BucketGraph::setNeighboursOfVertexActive(int vertexIndex)
+{
+    for(int i = 0; i < (int) vertexReferences[vertexIndex]->adj->size(); i++)
+    {
+        Vertex* neighbour = vertexReferences[vertexReferences[vertexIndex]->adj->at(i)];
+        if(!neighbour->isActive)
+        {
+            setActive(neighbour->index);
+        }
+    }
+} */
+
 void BucketGraph::setInactive(std::vector<int>* vertexIndices)
 {
     for(int i = 0; i < (int) vertexIndices->size(); i++)
@@ -739,10 +848,23 @@ void BucketGraph::setInactive(std::vector<int>* vertexIndices)
     }
 }
 
+/* FIXME: delete at the end if not needed
+void BucketGraph::setNeighboursOfVertexInactive(int vertexIndex)
+{
+    for(int i = 0; i < (int) vertexReferences[vertexIndex]->adj->size(); i++)
+    {
+        Vertex* neighbour = vertexReferences[vertexReferences[vertexIndex]->adj->at(i)];
+        if(neighbour->isActive)
+        {
+            setInactive(neighbour->index);
+        }
+    }
+} */
+
 std::vector<int>* BucketGraph::getNeighbours(int vertexIndex)
 {
-    std::vector<int>* neighbours = new std::vector<int>();
     Vertex* v = vertexReferences[vertexIndex];
+    std::vector<int>* neighbours = new std::vector<int>();
     if(v == nullptr)
     {
         throw std::invalid_argument("getNeighbours: vertex " + std::to_string(vertexIndex) + " is nullptr");
@@ -830,7 +952,7 @@ list<BucketVertex>* BucketGraph::getVerticesOfDegree(int degree)
     }
     else
     {
-        throw std::invalid_argument("getVerticesOfDegree: degree goes out of bounds");
+        return nullptr;
     }
 }
 
@@ -878,6 +1000,8 @@ void BucketGraph::reduce()
 {
     //TODO:
 }
+
+
 
 
 /*----------------------------------------------------------*/
@@ -1033,7 +1157,7 @@ int BucketGraph::getLowerBoundVC() {
 
 void BucketGraph::resetLPBoundDataStructures()
 {
-    //TODO: BRUNO IMPLEMENT THIS
+    initMatching();
 }
 
 int BucketGraph::getLPBound()

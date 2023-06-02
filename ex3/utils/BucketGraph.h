@@ -11,11 +11,12 @@
 
 
 #include <unordered_map> //O(1) for insert and access instead of O(log n) for ordered maps
-
 #include <algorithm>
 
-#include "boost/intrusive/list.hpp"
+#include <boost/intrusive/list.hpp>
 #include <boost/functional/hash.hpp>
+
+#include "Reductions.h"
 
 using namespace boost::intrusive;
 
@@ -94,6 +95,7 @@ private:
     BucketVertex* bucketVertex;
 
     friend class BucketGraph;
+    friend class Reductions;
 public:
 
     Vertex(std::vector<int>* adjVertices, std::string orginalName, int _index, int startingDegree)
@@ -117,6 +119,8 @@ private:
 
     int numEdges;
     int numVertices;
+
+    Reductions* reductions;
 
     /* each index represents a degree, that maps to a Bucket object that may be contained in the bucketQueue */
     std::vector<Bucket*> bucketReferences;
@@ -146,7 +150,8 @@ public:
     /* creates and initialises a graph from standard input */
     static BucketGraph* readStandardInput();
     std::vector<std::string>* getStringsFromVertexIndices(std::vector<int>* vertices);
-    void copy();
+    /* creates a graph from the current graph and resets its data structures */
+    BucketGraph* resetGraph();
 
     bool vertexHasEdgeTo(int vertex, int secondVertex); //O(1)
     int getNumVertices();
@@ -168,6 +173,7 @@ public:
     inline list<Vertex>* getActiveList() { return &activeList; }
     /* returns -1 if no vertex of degree */
     int getFirstVertexOfDegree(int degree);
+    inline Vertex* getVertex(int index) { if(index < vertexReferences.size()) return vertexReferences[index]; else return nullptr; }
 
     void print();
     void printActiveList();
@@ -180,7 +186,7 @@ public:
     int getLPBound();
     int getFlow();
 
-    void resetLPBoundDataStructures(); //TODO: BRUNO IMPLEMENT THIS PLEASE
+    void resetLPBoundDataStructures();
 
     /* apply data reduction rules to graph */
     void reduce();
@@ -203,7 +209,12 @@ private:
 
     int bruteForceCalculateNumEdges();
     void addToBucketQueue(int degree, std::vector<BucketVertex*> vertices);
+    /* add vertices of specific degree to bucket queue. If no bucket of degree in queue, insert new bucket before given biggerBucketDegree*/
+    //void addToBucketQueueBeforeBucket(int degree, std::vector<BucketVertex*> vertices, int biggerBucketDegree);
+    //void addToBucketQueueBeforeBucket(int degree, std::vector<BucketVertex*> vertices, list_iterator<bhtraits<Bucket, list_node_traits<hook_defaults::void_pointer>, safe_link, hook_defaults::tag, 1U>, false> it);
     void removeFromBucketQueue(int degree, std::vector<BucketVertex*> vertices);
+    void moveToBiggerBucket(int degree, int vertex);
+    void moveToSmallerBucket(int degree, int vertex);
 
     //------------------------ Virtual Flow Graph ------------------------
     /* create a mapping between the virtual flow graph and the bucket graph
@@ -485,6 +496,8 @@ private:
 
     //------------------------ Data Reduction ------------------------
     //TODO: apply data reduction to input graph and return output graph
+
+
 
 };
 
