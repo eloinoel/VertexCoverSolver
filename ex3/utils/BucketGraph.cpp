@@ -979,7 +979,7 @@ int BucketGraph::hopcroftKarpMatchingSize()
                 }
             }
         }
-        currentLPBound = matching+1; //TODO: for some reason matching is always 1 smaller than the actual size of the matching ( Adding 1 for good measure :'P )
+        currentLPBound = matching/* +1 */; //TODO: for some reason matching is always 1 smaller than the actual size of the matching ( Adding 1 for good measure :'P )
         didInitialMatchingCalculation = true;
     }
     else
@@ -1043,6 +1043,7 @@ int BucketGraph::getLPBound()
     /* std::cout << "pre flow: " << std::endl;
     printMatching(); */
     edmondsKarpFlow();
+    LPReduce();
     /* std::cout << "post flow: " << std::endl;
     printMatching();
     std::cout << std::endl; */

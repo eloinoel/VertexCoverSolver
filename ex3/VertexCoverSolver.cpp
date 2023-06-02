@@ -377,7 +377,7 @@ int main(int argc, char* argv[]) {
 	try
 	{
         //chooseImplementationAndOutput(0, false, false, false, false, true, false);
-        chooseImplementationAndOutput(1, false, false, false, false, true, false);
+        chooseImplementationAndOutput(1, true, false, false, false, true, false);
 	}
 	catch (const exception& e)
 	{

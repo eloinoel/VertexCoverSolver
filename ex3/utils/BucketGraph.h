@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <queue>
+#include <stack>
 #include <utility>
 #include <functional>
 #include <limits.h>
@@ -246,7 +247,7 @@ private:
 
     int edmondsKarpFlow()
     {
-        //std::cout << ".";
+        std::cout << ".";
         //std::cout << "Beginning flow" << std::endl;
         // number of vertices helper variable (only for clarity)
         const int nv = vertexReferences.size();
@@ -359,8 +360,8 @@ private:
 
             if (pred[t] != -1)
             {
-                //std::cout << "Found flow-improving path" << std::endl;
-                //printMatching();
+                std::cout << "Found flow-improving path" << std::endl;
+                printMatching();
                 /* int df = INT32_MAX;
                 for (int p = t; p != -1 && p != s; p = pred[p])
                 {
@@ -391,7 +392,7 @@ private:
 
                         pairU[p] = NIL;
                         pairV[pred[p]-nv] = NIL;
-                        //std::cout << "-" << "(" << p << ", " << pred[p]-nv << ") ";
+                        std::cout << "-" << "(" << p << ", " << pred[p]-nv << ") ";
                     }
                     // using forward edge
                     else
@@ -401,17 +402,78 @@ private:
 
                         pairU[pred[p]] = p-nv;
                         pairV[p-nv] = pred[p];
-                        //std::cout << "+" << "(" << pred[p] << ", " << p-nv << ") ";
+                        std::cout << "+" << "(" << pred[p] << ", " << p-nv << ") ";
                     }
                 }
-                //std::cout << std::endl;
-                //printMatching();
+                std::cout << std::endl;
+                printMatching();
                 flow_amt++;
                 //std::cout << "Processed flow-improving path" << std::endl;
             }
         }
         //std::cout << "Ending flow" << std::endl;
         return flow_amt;
+    }
+
+    void LPReduce()
+    {
+        std::stack<int> S = std::stack<int>();
+        std::vector<bool> visited = std::vector<bool>(pairU.size());
+        bool isNotComp = false;
+        // for each possible connected component (We exclude degree 0 connected components here)
+        for (int i=0; i<(int) pairU.size(); i++)
+        {
+            if (!vertexReferences[i]->isActive || pairU[i] == NIL/* this culls deg=0 rule */) { continue; }
+            for(int j=0; j<(int) visited.size(); j++) { visited[j] = false; }
+            while(!S.empty()) { S.pop(); }
+            isNotComp = false;
+            S.push(i);
+            std::vector<int> componentL = std::vector<int>();
+            // until component is closed
+            while (!S.empty())
+            {
+                int current = S.top();
+                // add vertex to component, if visited
+                if(visited[current])
+                {
+                    componentL.push_back(current);
+                    S.pop();
+                    continue;
+                }
+
+                // expand node
+                visited[current] = true;
+                for (auto v=vertexReferences[current]->adj->begin(); v != vertexReferences[current]->adj->end(); ++v)
+                {
+                    // if we find an unmatched right vertex, abort immediately (This cannot be a component)
+                    if(pairV[*v] == NIL) { isNotComp = true; break; }
+                    // We skip inactive vertices and the matched right vertex and vertices of which we already visited their left matched vertex
+                    if(!vertexReferences[*v]->isActive || current == pairV[*v] || visited[pairV[*v]]) { continue; }
+                    // push next left vertex
+                    S.push(pairV[*v]);
+                }
+                if(isNotComp) { break; }
+            }
+            if(isNotComp) { continue; }
+            // found component
+            // TODO: iterate through componentL and calc component right vertices
+            std::cout << "Components left vertices: {";
+            for (int j=0; j<(int) componentL.size(); j++)
+            {
+                std::cout << componentL[j] << ", ";
+            }
+            std::cout << "}" << std::endl;
+            std::cout << "Components right vertices: {";
+            for (int j=0; j<(int) componentL.size(); j++)
+            {
+                for (auto v=vertexReferences[componentL[j]]->adj->begin(); v != vertexReferences[componentL[j]]->adj->end(); ++v)
+                {
+                    std::cout << *v << ", ";
+                }
+            }
+            std::cout << "}" << std::endl;
+            // TODO: delete vertices from graph via Reductions
+        }
     }
 
     //------------------------------ Bounds ------------------------------
