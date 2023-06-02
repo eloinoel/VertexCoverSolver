@@ -651,8 +651,9 @@ void BucketGraph::setActive(int vertexIndex)
     }
 
     v->isActive = true;
-    activeList.push_back(*v);
     numVertices++;
+    // FIXME: add back if active is needed
+    //activeList.push_back(*v);
 
     addToBucketQueue(v->degree, {v->bucketVertex});
     //update degree of all adjacent nodes
@@ -681,9 +682,10 @@ void BucketGraph::setInactive(int vertexIndex)
     }
 
     v->isActive = false;
-    auto iter = activeList.iterator_to(*v);
-    activeList.erase(iter);
     numVertices--;
+    // FIXME: add back if active is needed
+    //auto iter = activeList.iterator_to(*v);
+    //activeList.erase(iter);
 
     removeFromBucketQueue(v->degree, {v->bucketVertex});
     //update degree of all adjacent nodes
