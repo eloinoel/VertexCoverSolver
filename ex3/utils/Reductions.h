@@ -5,7 +5,8 @@
 
 #include "BucketGraph.h"
 
-enum RULE{
+enum RULE
+{
     DEGREE_ZERO,        // = 0
     DEGREE_ONE,         // = 1
     DEGREE_TWO,         // = 2
@@ -13,7 +14,8 @@ enum RULE{
     DOMINATION          // = 4
 };
 
-class Reduction{
+class Reduction
+{
 public:
     RULE rule;
     int kDecrement;
