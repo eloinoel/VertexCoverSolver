@@ -136,7 +136,7 @@ private:
     int currentLPBound;
     bool didInitialMatchingCalculation = false;
 
-    std::vector<std::vector<int>> capacities;
+    std::vector<std::vector<int>> flow;
 
 //functions
 public:
@@ -177,6 +177,7 @@ public:
     int getLowerBoundVC();
     int getCliqueBound(int k = INT_MAX);
     int getLPBound();
+    int getFlow();
 
     void resetLPBoundDataStructures(); //TODO: BRUNO IMPLEMENT THIS PLEASE
 
@@ -243,9 +244,174 @@ private:
     int hopcroftKarpMatchingSize();
     std::pair<int, std::pair<std::vector<int>*, std::vector<int>*>> hopcroftKarpMatching();
 
-    int edmondsKarp()
+    int edmondsKarpFlow()
     {
-        return -1;
+        //std::cout << ".";
+        //std::cout << "Beginning flow" << std::endl;
+        // number of vertices helper variable (only for clarity)
+        const int nv = vertexReferences.size();
+
+        int flow_amt = 0;
+        int s = nv*2;
+        int t = nv*2+1;
+        std::vector<int> pred = std::vector<int>(nv*2+2);
+        std::queue<int> Q = std::queue<int>();
+        int current;
+
+        // init flow
+        // TODO: see how much of this can be saved across iterations
+        flow = std::vector<std::vector<int>>(nv*2+2);
+        for(int i=0; i<nv*2+2; i++)
+        {
+            flow[i] = std::vector<int>(nv*2+2);
+            pred[i] = -1;
+            for(int j=0; j<nv*2+2; j++)
+            {
+                flow[i][j] = 0;
+            }
+        }
+        // set left to right flow according to matching
+        for (int i=0; i<(int) pairU.size(); i++)
+        {
+            if(pairU[i] != NIL)
+            {
+                flow[s][i] = 1;
+                flow[i][pairU[i]] = 1;
+                flow[pairU[i]][t] = 1;
+            }
+        }
+        //std::cout << "Initialized flow" << std::endl;
+        pred[t] = 1;
+        // Until no augmenting path was found last iteration
+        while (pred[t] != -1)
+        {
+            // clear queue & predecessors
+            while (!Q.empty()) { Q.pop(); }
+            for(int i=0; i<nv*2+2; i++) { pred[i] = -1; }
+            // init queue with source vertex
+            Q.push(s);
+            //std::cout << "Pushed source vertex" << std::endl;
+            // BFS to find the shortest s-t path
+            while (!Q.empty())
+            {
+                // retrieve next queued vertex
+                current = Q.front();
+                Q.pop();
+
+                // if current is s (capacity == 1)
+                if(current == s)
+                {
+                    //std::cout << "Evaluating source vertex" << std::endl;
+                    // s exclusively has edges to left vertices (indices 0 to vertexReferences.size()-1)
+                    for (int i=0; i<nv; i++)
+                    {
+                        if(!vertexReferences[i]->isActive) { continue; }
+                        // if left vertex i wasn't expanded & edge to it isn't already in flow
+                        if (pred[i] == -1 && 1 > flow[current][i])
+                        {
+                            pred[i] = current;
+                            Q.push(i);
+                        }
+                    }
+                    //std::cout << "Evaluated source vertex" << std::endl;
+                }
+                // if current is a left vertex (capacity == INF for edges to right vertices)
+                else if (current < nv)
+                {
+                    //std::cout << "Evaluating left side vertex" << std::endl;
+                    // current has edges to right vertices (indices vertexReferences.size() to vertexReferences.size()*2-1)
+                    for (auto v=vertexReferences[current]->adj->begin(); v != vertexReferences[current]->adj->end(); ++v)
+                    {
+                        if(!vertexReferences[*v]->isActive) { continue; }
+                        if (pred[nv+*v] == -1)
+                        {
+                            pred[nv+*v] = current;
+                            Q.push(nv+*v);
+                        }
+                    }
+                    //std::cout << "Evaluated left side vertex" << std::endl;
+                }
+                // if current is a right vertex (capacity == 1 for edge to t and capacity == INF for the reverse edges to left vertices)
+                else if (nv <= current && current < nv*2)
+                {
+                    //std::cout << "Evaluating right side vertex: " << current << std::endl;
+                    // current has reverse edges to left vertices (indices vertexReferences.size() to vertexReferences.size()*2-1)
+                    for (auto v=vertexReferences[current-nv]->adj->begin(); v != vertexReferences[current-nv]->adj->end(); ++v)
+                    {
+                        if(!vertexReferences[*v]->isActive) { continue; }
+                        //std::cout << "Evaluating right side vertices left side neighbour" << std::endl;
+                        if (pred[*v] == -1 && pairU[*v] == current)
+                        {
+                            pred[*v] = current;
+                            Q.push(*v);
+                        }
+                    }
+                    //std::cout << "Evaluated right side vertices reverse edges" << std::endl;
+                    if (pred[t] == -1 && 1 > flow[current][t])
+                    {
+                        pred[t] = current;
+                        break;
+                        //std::cout << "Found s-t path" << std::endl;
+                    }
+                }
+            }
+            //std::cout << "Finished DFS" << std::endl;
+
+            if (pred[t] != -1)
+            {
+                //std::cout << "Found flow-improving path" << std::endl;
+                //printMatching();
+                /* int df = INT32_MAX;
+                for (int p = t; p != -1 && p != s; p = pred[p])
+                {
+                    //std::cout << "pathstep" << std::endl;
+                    int cap = INT32_MAX;
+                    if(p == t || pred[p] == t) { cap = 1; }
+                    df = std::min(df, cap - flow[pred[p]][p]);
+                }
+                //std::cout << "Determined df" << std::endl;
+                for (int p = t; p != -1 && p != s; p = pred[p])
+                {
+                    flow[pred[p]][p] += df;
+                    flow[p][pred[p]] -= df;
+                }
+                flow_amt += df;
+                */
+                // always: df = 1;
+                for (int p = t; p != -1 && p != s; p = pred[p])
+                {
+                    flow[pred[p]][p]++;
+                    flow[p][pred[p]]--;
+                    if(pred[p] == s || p == t) { continue; }
+                    // using reverse edge
+                    if (p < nv)
+                    {
+                        pairV[pairU[p]] = NIL;
+                        pairU[pairV[pred[p]-nv]] = NIL;
+
+                        pairU[p] = NIL;
+                        pairV[pred[p]-nv] = NIL;
+                        //std::cout << "-" << "(" << p << ", " << pred[p]-nv << ") ";
+                    }
+                    // using forward edge
+                    else
+                    {
+                        pairV[pairU[pred[p]]] = NIL;
+                        pairU[pairV[p-nv]] = NIL;
+
+                        pairU[pred[p]] = p-nv;
+                        pairV[p-nv] = pred[p];
+                        //std::cout << "+" << "(" << pred[p] << ", " << p-nv << ") ";
+                    }
+                }
+                //std::cout << std::endl;
+                //printMatching();
+                flow_amt++;
+                //std::cout << "Processed flow-improving path" << std::endl;
+            }
+        }
+        //std::cout << "Ending flow" << std::endl;
+        return flow_amt;
     }
 
     //------------------------------ Bounds ------------------------------
