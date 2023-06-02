@@ -214,7 +214,15 @@ public:
     void reduce();
 
     // return bool indicating if no vertex cover possible
-    bool applyReductionRules(int* k, std::vector<ReductionVertices>* reductionArray);
+    bool applyReductionRules(int* k, std::vector<ReductionVertices>* reductionArray, bool printDebug);
+
+    // Adds the deleted vertices from the reduction rules to the vertex cover
+    void addReducedVertices(std::vector<int>* S, std::vector<ReductionVertices>* reductionArray, bool printDebug);
+
+    // Restores the initial kernel problem
+    void addBackReducedVertices(int *k, std::vector<ReductionVertices>* reductionArray, bool printDebug);
+
+    void initRuleCounter();
 
     void printReductionRules(std::vector<ReductionVertices>* reductionArray);
 
@@ -299,22 +307,15 @@ private:
     //TODO: apply data reduction to input graph and return output graph
     //================================================================
     // Reduction Rules
-    bool rule_HighDegree(int *k, std::vector<ReductionVertices>* reductionVertices);
-    bool rule_DegreeZero(std::vector<ReductionVertices>* reductionArray);
+    bool rule_HighDegree(int *k, std::vector<ReductionVertices>* reductionVertices, bool printDebug);
+    bool rule_DegreeZero(std::vector<ReductionVertices>* reductionArray, bool printDebug);
 
-    // TODO: Check that numberOfVertices & numberOfEdges are up to date
-//    bool rule_Buss(int* k);
+    bool rule_Buss(int* k, bool printDebug);
 
-    void rule_DegreeOne(int* k, std::vector<ReductionVertices>* reductionArray);
-//    void rule_DegreeTwo(int* k, std::vector<ReductionVertices>* reductionArray);
-//    void rule_Domination(int* k, std::vector<ReductionVertices>* reductionArray);
+    void rule_DegreeOne(int* k, std::vector<ReductionVertices>* reductionArray, bool printDebug);
+//    void rule_DegreeTwo(int* k, std::vector<ReductionVertices>* reductionArray, bool printDebug);
+//    void rule_Domination(int* k, std::vector<ReductionVertices>* reductionArray, bool printDebug);
     //================================================================
-
-    // Adds the deleted vertices from the reduction rules to the vertex cover
-//    void addReducedVertices(std::vector<int>* S, std::vector<ReductionVertices>* reductionArray);
-
-    // Restores the initial kernel problem
-//    void addBackReducedVertices(int *k, std::vector<ReductionVertices>* reductionArray);
 
     //TODO: ------------Functions that need implementation-------------
 

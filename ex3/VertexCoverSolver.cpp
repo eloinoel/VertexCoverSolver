@@ -110,25 +110,63 @@ vector<int>* vcSolverRecursive(BucketGraph* G, int* numRec)
         // Reduction Rules
         vector<ReductionVertices>* reductionVertices = new std::vector<ReductionVertices>;
 
-        int kBefo = k;
+        int kBefore = k;
+        bool printDebugReduction = false;
 
+        if (printDebugReduction)
+        {
+            std::cout << std::endl;
+            std::string kPred = "Predicted k: " + std::to_string(kBefore);
+            std::cout << ColorPrint::dye(kPred, 'r') << std::endl ;
+            std::cout << ColorPrint::dye(kPred, 'y') << std::endl ;
+            std::cout << ColorPrint::dye(kPred, 'c') << std::endl ;
+            std::cout << std::endl;
+        }
 
         // Apply Reduction Rules for the first time
-       /*  if(G->applyReductionRules(&k, reductionVertices))
-            return nullptr; */
+        if(!G->applyReductionRules(&k, reductionVertices, printDebugReduction))
+            return nullptr;
 
-		vc = vcVertexBranchingRecursive(G, k, numRec);
+        if (printDebugReduction)
+        {
+            std::cout << std::endl;
+            std::string kBef = "Before Reduction k: " + std::to_string(kBefore);
+            std::cout << ColorPrint::dye(kBef, 'r') << std::endl ;
+            std::string kAft = "After Reduction k: " + std::to_string(k);
+            std::cout << ColorPrint::dye(kAft, 'y') << std::endl ;
+            std::cout << std::endl;
+        }
+        cout << "#recursive steps: " << kBefore -k << endl;
+
+
+        vc = vcVertexBranchingRecursive(G, k, numRec);
 		if (vc != nullptr)
 		{
+            if (printDebugReduction)
+            {
+                std::cout << std::endl;
+                std::string addSol = "Adding to Vertex Cover: " + std::to_string((int)reductionVertices->size());
+                std::cout << ColorPrint::dye(addSol, 'r') << std::endl ;
+                std::cout << std::endl;
+            }
+
             // Add Reduced Vertices to Vertex Cover
-            /* G->addReducedVertices(vc, reductionVertices);
-            delete reductionVertices; */
+             G->addReducedVertices(vc, reductionVertices, printDebugReduction);
+            delete reductionVertices;
 
 			return vc;
 		}
 
-        /* G->addBackReducedVertices(&k, reductionVertices);
-        delete reductionVertices; */
+        if (printDebugReduction)
+        {
+            std::cout << std::endl;
+            std::string revSol = "Reversing Reduction Rules: " + std::to_string((int)reductionVertices->size());
+            std::cout << ColorPrint::dye(revSol, 'r') << std::endl ;
+            std::cout << std::endl;
+        }
+
+         G->addBackReducedVertices(&k, reductionVertices, printDebugReduction);
+        delete reductionVertices;
 
         k++;
 	}
@@ -343,7 +381,8 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
             int numRecursiveSteps = 0;
             std::vector<int>* vc = vcSolverRecursive(G, &numRecursiveSteps);
             writeSolutionToConsole(G->getStringsFromVertexIndices(vc));
-            cout << "#recursive steps: " << numRecursiveSteps << endl;
+//            cout << "#VC SIZE: " << (int) vc->size() << endl;
+//            cout << "#recursive steps: " << numRecursiveSteps << endl;
         }
 
         if(printBounds)
