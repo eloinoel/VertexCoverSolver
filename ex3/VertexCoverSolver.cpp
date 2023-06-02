@@ -28,18 +28,21 @@ vector<int>* vcVertexBranchingRecursive(BucketGraph* G, int k, int* numRec)
 //      if(G->applyReductionRules(&k, reductionVertices))
 //         return nullptr;
 
+    /* std::cout << "> calculated LPBound: " << G->getLPBound() << " with k=" << k << std::endl; */
+    //if (k < G->getLPBound()) { return nullptr; }
+
     //cout << "before getMaxDegreeVertex" << endl;
 	int vertex = G->getMaxDegreeVertex();
-    
+
     //no vertices left
     if (vertex == -1)
     {
         return new vector<int>();
     }
 
-    //G->printBucketQueue();
     //cout << "before getVertexDegree: " << vertex << endl;
     int vertexDeg = G->getVertexDegree(vertex);
+
 	//graph has no edges left
 	if (vertexDeg == 0)
 	{
@@ -53,6 +56,8 @@ vector<int>* vcVertexBranchingRecursive(BucketGraph* G, int k, int* numRec)
 	vector<int>* S = vcVertexBranchingRecursive(G, k - 1, numRec);
 	if (S != nullptr)
 	{
+        //revert changes for multiple executions of the algorithm
+        G->setActive(vertex);
 		//return results
 		S->push_back(vertex);
 		return S;
@@ -76,6 +81,8 @@ vector<int>* vcVertexBranchingRecursive(BucketGraph* G, int k, int* numRec)
 	S = vcVertexBranchingRecursive(G, k - neighbours->size(), numRec);
 	if (S != nullptr)
 	{
+        //revert changes for multiple executions of the algorithm
+        G->setActive(neighbours);
 		//return results
         for (int i = 0; i < (int) neighbours->size(); i++)
         {
@@ -98,8 +105,6 @@ vector<int>* vcSolverRecursive(BucketGraph* G, int* numRec)
 
 	vector<int> *vc;
 
-//    std::cout << "Solving Recursively" << std::endl;
-
 	while (true)
 	{
         // Reduction Rules
@@ -109,19 +114,15 @@ vector<int>* vcSolverRecursive(BucketGraph* G, int* numRec)
 
 
         // Apply Reduction Rules for the first time
-         if(!G->applyReductionRules(&k, reductionVertices))
-            return nullptr;
-        std::string kBefore =  "Before Reduction Ruled after Initialisation k: " + std::to_string(kBefo);
-        std::cout << ColorPrint::dye(kBefore, 'r') << std::endl ;
-        std::string kAfter =  "Reduction Ruled Applied after Initialisation k: " + std::to_string(k);
-        std::cout << ColorPrint::dye(kAfter, 'g') << std::endl ;
+       /*  if(G->applyReductionRules(&k, reductionVertices))
+            return nullptr; */
 
 		vc = vcVertexBranchingRecursive(G, k, numRec);
 		if (vc != nullptr)
 		{
             // Add Reduced Vertices to Vertex Cover
-             G->addReducedVertices(vc, reductionVertices);
-            delete reductionVertices;
+            /* G->addReducedVertices(vc, reductionVertices);
+            delete reductionVertices; */
 
 			return vc;
 		}
@@ -238,7 +239,7 @@ vector<int>* vertexBranchingSolverRecursiveEx2(ArrayGraph* G, int* numRec)
 	while (true)
 	{
 
-        vc = vcVertexBranchingRecursiveEx2(G, k, numRec);
+		vc = vcVertexBranchingRecursiveEx2(G, k, numRec);
 		if (vc != nullptr)
 		{
             // Add Reduced Vertices to Vertex Cover
@@ -277,11 +278,17 @@ void writeSolutionToConsole(vector<string>* vc)
 	}
 }
 
+/*----------------------------------------------------------*/
+/*-------------------   Data Reduction   -------------------*/
+/*----------------------------------------------------------*/
+
+
+
 /** Execute specific version of program with optional arguments for more prints
  * version
  * 0: ArrayGraph, recursive
  * 1: Bucketgraph
-
+ * 5: (b) apply data reduction and output smaller graph and diff in vc size
  * ....
 */
 void chooseImplementationAndOutput(int version = 1, bool printGraph = false, bool printMappings = false, 
@@ -320,7 +327,6 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
     else if(version == 1)
     {
         BucketGraph* G = BucketGraph::readStandardInput();
-
         if (G == nullptr)
             throw invalid_argument("Error constructing graph from input file.");
         if (printGraph)
@@ -346,6 +352,23 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
             cout << "#recursive steps: " << bound << endl;
         }
 
+    }
+    else if(version == 5)
+    {
+        BucketGraph* G = BucketGraph::readStandardInput();
+        if (G == nullptr)
+            throw invalid_argument("Error constructing graph from input file.");
+
+        //G->print();
+        int numRecursiveSteps = 0;
+        std::vector<int>* vc = vcSolverRecursive(G, &numRecursiveSteps);
+
+        G->reduce();
+        G->printEdgesToConsole();
+
+        G->resetLPBoundDataStructures();
+        std::vector<int>* reducedVc = vcSolverRecursive(G, &numRecursiveSteps);
+        cout << "#difference: " << to_string((vc->size() - reducedVc->size())) << endl;
     }
     else
     {

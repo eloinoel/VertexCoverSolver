@@ -258,7 +258,7 @@ int BipartiteArrayGraph::hopcroftKarpCycleBound()
                 }
             }
             //std::cout << "found cycle of size: " << currentCycle.size() << "\n";
-            // calculate 
+            // calculate
             LPCyclebound += std::ceil((double) currentCycle.size() / (double) 2);
         }
         else if(currentCycle.size() == 2)

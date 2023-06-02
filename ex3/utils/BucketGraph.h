@@ -15,6 +15,7 @@
 #include <algorithm>
 
 #include "boost/intrusive/list.hpp"
+#include <boost/functional/hash.hpp>
 
 /* Rule Codierung:
  *  1:
@@ -53,11 +54,10 @@ public:
     list<BucketVertex> vertices;
 
 public:
-    Bucket(int _degree, std::vector<BucketVertex*> _vertices)
+    Bucket(int _degree, std::vector<BucketVertex*>& _vertices)
      : degree(_degree)
     {
         vertices = list<BucketVertex>();
-        
         for (BucketVertex* vertex : _vertices)
         {
             vertices.push_back(*vertex);
@@ -134,6 +134,7 @@ private:
     list<Vertex> activeList;
 
     int numEdges;
+    int numVertices;
 
     /* each index represents a degree, that maps to a Bucket object that may be contained in the bucketQueue */
     std::vector<Bucket*> bucketReferences;
@@ -142,6 +143,19 @@ private:
 
     /* used for reading in data, maps from original vertex name from input data to index and degree */
     std::unordered_map<std::string, std::pair<int, int>> originalVertexNames;
+    std::vector<std::pair<std::string, std::string>> edges;
+
+    /* Current Matching */
+    std::vector<int> pairU;
+    std::vector<int> pairV;
+    std::vector<int> dist;
+    std::vector<int>* unmatched;
+    std::vector<int>* next_unmatched;
+    int NIL;
+    int currentLPBound;
+    bool didInitialMatchingCalculation = false;
+
+    std::vector<std::vector<int>> capacities;
 
     /* Initialized to 0 and of size Vertex*/
     std::vector<int> neighbourArray;
@@ -160,6 +174,8 @@ public:
     /* creates and initialises a graph from standard input */
     static BucketGraph* readStandardInput();
     std::vector<std::string>* getStringsFromVertexIndices(std::vector<int>* vertices);
+    /* creates a graph from the current graph and resets its data structures */
+    BucketGraph* resetGraph();
 
     bool vertexHasEdgeTo(int vertex, int secondVertex); //O(1)
     int getNumVertices();
@@ -174,16 +190,28 @@ public:
 
     int getMaxDegree();
     int getMaxDegreeVertex();
+    /* heuristic from paper which generally worsens performance a bit but reduces number of recursive steps */
+    int getMaxDegreeVertexMinimisingNeighbourEdges();
     int getVertexDegree(int vertexIndex);
     list<BucketVertex>* getVerticesOfDegree(int degree);
+    inline list<Vertex>* getActiveList() { return &activeList; }
     /* returns -1 if no vertex of degree */
     int getFirstVertexOfDegree(int degree);
 
     void print();
     void printActiveList();
     void printBucketQueue();
+    void printEdgesToConsole();
+    void printMatching();
 
     int getLowerBoundVC();
+    int getCliqueBound(int k = INT_MAX);
+    int getLPBound();
+
+    void resetLPBoundDataStructures();
+
+    /* apply data reduction rules to graph */
+    void reduce();
 
     // return bool indicating if no vertex cover possible
     bool applyReductionRules(int* k, std::vector<ReductionVertices>* reductionArray);
@@ -198,16 +226,22 @@ private:
     /* tests whether a char fulfills vertex naming format*/
 	static bool isVertexCharacter(char c);
 
-    void initActiveList(std::vector<std::pair<std::string, std::string>> edges); //--|
-    void initAdjMap();                                                          //----> should be called in this order
-    void initBucketQueue();                                                      //--|
+    void initActiveList();  //--|
+    void initAdjMap();      //----> should be called in this order
+    void initBucketQueue(); //--|
+    void initMatching();
     bool isAdjMapConsistent();
 
     //-------------------------- Graph Utility --------------------------
 
     int bruteForceCalculateNumEdges();
     void addToBucketQueue(int degree, std::vector<BucketVertex*> vertices);
+    /* add vertices of specific degree to bucket queue. If no bucket of degree in queue, insert new bucket before given biggerBucketDegree*/
+    //void addToBucketQueueBeforeBucket(int degree, std::vector<BucketVertex*> vertices, int biggerBucketDegree);
+    //void addToBucketQueueBeforeBucket(int degree, std::vector<BucketVertex*> vertices, list_iterator<bhtraits<Bucket, list_node_traits<hook_defaults::void_pointer>, safe_link, hook_defaults::tag, 1U>, false> it);
     void removeFromBucketQueue(int degree, std::vector<BucketVertex*> vertices);
+    void moveToBiggerBucket(int degree, int vertex);
+    void moveToSmallerBucket(int degree, int vertex);
 
     //------------------------ Virtual Flow Graph ------------------------
     /* create a mapping between the virtual flow graph and the bucket graph
@@ -244,36 +278,10 @@ private:
         return {};
     }
 
-    bool matchingBFS(std::vector<int>* pairU, std::vector<int>* pairV, std::vector<int>* dist, int NIL);
-    bool matchingDFS(std::vector<int>* pairU, std::vector<int>* pairV, std::vector<int>* dist, int u, int NIL);
+    bool matchingBFS();
+    bool matchingDFS(int u);
     int hopcroftKarpMatchingSize();
-
-    /* void hopcroftKarpMatching(std::vector<std::pair<int, int>>* matching)
-    {
-        // clear matching
-        if(!matching->empty()) { matching->clear(); }
-        // initialize pairU/pairV
-        std::vector<int>* pairU = new std::vector<int>(vertexReferences.size());
-        std::vector<int>* pairV = new std::vector<int>(vertexReferences.size());
-        for(int i=0; i<(int) pairU->size(); i++)
-        {
-            pairU[i] = NIL;
-            pairV[i] = NIL;
-        }
-        while (BFS() == true)
-        {
-            for (int i=0; i<(int) pairU->size(); i++)
-            {
-                if (Pair_U[u] == NIL)
-                {
-                    if (DFS(u) == true)
-                    {
-                        matching := matching + 1
-                    }
-                }
-            }
-        }
-    } */
+    std::pair<int, std::pair<std::vector<int>*, std::vector<int>*>> hopcroftKarpMatching();
 
     int edmondsKarp()
     {
@@ -282,10 +290,10 @@ private:
 
     //------------------------------ Bounds ------------------------------
 
-    int getCliqueBound(int k = INT_MAX);
     bool vertexCanBeAddedToClique(int vertex, std::vector<int>* clique);
 
-    int getLPBound(); //TODO: if necessary
+    //int getLPBound();
+    int getLPCycleBound();  // TODO: this is still trash
 
     //------------------------ Data Reduction ------------------------
     //TODO: apply data reduction to input graph and return output graph
