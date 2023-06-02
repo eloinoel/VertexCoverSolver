@@ -1,5 +1,4 @@
 #include "Reductions.h"
-#include "ReductionsFwd.h"
 #include "boost/intrusive/list.hpp"
 #include "BucketGraph.h"
 
