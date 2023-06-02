@@ -127,11 +127,11 @@ BucketGraph*  BucketGraph::readStandardInput()
         G->edges.push_back(edge_pair);
     }
     
-
     G->initActiveList(); //sets vertex references and generates activeList
     G->initAdjMap(); //sets references in adjacency lists of vertices
     G->initBucketQueue(); // initialise bucket queue
     G->initMatching(); // LP Bound matching fields
+    G->reductions = new Reductions();
     return G;
 }
 
@@ -379,6 +379,7 @@ BucketGraph* BucketGraph::resetGraph()
     G->originalVertexNames = originalVertexNames;
     G->edges = edges;
 
+    reductions = new Reductions();
     G->initActiveList();
     G->initAdjMap();
     G->initBucketQueue();
@@ -951,7 +952,7 @@ list<BucketVertex>* BucketGraph::getVerticesOfDegree(int degree)
     }
     else
     {
-        throw std::invalid_argument("getVerticesOfDegree: degree goes out of bounds");
+        return nullptr;
     }
 }
 

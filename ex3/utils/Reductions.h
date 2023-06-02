@@ -13,16 +13,16 @@ enum RULE{
     DOMINATION          // = 4
 };
 
-class ReductionVertices{
+class Reduction{
 public:
     RULE rule;
     int kDecrement;
     std::vector<int>* deletedVertices; // First idx is always to add in VC if(rule!=0)
     std::vector<int>* savedAdjacency;
 
-    ReductionVertices() {};
-    ReductionVertices(RULE rule) { this->rule = rule; };
-    ReductionVertices(RULE rule, int kDecrement, std::vector<int>* deletedVertices)
+    Reduction() {};
+    Reduction(RULE rule) { this->rule = rule; };
+    Reduction(RULE rule, int kDecrement, std::vector<int>* deletedVertices)
     {
         this->rule = rule;
         this->kDecrement = kDecrement;
@@ -33,16 +33,20 @@ public:
 class Reductions
 {
 public:
-    std::vector<ReductionVertices*>* appliedRules;
+    std::vector<Reduction*>* appliedRules;
 
 public:
-    bool rule_HighDegree(BucketGraph* G, int k);
-    bool rule_DegreeZero();
+    //rules return true if they were applicable
 
-    bool rule_Buss(int* k);
+    bool rule_HighDegree(BucketGraph* G, int* k);
+    bool rule_DegreeZero(BucketGraph* G);
+    /* only call if rule_HighDegree and rule_DegreeZero return false, returns true if no vertex cover of size k exists in graph */
+    bool rule_Buss(BucketGraph* G, int* k, int numVertices, int numEdges);
+    bool rule_DegreeOne(BucketGraph* G, int* k);
 
-    void rule_DegreeOne(int* k);
-    void rule_DegreeTwo(int* k);
+    //TODO:
+
+    bool rule_DegreeTwo(int* k);
 };
 
 #endif
