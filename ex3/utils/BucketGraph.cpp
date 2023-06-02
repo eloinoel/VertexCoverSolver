@@ -734,36 +734,6 @@ void BucketGraph::moveToSmallerBucket(int degree, int vertex)
     bucketReferences[degree]->insert(vertexReferences[vertex]->bucketVertex);
 }
 
-/* void BucketGraph::addToBucketQueueBeforeBucket(int degree, std::vector<BucketVertex*> vertices, int biggerBucketDegree)
-{
-    // extend bucketReferences
-    if(degree > (int) bucketReferences.size()-1)
-    {
-        for (int i=bucketReferences.size(); i<=degree; i++)
-        {
-            bucketReferences.push_back(new Bucket(i, *(new std::vector<BucketVertex*>({}))));
-        }
-    }
-    // insert bucket into queue
-    if((int) bucketReferences[degree]->vertices.size() == 0)
-    {
-        // search larger non-empty bucket in bucketQueue
-        auto it = bucketQueue.begin();
-        for(; it != bucketQueue.end(); ++it)
-        {
-            if(it->degree > degree) {
-                bucketQueue.insert(it, *bucketReferences[degree]);
-                break;
-            }
-        }
-
-        if(it == bucketQueue.end())
-        {
-            bucketQueue.insert(bucketQueue.end(), *bucketReferences[degree]);
-        }
-    }
-    bucketReferences[degree]->insert(vertices);
-} */
 
 void BucketGraph::setActive(int vertexIndex)
 {
@@ -778,7 +748,7 @@ void BucketGraph::setActive(int vertexIndex)
     // FIXME: add back if active is needed
     //activeList.push_back(*v);
 
-    addToBucketQueue(v->degree, {v->bucketVertex});
+    addToBucketQueue(v->degree, {v->bucketVertex}); //TODO: optimise this to not loop by storing previous references in recursion
     //update degree of all adjacent nodes
     for(int i = 0; i < (int) v->adj->size(); i++)
     {
@@ -1029,6 +999,8 @@ void BucketGraph::reduce()
 {
     //TODO:
 }
+
+
 
 
 /*----------------------------------------------------------*/

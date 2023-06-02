@@ -264,6 +264,8 @@ private:
     //------------------------ Data Reduction ------------------------
     //TODO: apply data reduction to input graph and return output graph
 
+
+
 };
 
 #endif
