@@ -9,7 +9,7 @@ RULE_APPLICATION_RESULT Reductions::rule_HighDegree(BucketGraph* G, int* k)
 {
     if(!(G->getMaxDegree() > *k)) return INAPPLICABLE; //cannot apply rule
     
-    Reduction* reduction = new Reduction(RULE::HIGH_DEGREE, 0, new std::vector<int>());
+    Reduction* reduction = new Reduction(RULE::HIGH_DEGREE, 0, nullptr, new std::vector<int>());
     appliedRules->push_back(reduction);
 
     //delete vertices that have to be in the vertex cover
@@ -18,7 +18,7 @@ RULE_APPLICATION_RESULT Reductions::rule_HighDegree(BucketGraph* G, int* k)
         if(*k == 0) return INSUFFIENT_BUDGET; //cannot delete more vertices, no possible vertex cover exists
         int maxDegVertex = G->getMaxDegreeVertex();
         reduction->kDecrement++;
-        reduction->deletedVertices->push_back(maxDegVertex);
+        reduction->deletedVCVertices->push_back(maxDegVertex);
         *k = *k - 1;
         G->setInactive(maxDegVertex);
     }
@@ -57,14 +57,14 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeOne(BucketGraph* G, int* k)
 
     if(degOneBucket == nullptr || degOneBucket->empty()) return INAPPLICABLE;
 
-    Reduction* reduction = new Reduction(RULE::DEGREE_ONE, 0, new std::vector<int>());
+    Reduction* reduction = new Reduction(RULE::DEGREE_ONE, 0, nullptr, new std::vector<int>());
     appliedRules->push_back(reduction);
 
     for(auto it = degOneBucket->begin(); it != degOneBucket->end(); ++it)
     {
         if(*k == 0) return INSUFFIENT_BUDGET; //cannot delete more vertices, no possible vertex cover exists
         int neighbourToDelete = G->getVertex(it->index)->adj->front();
-        reduction->deletedVertices->push_back(it->index);
+        reduction->deletedVCVertices->push_back(it->index);
         reduction->kDecrement++;
         *k = *k - 1;
         G->setInactive(it->index);
@@ -74,6 +74,22 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeOne(BucketGraph* G, int* k)
 
 RULE_APPLICATION_RESULT Reductions::rule_LPFlow(BucketGraph* G, int* k)
 {
-    
+    std::vector<int>* delVertices = new std::vector<int>();
+    std::vector<int>* delVCVertices = new std::vector<int>();
+
+    G->edmondsKarpFlow();
+    G->getBipartMatchingFlowComponents(delVertices, delVCVertices);
+    if((int) delVCVertices->size() > *k)
+    {
+        return INSUFFIENT_BUDGET;
+    }
+    if((int) delVCVertices->size() == 0 && (int) delVertices->size() == 0)
+    {
+        return INAPPLICABLE;
+    }
+
+    Reduction* reduction = new Reduction(RULE::LPFLOW, delVCVertices->size(), delVertices, delVCVertices);
+    appliedRules->push_back(reduction);
+    *k = *k - delVCVertices->size();
     return SUCCESSFUL;
 }

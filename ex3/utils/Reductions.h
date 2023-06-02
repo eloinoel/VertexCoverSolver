@@ -28,6 +28,7 @@ public:
     RULE rule;
     int kDecrement;
     std::vector<int>* deletedVertices; // First idx is always to add in VC if(rule!=0)
+    std::vector<int>* deletedVCVertices;
     std::vector<int>* savedAdjacency;
 
     Reduction() {};
@@ -37,6 +38,13 @@ public:
         this->rule = rule;
         this->kDecrement = kDecrement;
         this->deletedVertices = deletedVertices;
+    };
+    Reduction(RULE rule, int kDecrement, std::vector<int>* deletedVertices, std::vector<int>* deletedVCVertices)
+    {
+        this->rule = rule;
+        this->kDecrement = kDecrement;
+        this->deletedVertices = deletedVertices;
+        this->deletedVCVertices = deletedVCVertices;
     };
 };
 
