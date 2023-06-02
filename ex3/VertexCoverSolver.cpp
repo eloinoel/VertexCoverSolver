@@ -22,7 +22,7 @@ vector<int>* vcVertexBranchingRecursive(BucketGraph* G, int k, int* numRec)
 	}
 
     /* std::cout << "> calculated LPBound: " << G->getLPBound() << " with k=" << k << std::endl; */
-    if (k < G->getLPBound()) { return nullptr; }
+    //if (k < G->getLPBound()) { return nullptr; }
 
     //cout << "before getMaxDegreeVertex" << endl;
 	int vertex = G->getMaxDegreeVertex();
@@ -50,7 +50,7 @@ vector<int>* vcVertexBranchingRecursive(BucketGraph* G, int k, int* numRec)
 	if (S != nullptr)
 	{
         //revert changes for multiple executions of the algorithm
-        G->setActive(vertex);//TODO: dont revert in recursion
+        G->setActive(vertex);
 		//return results
 		S->push_back(vertex);
 		return S;
@@ -75,7 +75,7 @@ vector<int>* vcVertexBranchingRecursive(BucketGraph* G, int k, int* numRec)
 	if (S != nullptr)
 	{
         //revert changes for multiple executions of the algorithm
-        G->setActive(neighbours); //TODO: dont revert in recursion
+        G->setActive(neighbours);
 		//return results
         for (int i = 0; i < (int) neighbours->size(); i++)
         {
@@ -358,7 +358,7 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
         G->reduce();
         G->printEdgesToConsole();
 
-        G->resetLPBoundDataStructures(); //TODO: BRUNO IMPLEMENT THIS PLEASE
+        G->resetLPBoundDataStructures();
         std::vector<int>* reducedVc = vcSolverRecursive(G, &numRecursiveSteps);
         cout << "#difference: " << to_string((vc->size() - reducedVc->size())) << endl;
     }
