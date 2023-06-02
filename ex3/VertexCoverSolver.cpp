@@ -13,7 +13,7 @@ using namespace std;
 /*---------------   Exercise 3 Solver Code   ---------------*/
 /*----------------------------------------------------------*/
 
-vector<int>* vcVertexBranchingRecursive(BucketGraph* G, int k, int lastBound, int* numRec)
+vector<int>* vcVertexBranchingRecursive(BucketGraph* G, int k, int* numRec)
 {
     (*numRec)++;
 	if (k < 0)
@@ -21,9 +21,7 @@ vector<int>* vcVertexBranchingRecursive(BucketGraph* G, int k, int lastBound, in
 		return nullptr;
 	}
 
-    /* std::cout << "> calculated LPBound: " << G->getLPBound() << " with k=" << k << std::endl;
-    G->printMatching(); */
-    //lastBound = std::max(G->getLPBound(), lastBound);
+    /* std::cout << "> calculated LPBound: " << G->getLPBound() << " with k=" << k << std::endl; */
     if (k < G->getLPBound()) { return nullptr; }
 
     //cout << "before getMaxDegreeVertex" << endl;
@@ -48,7 +46,7 @@ vector<int>* vcVertexBranchingRecursive(BucketGraph* G, int k, int lastBound, in
 	//delete first vertex from graph and explore solution
     G->setInactive(vertex);
     //cout << "before branching" << endl;
-	vector<int>* S = vcVertexBranchingRecursive(G, k - 1, lastBound - 1, numRec);
+	vector<int>* S = vcVertexBranchingRecursive(G, k - 1, numRec);
 	if (S != nullptr)
 	{
         //revert changes for multiple executions of the algorithm
@@ -73,7 +71,7 @@ vector<int>* vcVertexBranchingRecursive(BucketGraph* G, int k, int lastBound, in
     //cout << "before getNeighbours" << endl;
     vector<int>* neighbours = G->getNeighbours(vertex);
     G->setInactive(neighbours);
-	S = vcVertexBranchingRecursive(G, k - neighbours->size(), lastBound - neighbours->size(), numRec);
+	S = vcVertexBranchingRecursive(G, k - neighbours->size(), numRec);
 	if (S != nullptr)
 	{
         //revert changes for multiple executions of the algorithm
@@ -109,7 +107,7 @@ vector<int>* vcSolverRecursive(BucketGraph* G, int* numRec)
        /*  if(G->applyReductionRules(&k, reductionVertices))
             return nullptr; */
 
-		vc = vcVertexBranchingRecursive(G, k, 0, numRec);
+		vc = vcVertexBranchingRecursive(G, k, numRec);
 		if (vc != nullptr)
 		{
             // Add Reduced Vertices to Vertex Cover

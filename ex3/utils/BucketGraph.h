@@ -39,7 +39,6 @@ public:
      : degree(_degree)
     {
         vertices = list<BucketVertex>();
-        
         for (BucketVertex* vertex : _vertices)
         {
             vertices.push_back(*vertex);
@@ -135,6 +134,8 @@ private:
     int NIL;
     int currentLPBound;
     bool didInitialMatchingCalculation = false;
+
+    std::vector<std::vector<int>> capacities;
 
 //functions
 public:
