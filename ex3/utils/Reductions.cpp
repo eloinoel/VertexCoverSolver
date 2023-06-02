@@ -71,3 +71,8 @@ bool Reductions::rule_DegreeOne(BucketGraph* G, int* k)
     }
     return true;
 }
+
+bool Reductions::rule_LPFlow(BucketGraph* G, int* k)
+{
+    
+}

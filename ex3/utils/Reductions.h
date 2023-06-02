@@ -8,7 +8,8 @@ enum RULE{
     DEGREE_ONE,         // = 1
     DEGREE_TWO,         // = 2
     HIGH_DEGREE,        // = 3
-    DOMINATION          // = 4
+    DOMINATION,         // = 4
+    LPFLOW              // = 5
 };
 
 class BucketGraph;
@@ -48,6 +49,8 @@ public:
     //TODO:
 
     bool rule_DegreeTwo(int* k);
+
+    bool rule_LPFlow(BucketGraph* G, int* k);
 };
 
 #endif
