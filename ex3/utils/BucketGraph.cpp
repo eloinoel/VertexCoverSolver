@@ -159,6 +159,7 @@ bool BucketGraph::isVertexCharacter(char c)
 void BucketGraph::initActiveList()
 {
     numEdges = edges.size();
+    numVertices = originalVertexNames.size();
     vertexReferences = std::vector<Vertex*>(originalVertexNames.size());
 
     //clear first
@@ -651,6 +652,7 @@ void BucketGraph::setActive(int vertexIndex)
 
     v->isActive = true;
     activeList.push_back(*v);
+    numVertices++;
 
     addToBucketQueue(v->degree, {v->bucketVertex});
     //update degree of all adjacent nodes
@@ -681,6 +683,7 @@ void BucketGraph::setInactive(int vertexIndex)
     v->isActive = false;
     auto iter = activeList.iterator_to(*v);
     activeList.erase(iter);
+    numVertices--;
 
     removeFromBucketQueue(v->degree, {v->bucketVertex});
     //update degree of all adjacent nodes
@@ -847,7 +850,7 @@ int BucketGraph::getFirstVertexOfDegree(int degree)
 
 int BucketGraph::getNumVertices()
 {
-    return activeList.size();
+    return numVertices;
 }
 
 int BucketGraph::getNumEdges()

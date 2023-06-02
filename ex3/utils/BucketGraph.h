@@ -116,6 +116,7 @@ private:
     list<Vertex> activeList;
 
     int numEdges;
+    int numVertices;
 
     /* each index represents a degree, that maps to a Bucket object that may be contained in the bucketQueue */
     std::vector<Bucket*> bucketReferences;
