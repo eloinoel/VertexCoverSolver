@@ -11,10 +11,9 @@
 #include "ColorPrint.h"
 
 #include <unordered_map> //O(1) for insert and access instead of O(log n) for ordered maps
-
 #include <algorithm>
 
-#include "boost/intrusive/list.hpp"
+#include <boost/intrusive/list.hpp>
 #include <boost/functional/hash.hpp>
 
 /* Rule Codierung:
@@ -112,6 +111,7 @@ private:
     BucketVertex* bucketVertex;
 
     friend class BucketGraph;
+    friend class Reductions;
 public:
 
     Vertex(std::vector<int>* adjVertices, std::string orginalName, int _index, int startingDegree)
@@ -135,6 +135,8 @@ private:
 
     int numEdges;
     int numVertices;
+
+    Reductions* reductions;
 
     /* each index represents a degree, that maps to a Bucket object that may be contained in the bucketQueue */
     std::vector<Bucket*> bucketReferences;
@@ -197,6 +199,7 @@ public:
     inline list<Vertex>* getActiveList() { return &activeList; }
     /* returns -1 if no vertex of degree */
     int getFirstVertexOfDegree(int degree);
+    inline Vertex* getVertex(int index) { if(index < vertexReferences.size()) return vertexReferences[index]; else return nullptr; }
 
     void print();
     void printActiveList();
@@ -322,19 +325,6 @@ private:
     /* Get list of vertices of degree d*/
 //    std::vector<int>* getVerticesDegree(int d);
 
-    /* Add 2 Adjacency Lists*/
-//    std::vector<int>* putAdjacencyTogether(std::vector<int>* neigh1, std::vector<int>* neigh2);
-
-    /* Changes Adjacency of vertex
-     * update own & neighbours degree here!
-     * => add a degree to new neighbours they will be decreased after again by setInactive in Degree Two Rule
-     * */
-//    void setVertexAdjacency(int vertexIndex, std::vector<int>* savedAdjacency);
-
-    /* Restore saved Adjacency of vertex
-     * update neighbours degree will be done in setActive()
-     * */
-//    void setVertexAdjacencyBack(int vertexIndex, std::vector<int>* savedAdjacency);
 };
 
 #endif

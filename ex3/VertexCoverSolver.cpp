@@ -29,7 +29,7 @@ vector<int>* vcVertexBranchingRecursive(BucketGraph* G, int k, int* numRec)
 //         return nullptr;
 
     /* std::cout << "> calculated LPBound: " << G->getLPBound() << " with k=" << k << std::endl; */
-    //if (k < G->getLPBound()) { return nullptr; }
+    if (k < G->getLPBound()) { return nullptr; }
 
     //cout << "before getMaxDegreeVertex" << endl;
 	int vertex = G->getMaxDegreeVertex();
@@ -102,6 +102,7 @@ vector<int>* vcVertexBranchingRecursive(BucketGraph* G, int k, int* numRec)
 vector<int>* vcSolverRecursive(BucketGraph* G, int* numRec)
 {
 	int k = G->getLowerBoundVC();
+    //int k = 0;
 
 	vector<int> *vc;
 
@@ -271,6 +272,7 @@ vector<int>* vcVertexBranchingRecursiveEx2(ArrayGraph* G, int k, int* numRec)
 vector<int>* vertexBranchingSolverRecursiveEx2(ArrayGraph* G, int* numRec)
 {
 	int k = G->getLowerBoundVC();
+    //int k = 0;
 
 	vector<int> *vc;
 
