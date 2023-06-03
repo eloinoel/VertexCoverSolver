@@ -85,9 +85,9 @@ vector<int>* vcVertexBranchingRecursive(BucketGraph* G, int k, int* numRec)
         return nullptr;
     }
 
-    //cout << "choosing neighbours of vertex " << vertex << ": ";
     vector<int>* neighbours = G->getNeighbours(vertex);
-    /* for(int i = 0; i < (int) neighbours->size(); i++)
+    /* cout << "choosing neighbours of vertex " << vertex << ": ";
+    for(int i = 0; i < (int) neighbours->size(); i++)
     {
         cout << neighbours->at(i) << ", ";
     }

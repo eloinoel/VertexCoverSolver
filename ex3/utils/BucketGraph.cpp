@@ -975,6 +975,23 @@ int BucketGraph::getFirstVertexOfDegree(int degree)
     return -1;
 }
 
+int BucketGraph::getFirstActiveNeighbour(int vertex)
+{
+    if(vertex >= (int) vertexReferences.size())
+    {
+        throw std::invalid_argument("getFirstActiveNeighbour: vertex");
+    }
+    Vertex* v = vertexReferences[vertex];
+    for(int i = 0; i < (int) v->adj->size(); i++)
+    {
+        if(vertexReferences[v->adj->at(i)]->isActive)
+        {
+            return v->adj->at(i);
+        }
+    }
+    return -1;
+}
+
 int BucketGraph::getNumVertices()
 {
     return numVertices;
@@ -1009,8 +1026,10 @@ bool BucketGraph::reduce(int* k)
         if(reductions->rule_Buss(this, k, getNumVertices(), getNumEdges()) == APPLICABLE)
             return true;
     }
+    //print();
     RULE_APPLICATION_RESULT degreeOneResult = reductions->rule_DegreeOne(this, k);
     if(degreeOneResult == INSUFFIENT_BUDGET) return true; //cut
+    //print();
     
     //TODO:
     //bool degreeTwoResult = reductions->rule_DegreeTwo(k);

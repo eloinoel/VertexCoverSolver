@@ -71,16 +71,19 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeOne(BucketGraph* G, int* k)
     Reduction* reduction = new Reduction(RULE::DEGREE_ONE, 0, nullptr, new std::vector<int>());
     appliedRules->push_back(reduction);
 
+    //std::cout << "DEGONE Culling vertices: {";
     while(!degOneBucket->empty())
     {
         if(*k == 0) return INSUFFIENT_BUDGET; //cannot delete more vertices, no possible vertex cover exists
         auto it = degOneBucket->begin();
-        int neighbourToDelete = G->getVertex(it->index)->adj->front();
-        reduction->deletedVCVertices->push_back(it->index);
+        int neighbourToDelete = G->getFirstActiveNeighbour(it->index);
+        reduction->deletedVCVertices->push_back(neighbourToDelete);
         reduction->kDecrement++;
         *k = *k - 1;
-        G->setInactive(it->index);
+        G->setInactive(neighbourToDelete);
+        //std::cout << neighbourToDelete << ", ";
     }
+    //std::cout << "}" << std::endl;
     return APPLICABLE;
 }
 

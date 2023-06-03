@@ -163,6 +163,7 @@ public:
     void setInactive(std::vector<int>* vertexIndices);
 
     std::vector<int>* getNeighbours(int vertexIndex);
+    int getFirstActiveNeighbour(int vertex);
 
     int getMaxDegree();
     int getMaxDegreeVertex();
