@@ -64,8 +64,8 @@ public:
 //    void initRuleCounter();
 
     void printReductionRules();
+    
     //rules return true if they were applicable
-
     RULE_APPLICATION_RESULT rule_HighDegree(BucketGraph* G, int* k);
     RULE_APPLICATION_RESULT rule_DegreeZero(BucketGraph* G);
     /* only call if rule_HighDegree and rule_DegreeZero return false, returns true if no vertex cover of size k exists in graph */

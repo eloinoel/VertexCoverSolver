@@ -163,7 +163,9 @@ public:
     void setInactive(std::vector<int>* vertexIndices);
 
     std::vector<int>* getNeighbours(int vertexIndex);
-    int getFirstActiveNeighbour(int vertex);
+    /* specify n starting with 0 */
+    int getNthActiveNeighbour(int vertex, int n);
+    std::pair<int, int>* getFirstTwoActiveNeighbours(int vertex);
 
     int getMaxDegree();
     int getMaxDegreeVertex();
@@ -193,6 +195,8 @@ public:
     bool reduce(int* k);
     /* vc is not nullptr, if deleted vertices should be appended to vc*/
     void unreduce(int* k, int previousK, std::vector<int>* vc = nullptr);
+    /* merge three vertices into one for degree 2 rule */
+    std::vector<int>* merge(int v0, int v1, int v2);
 
     void getBipartMatchingFlowComponents(std::vector<int>* L, std::vector<int>* R);
     int edmondsKarpFlow();

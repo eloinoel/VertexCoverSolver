@@ -76,7 +76,7 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeOne(BucketGraph* G, int* k)
     {
         if(*k == 0) return INSUFFIENT_BUDGET; //cannot delete more vertices, no possible vertex cover exists
         auto it = degOneBucket->begin();
-        int neighbourToDelete = G->getFirstActiveNeighbour(it->index);
+        int neighbourToDelete = G->getNthActiveNeighbour(it->index, 0);
         reduction->deletedVCVertices->push_back(neighbourToDelete);
         reduction->kDecrement++;
         *k = *k - 1;
@@ -159,53 +159,36 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeTwo(BucketGraph* G, int* k)
 
     if(degTwoBucket == nullptr || degTwoBucket->empty()) return INAPPLICABLE;
 
-    Reduction* reduction = new Reduction(RULE::DEGREE_TWO, 0, nullptr, new std::vector<int>());
-    appliedRules->push_back(reduction);
-
     while(!degTwoBucket->empty())
     {
         if(*k == 0) return INSUFFIENT_BUDGET; //cannot delete more vertices, no possible vertex cover exists
 
         auto it = degTwoBucket->begin();
-        int vertDegTwo = G->getVertex(it->index)->adj->front();
-
-        std::vector<int>* neighbours = G->getNeighbours(vertDegTwo);
-
-        int neighbourOne = neighbours->at(0);
-        int neighbourTwo = neighbours->at(1);
+        std::pair<int, int>* neighbours = G->getFirstTwoActiveNeighbours(it->index); //should always return valid vertices
 
         // save deleted vertex
         Reduction* delVer = new Reduction(RULE::DEGREE_TWO, 0, new std::vector<int>());
-        delVer->deletedVertices->push_back(neighbourOne);            // at (0)
-        delVer->deletedVertices->push_back(neighbourTwo);     // at (1)
-        delVer->deletedVertices->push_back(vertDegTwo);                     // at (2)
+        delVer->deletedVertices->push_back(neighbours->first);            // at (0)
+        delVer->deletedVertices->push_back(neighbours->second);     // at (1)
+        delVer->deletedVertices->push_back(it->index);                     // at (2)
 
-        delVer->savedAdjacency = neighbours;
+        //delVer->savedAdjacency = neighbours;
 
         // CASE The neighbours know each other
-        if(G->vertexHasEdgeTo(neighbourOne,neighbourTwo))
+        if(G->vertexHasEdgeTo(neighbours->first, neighbours->second))
         {
             delVer->kDecrement = 2;
-
-            G->setInactive(vertDegTwo);
-            (*k)-=2;
+            G->setInactive(delVer->deletedVertices);
+            (*k) = (*k) - 2;
         }
         // CASE Neighbours don't know each other => setInactive or do that in addReducedVertices?
         else
         {
             delVer->kDecrement = 1;
-
-//            merge()
-//            setVertexAdjacency(vertexID, putAdjacencyTogether(shortestNeighbourhood, otherNeighbour));
-
-            (*k)--;
+            delVer->savedAdjacency = G->merge(it->index, neighbours->first, neighbours->second); //sets merged vertices inactive
+            (*k) = (*k) - 1;
         }
-        G->setInactive(neighbourOne);
-        G->setInactive(neighbourTwo);
-
         appliedRules->push_back(delVer);
-
     }
     return APPLICABLE;
 }
-

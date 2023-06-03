@@ -975,21 +975,54 @@ int BucketGraph::getFirstVertexOfDegree(int degree)
     return -1;
 }
 
-int BucketGraph::getFirstActiveNeighbour(int vertex)
+int BucketGraph::getNthActiveNeighbour(int vertex, int n)
 {
     if(vertex >= (int) vertexReferences.size())
     {
         throw std::invalid_argument("getFirstActiveNeighbour: vertex");
     }
     Vertex* v = vertexReferences[vertex];
+    int counter = 0;
     for(int i = 0; i < (int) v->adj->size(); i++)
     {
         if(vertexReferences[v->adj->at(i)]->isActive)
         {
-            return v->adj->at(i);
+            if(counter == n)
+            {
+                return v->adj->at(i);
+            }
+            counter++;
         }
     }
     return -1;
+}
+
+std::pair<int, int>* BucketGraph::getFirstTwoActiveNeighbours(int vertex)
+{
+    std::pair<int, int>* neighbours = new std::pair<int, int>({-1, -1});
+    if(vertex >= (int) vertexReferences.size())
+    {
+        throw std::invalid_argument("getFirstActiveNeighbour: vertex");
+    }
+    Vertex* v = vertexReferences[vertex];
+    int counter = 0;
+    for(int i = 0; i < (int) v->adj->size(); i++)
+    {
+        if(vertexReferences[v->adj->at(i)]->isActive)
+        {
+            if(counter == 0)
+            {
+                neighbours->first = v->adj->at(i);
+            }
+            else if (counter == 1)
+            {
+                neighbours->second = v->adj->at(i);
+                return neighbours;
+            }
+            counter++;
+        }
+    }
+    return neighbours;
 }
 
 int BucketGraph::getNumVertices()
@@ -1099,6 +1132,55 @@ void BucketGraph::unreduce(int* k, int previousK, std::vector<int>* vc)
             throw std::invalid_argument("unreduce error: inconsistency, stop coding garbage");
         }
     }
+}
+
+std::vector<int>* BucketGraph::merge(int v0, int v1, int v2)
+{
+    //we merge into the vertex with the max degree, for less duplicate checks
+    int maxDegVertex = v2;
+    int mergev0 = v0;
+    int mergev1 = v1;
+    if(vertexReferences[mergev0]->degree > vertexReferences[maxDegVertex]->degree) 
+    {
+        int tmp = maxDegVertex;
+        maxDegVertex = mergev0;
+        mergev0 = tmp;
+    }
+    if(vertexReferences[mergev1]->degree > vertexReferences[maxDegVertex]->degree)
+    {
+        int tmp = maxDegVertex;
+        maxDegVertex = mergev1;
+        mergev1 = maxDegVertex;
+    } 
+
+    //save adjacency list of vertex to merge into
+    std::vector<int>* adj_copy = new std::vector<int>(*vertexReferences[maxDegVertex]->adj);
+
+    //add edges of merging vertices to adj of vertex to merge into
+    for(int i = 0; i < (int) vertexReferences[mergev0]->adj->size(); i++)
+    {
+        int neighbour = (int) vertexReferences[mergev0]->adj->at(i);
+        if(neighbour != maxDegVertex && !vertexHasEdgeTo(maxDegVertex, neighbour))
+        {
+            vertexReferences[maxDegVertex]->adj->push_back(neighbour);
+            vertexReferences[maxDegVertex]->adj_map->insert({neighbour, true});
+        }
+    }
+    for(int i = 0; i < (int) vertexReferences[mergev1]->adj->size(); i++)
+    {
+        int neighbour = (int) vertexReferences[mergev1]->adj->at(i);
+        if(vertexReferences[neighbour]->isActive && neighbour != maxDegVertex && !vertexHasEdgeTo(maxDegVertex, neighbour))
+        {
+            vertexReferences[maxDegVertex]->adj->push_back(neighbour);
+            vertexReferences[maxDegVertex]->adj_map->insert({neighbour, true});
+        }
+    }
+
+    //set merged vertices inactive
+    setInactive(mergev0);
+    setInactive(mergev1);
+
+    return adj_copy;
 }
 
 
