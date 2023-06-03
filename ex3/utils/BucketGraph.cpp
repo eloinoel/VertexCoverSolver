@@ -1004,13 +1004,13 @@ bool BucketGraph::reduce(int* k)
     RULE_APPLICATION_RESULT highDegreeResult = reductions->rule_HighDegree(this, k);
     if(highDegreeResult == INSUFFIENT_BUDGET) return true; //cut
     RULE_APPLICATION_RESULT degreeZeroResult = reductions->rule_DegreeZero(this);
-    /*if(highDegreeResult == INAPPLICABLE && degreeZeroResult == INAPPLICABLE)
+    if(highDegreeResult == INAPPLICABLE && degreeZeroResult == INAPPLICABLE)
     {
         if(reductions->rule_Buss(this, k, getNumVertices(), getNumEdges()) == APPLICABLE)
             return true;
     }
     RULE_APPLICATION_RESULT degreeOneResult = reductions->rule_DegreeOne(this, k);
-    if(degreeOneResult == INSUFFIENT_BUDGET) return true; */ //cut
+    if(degreeOneResult == INSUFFIENT_BUDGET) return true; //cut
     
     //TODO:
     //bool degreeTwoResult = reductions->rule_DegreeTwo(k);
@@ -1023,7 +1023,7 @@ void BucketGraph::unreduce(int* k, int previousK, std::vector<int>* vc)
         return;
 
     //pop rules
-    while(*k < previousK)
+    while(*k < previousK || (!reductions->appliedRules->empty() && reductions->appliedRules->back()->kDecrement == 0))
     {
         Reduction* rule = reductions->appliedRules->back();
         switch(rule->rule)

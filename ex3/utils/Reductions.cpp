@@ -35,6 +35,8 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeZero(BucketGraph* G)
 
     if(degZeroBucket == nullptr || degZeroBucket->empty()) return INAPPLICABLE;
 
+    //G->print();
+
     Reduction* reduction = new Reduction(RULE::DEGREE_ZERO, 0, new std::vector<int>());
     appliedRules->push_back(reduction);
 
