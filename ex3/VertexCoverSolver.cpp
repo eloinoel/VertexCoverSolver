@@ -6,6 +6,7 @@
 #include "utils/ArrayGraph.h"
 #include "utils/ColorPrint.h"
 #include "utils/BucketGraph.h"
+#include "utils/Reductions.h"
 
 using namespace std;
 
@@ -109,7 +110,8 @@ vector<int>* vcSolverRecursive(BucketGraph* G, int* numRec)
 	while (true)
 	{
         // Reduction Rules
-        vector<ReductionVertices>* reductionVertices = new std::vector<ReductionVertices>;
+//        vector<ReductionVertices>* reductionVertices = new std::vector<ReductionVertices>;
+        Reductions* reductionVertices = new Reductions(G);
 
         int kBefore = k;
         bool printDebugReduction = false;
@@ -125,7 +127,7 @@ vector<int>* vcSolverRecursive(BucketGraph* G, int* numRec)
         }
 
         // Apply Reduction Rules for the first time
-        if(!G->applyReductionRules(&k, reductionVertices, printDebugReduction))
+        if(!reduce(&k, reductionVertices))
             return nullptr;
 
         if (printDebugReduction)
@@ -137,7 +139,7 @@ vector<int>* vcSolverRecursive(BucketGraph* G, int* numRec)
             std::cout << ColorPrint::dye(kAft, 'y') << std::endl ;
             std::cout << std::endl;
         }
-        cout << "#recursive steps: " << kBefore -k << endl;
+        cout << "#recursive steps: " << kBefore - k << endl;
 
 
         vc = vcVertexBranchingRecursive(G, k, numRec);
@@ -152,7 +154,7 @@ vector<int>* vcSolverRecursive(BucketGraph* G, int* numRec)
             }
 
             // Add Reduced Vertices to Vertex Cover
-             G->addReducedVertices(vc, reductionVertices, printDebugReduction);
+            reductionVertices->addReducedVertices(vc, reductionVertices);
             delete reductionVertices;
 
 			return vc;
@@ -166,7 +168,7 @@ vector<int>* vcSolverRecursive(BucketGraph* G, int* numRec)
             std::cout << std::endl;
         }
 
-         G->addBackReducedVertices(&k, reductionVertices, printDebugReduction);
+        reductionVertices->addBackReducedVertices(&k, reductionVertices);
         delete reductionVertices;
 
         k++;
@@ -201,15 +203,6 @@ vector<int>* vcVertexBranchingRecursiveEx2(ArrayGraph* G, int k, int* numRec)
 		return new vector<int>();
 	}
 
-    //================================================================
-    // Reduction Rules
-    /* vector<ReductionVertices>* reductionVertices = new vector<ReductionVertices>;
-
-    if(!G->applyReductionRules(&k, reductionVertices)) {
-        delete reductionVertices;
-        return nullptr;
-    } */
-    //================================================================
 
 	//delete first vertex from graph and explore solution
     G->setInactive(vertex);
@@ -217,11 +210,6 @@ vector<int>* vcVertexBranchingRecursiveEx2(ArrayGraph* G, int k, int* numRec)
 	if (S != nullptr)
 	{
 		//return results
-
-        // Add Reduced Vertices to Vertex Cover
-        /* G->addReducedVertices(S, merged, deletedReduced);
-        delete reductionVertices; */
-
 		S->push_back(vertex);
 		return S;
 	}
@@ -248,10 +236,6 @@ vector<int>* vcVertexBranchingRecursiveEx2(ArrayGraph* G, int k, int* numRec)
             S->push_back(neighbours->at(i));
         }
 
-        // Add Reduced Vertices to Vertex Cover
-        /* G->addReducedVertices(S, merged, deletedReduced);
-        delete reductionVertices; */
-
         return S;
 	}
 	else
@@ -259,12 +243,6 @@ vector<int>* vcVertexBranchingRecursiveEx2(ArrayGraph* G, int k, int* numRec)
 		//revert changes to graph
 		G->setActive(neighbours);
 	}
-
-    //================================================================
-    // Reverse Data Reduction
-    /* G->addBackReducedVertices(k, reductionVertices);
-    delete reductionVertices; */
-    //================================================================
 
 	return nullptr;
 }
@@ -404,7 +382,7 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
         int numRecursiveSteps = 0;
         std::vector<int>* vc = vcSolverRecursive(G, &numRecursiveSteps);
 
-        G->reduce();
+//        reduce();
         G->printEdgesToConsole();
 
         G->resetLPBoundDataStructures();

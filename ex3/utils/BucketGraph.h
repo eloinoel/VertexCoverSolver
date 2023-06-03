@@ -8,30 +8,14 @@
 #include <functional>
 #include <limits.h>
 
-#include "ColorPrint.h"
 
 #include <unordered_map> //O(1) for insert and access instead of O(log n) for ordered maps
+
 #include <algorithm>
 
 #include <boost/intrusive/list.hpp>
 #include <boost/functional/hash.hpp>
 
-/* Rule Codierung:
- *  1:
- *  2:
- *  3:
- *  4:
- *  5:
- *  6:
- * */
-class ReductionVertices{
-public:
-    // Indicating the rule
-    int rule;
-    int kDecrement;
-    std::vector<int> deletedVertices;
-    std::vector<int>* savedAdjacency;
-};
 
 
 using namespace boost::intrusive;
@@ -136,7 +120,7 @@ private:
     int numEdges;
     int numVertices;
 
-    Reductions* reductions;
+//    Reductions* reductions;
 
     /* each index represents a degree, that maps to a Bucket object that may be contained in the bucketQueue */
     std::vector<Bucket*> bucketReferences;
@@ -161,13 +145,6 @@ private:
 
     /* Initialized to 0 and of size Vertex*/
     std::vector<int> neighbourArray;
-
-    int rule_0 = 0;
-    int rule_1 = 0;
-    int rule_2 = 0;
-    int rule_3 = 0;
-    int rule_4 = 0;
-    int rule_5 = 0;
 
 //functions
 public:
@@ -199,7 +176,7 @@ public:
     inline list<Vertex>* getActiveList() { return &activeList; }
     /* returns -1 if no vertex of degree */
     int getFirstVertexOfDegree(int degree);
-    inline Vertex* getVertex(int index) { if(index < vertexReferences.size()) return vertexReferences[index]; else return nullptr; }
+    inline Vertex* getVertex(int index) { if(index <(int) vertexReferences.size()) return vertexReferences[index]; else return nullptr; }
 
     void print();
     void printActiveList();
@@ -214,20 +191,8 @@ public:
     void resetLPBoundDataStructures();
 
     /* apply data reduction rules to graph */
-    void reduce();
-
-    // return bool indicating if no vertex cover possible
-    bool applyReductionRules(int* k, std::vector<ReductionVertices>* reductionArray, bool printDebug);
-
-    // Adds the deleted vertices from the reduction rules to the vertex cover
-    void addReducedVertices(std::vector<int>* S, std::vector<ReductionVertices>* reductionArray, bool printDebug);
-
-    // Restores the initial kernel problem
-    void addBackReducedVertices(int *k, std::vector<ReductionVertices>* reductionArray, bool printDebug);
-
-    void initRuleCounter();
-
-    void printReductionRules(std::vector<ReductionVertices>* reductionArray);
+//    void reduce(int* k, Reductions* reductions);
+//    void reduce(int* k, Reductions* reductions);
 
 private:
 
@@ -306,24 +271,6 @@ private:
     //int getLPBound();
     int getLPCycleBound();  // TODO: this is still trash
 
-    //------------------------ Data Reduction ------------------------
-    //TODO: apply data reduction to input graph and return output graph
-    //================================================================
-    // Reduction Rules
-    bool rule_HighDegree(int *k, std::vector<ReductionVertices>* reductionVertices, bool printDebug);
-    bool rule_DegreeZero(std::vector<ReductionVertices>* reductionArray, bool printDebug);
-
-    bool rule_Buss(int* k, bool printDebug);
-
-    void rule_DegreeOne(int* k, std::vector<ReductionVertices>* reductionArray, bool printDebug);
-//    void rule_DegreeTwo(int* k, std::vector<ReductionVertices>* reductionArray, bool printDebug);
-//    void rule_Domination(int* k, std::vector<ReductionVertices>* reductionArray, bool printDebug);
-    //================================================================
-
-    //TODO: ------------Functions that need implementation-------------
-
-    /* Get list of vertices of degree d*/
-//    std::vector<int>* getVerticesDegree(int d);
 
 };
 
