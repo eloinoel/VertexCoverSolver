@@ -2,6 +2,7 @@
 #define REDUCTIONS_H
 
 #include <vector>
+#include <unordered_map>
 
 enum RULE
 {
@@ -29,7 +30,7 @@ public:
     int kDecrement;
     std::vector<int>* deletedVertices; // First idx is always to add in VC if(rule!=0)
     std::vector<int>* deletedVCVertices;
-    std::vector<int>* savedAdjacency;
+    std::tuple<int, std::vector<int>*, std::unordered_map<int, bool>*>* savedMergeVertex;
 
     Reduction() {};
     Reduction(RULE rule) { this->rule = rule; };
@@ -51,7 +52,7 @@ public:
 class Reductions
 {
 public:
-    int rule_0 , rule_1, rule_2 , rule_3,  rule_4, rule_5;
+    //int rule_0 , rule_1, rule_2 , rule_3,  rule_4, rule_5;
 
     std::vector<Reduction*>* appliedRules;
 
@@ -64,7 +65,7 @@ public:
 //    void initRuleCounter();
 
     void printReductionRules();
-    
+
     //rules return true if they were applicable
     RULE_APPLICATION_RESULT rule_HighDegree(BucketGraph* G, int* k);
     RULE_APPLICATION_RESULT rule_DegreeZero(BucketGraph* G);

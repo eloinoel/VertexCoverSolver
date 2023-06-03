@@ -142,15 +142,14 @@ void Reductions::printReductionRules()
         if(reductionR->rule == DEGREE_TWO)
         {
             std::string savedAdj = "Saved Adjacency List: ";
-            for (int k = 0; k < (int) reductionR->savedAdjacency->size(); ++k)
+            for (int k = 0; k < (int) std::get<1>(*reductionR->savedMergeVertex)->size(); ++k)
             {
-                savedAdj += std::to_string(reductionR->savedAdjacency->at(k)) + ", ";
+                savedAdj += std::to_string(std::get<1>(*reductionR->savedMergeVertex)->at(k)) + ", ";
             }
             std::cout << ColorPrint::dye(savedAdj, 'c') << std::endl;
         }
         std::cout << std::endl;
     }
-
 }
 
 RULE_APPLICATION_RESULT Reductions::rule_DegreeTwo(BucketGraph* G, int* k)
@@ -185,7 +184,7 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeTwo(BucketGraph* G, int* k)
         else
         {
             delVer->kDecrement = 1;
-            delVer->savedAdjacency = G->merge(it->index, neighbours->first, neighbours->second); //sets merged vertices inactive
+            delVer->savedMergeVertex = G->merge(it->index, neighbours->first, neighbours->second); //sets merged vertices inactive
             (*k) = (*k) - 1;
         }
         appliedRules->push_back(delVer);
