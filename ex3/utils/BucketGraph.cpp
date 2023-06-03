@@ -1004,18 +1004,75 @@ bool BucketGraph::reduce(int* k)
     RULE_APPLICATION_RESULT highDegreeResult = reductions->rule_HighDegree(this, k);
     if(highDegreeResult == INSUFFIENT_BUDGET) return true; //cut
     RULE_APPLICATION_RESULT degreeZeroResult = reductions->rule_DegreeZero(this);
-    if(highDegreeResult == INAPPLICABLE && degreeZeroResult == INAPPLICABLE)
+    /*if(highDegreeResult == INAPPLICABLE && degreeZeroResult == INAPPLICABLE)
     {
         if(reductions->rule_Buss(this, k, getNumVertices(), getNumEdges()) == APPLICABLE)
             return true;
     }
     RULE_APPLICATION_RESULT degreeOneResult = reductions->rule_DegreeOne(this, k);
-    if(degreeOneResult == INSUFFIENT_BUDGET) return true; //cut
+    if(degreeOneResult == INSUFFIENT_BUDGET) return true; */ //cut
     
     //TODO:
     //bool degreeTwoResult = reductions->rule_DegreeTwo(k);
     return false;
+}
 
+void BucketGraph::unreduce(int* k, int previousK, std::vector<int>* vc)
+{
+    if(reductions->appliedRules->empty())
+        return;
+
+    //pop rules
+    while(*k < previousK)
+    {
+        Reduction* rule = reductions->appliedRules->back();
+        switch(rule->rule)
+        {
+            case DEGREE_ZERO:
+                setActive(rule->deletedVertices);
+                break;
+            case DEGREE_ONE:
+                *k = *k + rule->kDecrement;
+                setActive(rule->deletedVCVertices);
+                if(vc != nullptr)
+                {
+                    vc->insert(vc->end(), rule->deletedVCVertices->begin(), rule->deletedVCVertices->end());
+                }
+                break;
+            case DEGREE_TWO:
+                //TODO:
+                break;
+            case HIGH_DEGREE:
+                *k = *k + rule->kDecrement;
+                setActive(rule->deletedVCVertices);
+                if(vc != nullptr)
+                {
+                    vc->insert(vc->end(), rule->deletedVCVertices->begin(), rule->deletedVCVertices->end());
+                }
+                break;
+            case DOMINATION:
+                //TODO:
+                break;
+            case LPFLOW:
+                *k = *k + rule->kDecrement;
+                setActive(rule->deletedVertices);
+                setActive(rule->deletedVCVertices);
+                if(vc != nullptr)
+                {
+                    vc->insert(vc->end(), rule->deletedVCVertices->begin(), rule->deletedVCVertices->end());
+                }
+                break;
+            default:
+                throw std::invalid_argument("unreduce error: unknown rule");
+                break;
+        }
+        reductions->appliedRules->pop_back();
+        //TODO: delete debug at the end
+        if(*k > previousK)
+        {
+            throw std::invalid_argument("unreduce error: inconsistency, stop coding garbage");
+        }
+    }
 }
 
 

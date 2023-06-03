@@ -53,6 +53,11 @@ class Reductions
 public:
     std::vector<Reduction*>* appliedRules;
 
+    Reductions()
+    {
+        appliedRules = new std::vector<Reduction*>();
+    }
+
 public:
     //rules return true if they were applicable
 

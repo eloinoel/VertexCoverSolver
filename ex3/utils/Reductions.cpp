@@ -1,6 +1,7 @@
 #include "Reductions.h"
 #include "boost/intrusive/list.hpp"
 #include "BucketGraph.h"
+#include <iostream>
 
 
 using namespace boost::intrusive;
@@ -12,6 +13,7 @@ RULE_APPLICATION_RESULT Reductions::rule_HighDegree(BucketGraph* G, int* k)
     Reduction* reduction = new Reduction(RULE::HIGH_DEGREE, 0, nullptr, new std::vector<int>());
     appliedRules->push_back(reduction);
 
+    std::cout << "HIGHDEG Culling vertices: {";
     //delete vertices that have to be in the vertex cover
     while(G->getMaxDegree() > *k)
     {
@@ -21,7 +23,9 @@ RULE_APPLICATION_RESULT Reductions::rule_HighDegree(BucketGraph* G, int* k)
         reduction->deletedVCVertices->push_back(maxDegVertex);
         *k = *k - 1;
         G->setInactive(maxDegVertex);
+        std::cout << maxDegVertex << ", ";
     }
+    std::cout << "}" << std::endl;
     return APPLICABLE;
 }
 
@@ -34,11 +38,15 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeZero(BucketGraph* G)
     Reduction* reduction = new Reduction(RULE::DEGREE_ZERO, 0, new std::vector<int>());
     appliedRules->push_back(reduction);
 
-    for(auto it = degZeroBucket->begin(); it != degZeroBucket->end(); ++it)
+    std::cout << "DEGZERO Culling vertices: {";
+    while(!degZeroBucket->empty())
     {
-        reduction->deletedVertices->push_back(it->index);
-        G->setInactive(it->index);
+        auto first = degZeroBucket->begin();
+        reduction->deletedVertices->push_back(first->index);
+        G->setInactive(first->index);
+        std::cout << first->index << ", ";
     }
+    std::cout << "}" << std::endl;
     return APPLICABLE;
 }
 
@@ -60,9 +68,10 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeOne(BucketGraph* G, int* k)
     Reduction* reduction = new Reduction(RULE::DEGREE_ONE, 0, nullptr, new std::vector<int>());
     appliedRules->push_back(reduction);
 
-    for(auto it = degOneBucket->begin(); it != degOneBucket->end(); ++it)
+    while(!degOneBucket->empty())
     {
         if(*k == 0) return INSUFFIENT_BUDGET; //cannot delete more vertices, no possible vertex cover exists
+        auto it = degOneBucket->begin();
         int neighbourToDelete = G->getVertex(it->index)->adj->front();
         reduction->deletedVCVertices->push_back(it->index);
         reduction->kDecrement++;
@@ -87,7 +96,8 @@ RULE_APPLICATION_RESULT Reductions::rule_LPFlow(BucketGraph* G, int* k)
     {
         return INAPPLICABLE;
     }
-
+    G->setInactive(delVertices);
+    G->setInactive(delVCVertices);
     Reduction* reduction = new Reduction(RULE::LPFLOW, delVCVertices->size(), delVertices, delVCVertices);
     appliedRules->push_back(reduction);
     *k = *k - delVCVertices->size();
