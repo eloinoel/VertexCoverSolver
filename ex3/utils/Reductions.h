@@ -51,6 +51,8 @@ public:
 class Reductions
 {
 public:
+    int rule_0 , rule_1, rule_2 , rule_3,  rule_4, rule_5;
+
     std::vector<Reduction*>* appliedRules;
 
     Reductions()
@@ -59,6 +61,9 @@ public:
     }
 
 public:
+//    void initRuleCounter();
+
+    void printReductionRules();
     //rules return true if they were applicable
 
     RULE_APPLICATION_RESULT rule_HighDegree(BucketGraph* G, int* k);
@@ -67,9 +72,7 @@ public:
     RULE_APPLICATION_RESULT rule_Buss(BucketGraph* G, int* k, int numVertices, int numEdges);
     RULE_APPLICATION_RESULT rule_DegreeOne(BucketGraph* G, int* k);
 
-    //TODO:
-
-    RULE_APPLICATION_RESULT rule_DegreeTwo(int* k);
+    RULE_APPLICATION_RESULT rule_DegreeTwo(BucketGraph* G, int* k);
 
     RULE_APPLICATION_RESULT rule_LPFlow(BucketGraph* G, int* k);
 };
