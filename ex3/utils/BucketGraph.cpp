@@ -1097,7 +1097,12 @@ void BucketGraph::unreduce(int* k, int previousK, std::vector<int>* vc)
                 }
                 break;
             case DEGREE_TWO:
-                //TODO:
+                *k = *k + rule->kDecrement;
+                unmerge(rule);
+                if(vc != nullptr)
+                {
+                    //TODO:
+                }
                 break;
             case HIGH_DEGREE:
                 *k = *k + rule->kDecrement;
@@ -1192,11 +1197,11 @@ std::tuple<int, std::vector<int>*, std::unordered_map<int, bool>*>* BucketGraph:
 void BucketGraph::unmerge(Reduction* mergeRule)
 {
     //restore adjacency list and other fields of the merge vertex
-    int mergeVertex = std::get<0>(*mergeRule->savedMergeVertex);
+    int mergeVertex = std::get<0>(*mergeRule->mergeVertexInfo);
     removeFromBucketQueue(mergeVertex);
 
-    vertexReferences[mergeVertex]->adj = std::get<1>(*mergeRule->savedMergeVertex);
-    vertexReferences[mergeVertex]->adj_map = std::get<2>(*mergeRule->savedMergeVertex);
+    vertexReferences[mergeVertex]->adj = std::get<1>(*mergeRule->mergeVertexInfo);
+    vertexReferences[mergeVertex]->adj_map = std::get<2>(*mergeRule->mergeVertexInfo);
     vertexReferences[mergeVertex]->degree = vertexReferences[mergeVertex]->adj->size();
 
     addToBucketQueue(mergeVertex);

@@ -142,9 +142,9 @@ void Reductions::printReductionRules()
         if(reductionR->rule == DEGREE_TWO)
         {
             std::string savedAdj = "Saved Adjacency List: ";
-            for (int k = 0; k < (int) std::get<1>(*reductionR->savedMergeVertex)->size(); ++k)
+            for (int k = 0; k < (int) std::get<1>(*reductionR->mergeVertexInfo)->size(); ++k)
             {
-                savedAdj += std::to_string(std::get<1>(*reductionR->savedMergeVertex)->at(k)) + ", ";
+                savedAdj += std::to_string(std::get<1>(*reductionR->mergeVertexInfo)->at(k)) + ", ";
             }
             std::cout << ColorPrint::dye(savedAdj, 'c') << std::endl;
         }
@@ -167,12 +167,13 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeTwo(BucketGraph* G, int* k)
 
         // save deleted vertex
         Reduction* delVer = new Reduction(RULE::DEGREE_TWO, 0, new std::vector<int>());
-        delVer->deletedVertices->push_back(neighbours->first);            // at (0)
-        delVer->deletedVertices->push_back(neighbours->second);     // at (1)
-        delVer->deletedVertices->push_back(it->index);                     // at (2)
+        delVer->deletedVertices->push_back(neighbours->first);
+        delVer->deletedVertices->push_back(neighbours->second);
+        delVer->deletedVertices->push_back(it->index);
 
-        //delVer->savedAdjacency = neighbours;
+        //TODO: which vertex to delete and which to add to vc
 
+        delVer->mergeVertexInfo = nullptr;
         // CASE The neighbours know each other
         if(G->vertexHasEdgeTo(neighbours->first, neighbours->second))
         {
@@ -184,7 +185,7 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeTwo(BucketGraph* G, int* k)
         else
         {
             delVer->kDecrement = 1;
-            delVer->savedMergeVertex = G->merge(it->index, neighbours->first, neighbours->second); //sets merged vertices inactive
+            delVer->mergeVertexInfo = G->merge(it->index, neighbours->first, neighbours->second); //sets merged vertices inactive
             (*k) = (*k) - 1;
         }
         appliedRules->push_back(delVer);
