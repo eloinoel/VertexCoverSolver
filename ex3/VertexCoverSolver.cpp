@@ -34,7 +34,7 @@ vector<int>* vcVertexBranchingRecursive(BucketGraph* G, int k, int* numRec)
     /* std::cout << "> calculated LPBound: " << G->getLPBound() << " with k=" << k << std::endl; */
     if (k < G->getLPBound()) {
         G->unreduce(&k, previousK);
-        return nullptr; 
+        return nullptr;
     }
 
     //cout << "before getMaxDegreeVertex" << endl;
@@ -56,7 +56,7 @@ vector<int>* vcVertexBranchingRecursive(BucketGraph* G, int k, int* numRec)
         return vc;
 	}
 
-    //cout << "before setInactive" << endl;
+    //cout << "deleting vertex: " << vertex << endl;
 	//delete first vertex from graph and explore solution
     G->setInactive(vertex);
     //cout << "before branching" << endl;
@@ -77,6 +77,7 @@ vector<int>* vcVertexBranchingRecursive(BucketGraph* G, int k, int* numRec)
 		G->setActive(vertex);
         G->unreduce(&k, previousK);
 	}
+    //cout << "restoring vertex: " << vertex << endl;
 
 	//cannot fully explore neighbours
     if (vertexDeg > k)
@@ -84,8 +85,7 @@ vector<int>* vcVertexBranchingRecursive(BucketGraph* G, int k, int* numRec)
         G->unreduce(&k, previousK);
         return nullptr;
     }
-
-    //cout << "before getNeighbours" << endl;
+    //cout << "deleting neighbourhood of vertex: " << vertex << endl;
     vector<int>* neighbours = G->getNeighbours(vertex);
     G->setInactive(neighbours);
 	S = vcVertexBranchingRecursive(G, k - neighbours->size(), numRec);
@@ -107,6 +107,7 @@ vector<int>* vcVertexBranchingRecursive(BucketGraph* G, int k, int* numRec)
 		G->setActive(neighbours);
         G->unreduce(&k, previousK);
 	}
+    cout << "restoring neighbourhood of vertex: " << vertex << endl;
 
     G->unreduce(&k, previousK);
     return nullptr;

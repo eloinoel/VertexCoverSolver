@@ -1029,6 +1029,12 @@ void BucketGraph::unreduce(int* k, int previousK, std::vector<int>* vc)
         switch(rule->rule)
         {
             case DEGREE_ZERO:
+                /* std::cout << "DEGZERO Restoring vertices: {";
+                for(auto elem : *rule->deletedVertices)
+                {
+                    std::cout << elem << ", ";
+                }
+                std::cout << "}" << std::endl; */
                 setActive(rule->deletedVertices);
                 break;
             case DEGREE_ONE:

@@ -13,7 +13,7 @@ RULE_APPLICATION_RESULT Reductions::rule_HighDegree(BucketGraph* G, int* k)
     Reduction* reduction = new Reduction(RULE::HIGH_DEGREE, 0, nullptr, new std::vector<int>());
     appliedRules->push_back(reduction);
 
-    std::cout << "HIGHDEG Culling vertices: {";
+    //std::cout << "HIGHDEG Culling vertices: {";
     //delete vertices that have to be in the vertex cover
     while(G->getMaxDegree() > *k)
     {
@@ -23,9 +23,9 @@ RULE_APPLICATION_RESULT Reductions::rule_HighDegree(BucketGraph* G, int* k)
         reduction->deletedVCVertices->push_back(maxDegVertex);
         *k = *k - 1;
         G->setInactive(maxDegVertex);
-        std::cout << maxDegVertex << ", ";
+        //std::cout << maxDegVertex << ", ";
     }
-    std::cout << "}" << std::endl;
+    //std::cout << "}" << std::endl;
     return APPLICABLE;
 }
 
@@ -38,15 +38,15 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeZero(BucketGraph* G)
     Reduction* reduction = new Reduction(RULE::DEGREE_ZERO, 0, new std::vector<int>());
     appliedRules->push_back(reduction);
 
-    std::cout << "DEGZERO Culling vertices: {";
+    //std::cout << "DEGZERO Culling vertices: {";
     while(!degZeroBucket->empty())
     {
         auto first = degZeroBucket->begin();
         reduction->deletedVertices->push_back(first->index);
         G->setInactive(first->index);
-        std::cout << first->index << ", ";
+        //std::cout << first->index << ", ";
     }
-    std::cout << "}" << std::endl;
+    //std::cout << "}" << std::endl;
     return APPLICABLE;
 }
 
