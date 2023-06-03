@@ -17,6 +17,7 @@
 #include <boost/functional/hash.hpp>
 
 class Reductions;
+class Reduction;
 
 using namespace boost::intrusive;
 
@@ -65,9 +66,9 @@ public:
         }
     }
 
-    inline void remove(std::vector<BucketVertex*> _vertices)
+    inline void remove(std::vector<BucketVertex*>* _vertices)
     {
-        for(BucketVertex* vertex : _vertices)
+        for(BucketVertex* vertex : *_vertices)
         {
             auto it = vertices.iterator_to(*vertex);
             vertices.erase(it);
@@ -91,7 +92,7 @@ private:
     //temporary fields
     bool isActive;
     int degree;
-    //maybe also add pointer to bucket queue ref for fast deletion
+    //pointer to bucketQueue entry for fast deletion
     BucketVertex* bucketVertex;
 
     friend class BucketGraph;
@@ -163,6 +164,9 @@ public:
     void setInactive(std::vector<int>* vertexIndices);
 
     std::vector<int>* getNeighbours(int vertexIndex);
+    /* specify n starting with 0 */
+    int getNthActiveNeighbour(int vertex, int n);
+    std::pair<int, int>* getFirstTwoActiveNeighbours(int vertex);
 
     int getMaxDegree();
     int getMaxDegreeVertex();
@@ -192,6 +196,10 @@ public:
     bool reduce(int* k);
     /* vc is not nullptr, if deleted vertices should be appended to vc*/
     void unreduce(int* k, int previousK, std::vector<int>* vc = nullptr);
+    /* merge three vertices into one for degree 2 rule, returns vertex that was merged into and its previous adjacency list */
+    std::tuple<int, std::vector<int>*, std::unordered_map<int, bool>*>* merge(int v0, int v1, int v2);
+    /* restores previous previously merged vertices into 3 seperate vertices */
+    void unmerge(Reduction* mergeRule);
 
     void getBipartMatchingFlowComponents(std::vector<int>* L, std::vector<int>* R);
     void setBipartMatchingFlowComponentsInactive(std::vector<int>* L, std::vector<int>* R);
@@ -217,12 +225,13 @@ private:
     //-------------------------- Graph Utility --------------------------
 
     int bruteForceCalculateNumEdges();
-    void addToBucketQueue(int degree, std::vector<BucketVertex*> vertices);
-    /* add vertices of specific degree to bucket queue. If no bucket of degree in queue, insert new bucket before given biggerBucketDegree*/
-    //void addToBucketQueueBeforeBucket(int degree, std::vector<BucketVertex*> vertices, int biggerBucketDegree);
-    //void addToBucketQueueBeforeBucket(int degree, std::vector<BucketVertex*> vertices, list_iterator<bhtraits<Bucket, list_node_traits<hook_defaults::void_pointer>, safe_link, hook_defaults::tag, 1U>, false> it);
-    void removeFromBucketQueue(int degree, std::vector<BucketVertex*> vertices);
+    /* add vertex to bucket of the degree of the vertex. If no bucket of degree in queue, insert new bucket before given biggerBucketDegree*/
+    void addToBucketQueue(int vertex);
+    /*  remove vertex from bucket of the degree of the vertex, deletes empty buckets from the queue */
+    void removeFromBucketQueue(int vertex);
+    /* move vertex of degree to a bucket of degree + 1*/
     void moveToBiggerBucket(int degree, int vertex);
+    /* move vertex of degree to a bucket of degree - 1*/
     void moveToSmallerBucket(int degree, int vertex);
 
     //------------------------ Virtual Flow Graph ------------------------
@@ -243,10 +252,6 @@ private:
 
     //int getLPBound();
     int getLPCycleBound();  // TODO: this is still trash
-
-    //------------------------ Data Reduction ------------------------
-    //TODO: apply data reduction to input graph and return output graph
-
 
 
 };

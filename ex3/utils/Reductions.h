@@ -2,6 +2,7 @@
 #define REDUCTIONS_H
 
 #include <vector>
+#include <unordered_map>
 
 enum RULE
 {
@@ -15,8 +16,8 @@ enum RULE
 
 enum RULE_APPLICATION_RESULT
 {
-    APPLICABLE,
     INAPPLICABLE,
+    APPLICABLE,
     INSUFFICIENT_BUDGET //k doesn't allow for more vertex deletions -> no possible vertex cover of size k
 };
 
@@ -29,7 +30,7 @@ public:
     int kDecrement;
     std::vector<int>* deletedVertices; // First idx is always to add in VC if(rule!=0)
     std::vector<int>* deletedVCVertices;
-    std::vector<int>* savedAdjacency;
+    std::tuple<int, std::vector<int>*, std::unordered_map<int, bool>*>* savedMergeVertex;
 
     Reduction() {};
     Reduction(RULE rule) { this->rule = rule; };
@@ -51,6 +52,8 @@ public:
 class Reductions
 {
 public:
+    //int rule_0 , rule_1, rule_2 , rule_3,  rule_4, rule_5;
+
     std::vector<Reduction*>* appliedRules;
 
     Reductions()
@@ -59,17 +62,18 @@ public:
     }
 
 public:
-    //rules return true if they were applicable
+//    void initRuleCounter();
 
+    void printReductionRules();
+
+    //rules return true if they were applicable
     RULE_APPLICATION_RESULT rule_HighDegree(BucketGraph* G, int* k);
     RULE_APPLICATION_RESULT rule_DegreeZero(BucketGraph* G);
     /* only call if rule_HighDegree and rule_DegreeZero return false, returns true if no vertex cover of size k exists in graph */
     RULE_APPLICATION_RESULT rule_Buss(BucketGraph* G, int* k, int numVertices, int numEdges);
     RULE_APPLICATION_RESULT rule_DegreeOne(BucketGraph* G, int* k);
 
-    //TODO:
-
-    RULE_APPLICATION_RESULT rule_DegreeTwo(int* k);
+    RULE_APPLICATION_RESULT rule_DegreeTwo(BucketGraph* G, int* k);
 
     RULE_APPLICATION_RESULT rule_LPFlow(BucketGraph* G, int* k);
 };
