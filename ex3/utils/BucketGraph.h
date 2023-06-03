@@ -151,6 +151,7 @@ public:
     /* creates and initialises a graph from standard input */
     static BucketGraph* readStandardInput();
     std::vector<std::string>* getStringsFromVertexIndices(std::vector<int>* vertices);
+    std::vector<std::string>* getStringsFromVertexIndices(std::unordered_map<int, bool>* vertices);
     /* creates a graph from the current graph and resets its data structures */
     BucketGraph* resetGraph();
 
@@ -195,7 +196,7 @@ public:
     /* apply data reduction rules to graph, returns true if no vertex cover can be found for this k */
     bool reduce(int* k);
     /* vc is not nullptr, if deleted vertices should be appended to vc*/
-    void unreduce(int* k, int previousK, std::vector<int>* vc = nullptr);
+    void unreduce(int* k, int previousK, std::unordered_map<int, bool>* vc = nullptr);
     /* merge three vertices into one for degree 2 rule, returns vertex that was merged into and its previous adjacency list */
     std::tuple<int, std::vector<int>*, std::unordered_map<int, bool>*>* merge(int v0, int v1, int v2);
     /* restores previous previously merged vertices into 3 seperate vertices */

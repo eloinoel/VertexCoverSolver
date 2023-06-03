@@ -165,10 +165,11 @@ void Reductions::printReductionRules()
 
 RULE_APPLICATION_RESULT Reductions::rule_DegreeTwo(BucketGraph* G, int* k)
 {
-    list<BucketVertex>* degTwoBucket = G->getVerticesOfDegree(0);
+    list<BucketVertex>* degTwoBucket = G->getVerticesOfDegree(2);
 
     if(degTwoBucket == nullptr || degTwoBucket->empty()) return INAPPLICABLE;
 
+    std::cout << "DEGTWO Culling vertices: ";
     while(!degTwoBucket->empty())
     {
         if(*k == 0) return INSUFFICIENT_BUDGET; //cannot delete more vertices, no possible vertex cover exists
@@ -178,18 +179,21 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeTwo(BucketGraph* G, int* k)
 
         // save deleted vertex
         Reduction* delVer = new Reduction(RULE::DEGREE_TWO, 0, new std::vector<int>());
-        delVer->deletedVertices->push_back(neighbours->first);
-        delVer->deletedVertices->push_back(neighbours->second);
+
+        //if no merge, take neighbours, otherwise case destinction whether merged vertex is in vc
+        delVer->deletedVCVertices->push_back(neighbours->first);
+        delVer->deletedVCVertices->push_back(neighbours->second);
         delVer->deletedVertices->push_back(it->index);
 
-        //TODO: which vertex to delete and which to add to vc
+        std::cout << it->index  << ", " << neighbours->first << ", " << neighbours->second;
 
         delVer->mergeVertexInfo = nullptr;
-        // CASE The neighbours know each other
+        // CASE The neighbours know each other, take them into vc
         if(G->vertexHasEdgeTo(neighbours->first, neighbours->second))
         {
             delVer->kDecrement = 2;
             G->setInactive(delVer->deletedVertices);
+            G->setInactive(delVer->deletedVCVertices);
             (*k) = (*k) - 2;
         }
         // CASE Neighbours don't know each other => setInactive or do that in addReducedVertices?
@@ -198,6 +202,7 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeTwo(BucketGraph* G, int* k)
             delVer->kDecrement = 1;
             delVer->mergeVertexInfo = G->merge(it->index, neighbours->first, neighbours->second); //sets merged vertices inactive
             (*k) = (*k) - 1;
+            std::cout << " | merging into " << std::get<0>(*delVer->mergeVertexInfo);
         }
         appliedRules->push_back(delVer);
     }

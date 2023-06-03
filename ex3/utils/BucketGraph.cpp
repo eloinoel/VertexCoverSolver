@@ -583,6 +583,18 @@ std::vector<std::string>* BucketGraph::getStringsFromVertexIndices(std::vector<i
     return solution;
 }
 
+std::vector<std::string>* BucketGraph::getStringsFromVertexIndices(std::unordered_map<int, bool>* vertices)
+{
+    std::vector<std::string>* solution = new std::vector<std::string>();
+    for (auto it = vertices->begin(); it != vertices->end(); ++it)
+    {
+        std::string stringcpy = vertexReferences[it->first]->strName;
+        solution->push_back(stringcpy);
+    }
+    return solution;
+}
+
+
 bool BucketGraph::vertexHasEdgeTo(int vertex, int secondVertex)
 {
     if(vertex >= (int) vertexReferences.size() || secondVertex >= (int) vertexReferences.size())
@@ -1052,33 +1064,34 @@ bool BucketGraph::reduce(int* k)
 {
     while(true)
     {
-        /* RULE_APPLICATION_RESULT highDegreeResult = reductions->rule_HighDegree(this, k);
+        RULE_APPLICATION_RESULT highDegreeResult = reductions->rule_HighDegree(this, k);
         if(highDegreeResult == INSUFFICIENT_BUDGET) return true; //cut
         RULE_APPLICATION_RESULT degreeZeroResult = reductions->rule_DegreeZero(this);
         if(highDegreeResult == INAPPLICABLE && degreeZeroResult == INAPPLICABLE)
         {
             if(reductions->rule_Buss(this, k, getNumVertices(), getNumEdges()) == APPLICABLE)
                 return true;
-        } */
-        //print();
-        /* RULE_APPLICATION_RESULT degreeOneResult = reductions->rule_DegreeOne(this, k);
-        if(degreeOneResult == INSUFFICIENT_BUDGET) return true; */ //cut
-        //print();
+        }
+        RULE_APPLICATION_RESULT degreeOneResult = reductions->rule_DegreeOne(this, k);
+        if(degreeOneResult == INSUFFICIENT_BUDGET) return true; //cut
         
-        //TODO:
-        //bool degreeTwoResult = reductions->rule_DegreeTwo(k);
-        /* if(highDegreeResult == INAPPLICABLE && degreeZeroResult == INAPPLICABLE && degreeOneResult == INAPPLICABLE) //TODO: add conditions for other rules
+        //TODO: debug merge 
+        /* print();
+        RULE_APPLICATION_RESULT degreeTwoResult = reductions->rule_DegreeTwo(this, k);
+        print(); */
+        RULE_APPLICATION_RESULT degreeTwoResult = INAPPLICABLE;
+        if(highDegreeResult == INAPPLICABLE && degreeZeroResult == INAPPLICABLE && degreeOneResult == INAPPLICABLE && degreeTwoResult == INAPPLICABLE) //TODO: add conditions for other rules
         {
             return false;
-        } */
-        RULE_APPLICATION_RESULT LPFlowResult = reductions->rule_LPFlow(this, k);
+        }
+        /* RULE_APPLICATION_RESULT LPFlowResult = reductions->rule_LPFlow(this, k);
         if(LPFlowResult == INSUFFICIENT_BUDGET) return true;
-        break;
+        break; */
     }
     return false;
 }
 
-void BucketGraph::unreduce(int* k, int previousK, std::vector<int>* vc)
+void BucketGraph::unreduce(int* k, int previousK, std::unordered_map<int, bool>* vc)
 {
     if(reductions->appliedRules->empty())
         return;
@@ -1090,12 +1103,6 @@ void BucketGraph::unreduce(int* k, int previousK, std::vector<int>* vc)
         switch(rule->rule)
         {
             case DEGREE_ZERO:
-                /* std::cout << "DEGZERO Restoring vertices: {";
-                for(auto elem : *rule->deletedVertices)
-                {
-                    std::cout << elem << ", ";
-                }
-                std::cout << "}" << std::endl; */
                 setActive(rule->deletedVertices);
                 break;
             case DEGREE_ONE:
@@ -1103,7 +1110,11 @@ void BucketGraph::unreduce(int* k, int previousK, std::vector<int>* vc)
                 setActive(rule->deletedVCVertices);
                 if(vc != nullptr)
                 {
-                    vc->insert(vc->end(), rule->deletedVCVertices->begin(), rule->deletedVCVertices->end());
+                    for(int i = 0; i < (int) rule->deletedVCVertices->size(); i++)
+                    {
+                        vc->insert({rule->deletedVCVertices->at(i), true});
+                    }
+                    //vc->insert(vc->end(), rule->deletedVCVertices->begin(), rule->deletedVCVertices->end());
                 }
                 break;
             case DEGREE_TWO:
@@ -1111,7 +1122,31 @@ void BucketGraph::unreduce(int* k, int previousK, std::vector<int>* vc)
                 unmerge(rule);
                 if(vc != nullptr)
                 {
-                    //TODO:
+                    if(rule->mergeVertexInfo == nullptr)
+                    {
+                        //didn't merge, take neighbours of deg2 vertex
+                        for(int i = 0; i < (int) rule->deletedVCVertices->size(); i++)
+                        {
+                            vc->insert({rule->deletedVCVertices->at(i), true});
+                        }
+                    }
+                    else
+                    {
+                        //if vc contains vertex that was merged into, add neighbours of deg2 vertex to the solution
+                        auto it = vc->find(std::get<0>(*rule->mergeVertexInfo));
+                        if(it != vc->end())
+                        {
+                            vc->erase(it);
+                            for(int i = 0; i < (int) rule->deletedVCVertices->size(); i++)
+                            {
+                                vc->insert({rule->deletedVCVertices->at(i), true});
+                            }
+                        }
+                        else //else merge vertex wasn't chosen, so its neighbours must be in vc --> add deg2 vertex to solution
+                        {
+                            vc->insert({rule->deletedVertices->front(), true});
+                        }
+                    }
                 }
                 break;
             case HIGH_DEGREE:
@@ -1119,7 +1154,11 @@ void BucketGraph::unreduce(int* k, int previousK, std::vector<int>* vc)
                 setActive(rule->deletedVCVertices);
                 if(vc != nullptr)
                 {
-                    vc->insert(vc->end(), rule->deletedVCVertices->begin(), rule->deletedVCVertices->end());
+                    for(int i = 0; i < (int) rule->deletedVCVertices->size(); i++)
+                    {
+                        vc->insert({rule->deletedVCVertices->at(i), true});
+                    }
+                    //vc->insert(vc->end(), rule->deletedVCVertices->begin(), rule->deletedVCVertices->end());
                 }
                 break;
             case DOMINATION:
@@ -1131,7 +1170,11 @@ void BucketGraph::unreduce(int* k, int previousK, std::vector<int>* vc)
                 setActive(rule->deletedVCVertices);
                 if(vc != nullptr)
                 {
-                    vc->insert(vc->end(), rule->deletedVCVertices->begin(), rule->deletedVCVertices->end());
+                    for(int i = 0; i < (int) rule->deletedVCVertices->size(); i++)
+                    {
+                        vc->insert({rule->deletedVCVertices->at(i), true});
+                    }
+                    //vc->insert(vc->end(), rule->deletedVCVertices->begin(), rule->deletedVCVertices->end());
                 }
                 break;
             default:
@@ -1142,13 +1185,7 @@ void BucketGraph::unreduce(int* k, int previousK, std::vector<int>* vc)
         //TODO: delete debug at the end
         if(*k > previousK)
         {
-            throw std::invalid_argument((std::ostringstream()
-        << "unreduce error: "
-        << *k
-        << ">"
-        << previousK
-        << ", stop coding garbage (you too <3)"
-        ).str());
+            throw std::invalid_argument("unreduce error: " + std::to_string(*k) + " > " + std::to_string(previousK) + ", stop coding garbage");
         }
     }
 }

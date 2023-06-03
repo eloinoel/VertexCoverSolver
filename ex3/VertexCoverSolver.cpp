@@ -1,5 +1,4 @@
 #include <iostream>
-#include <unordered_map> //O(1) for insert and access instead of O(log n) for ordered maps
 #include <fstream>  //ifstream file opening
 #include <stack>          // std::stack
 #include <math.h>          // INFINITY
@@ -13,7 +12,7 @@ using namespace std;
 /*---------------   Exercise 3 Solver Code   ---------------*/
 /*----------------------------------------------------------*/
 
-vector<int>* vcVertexBranchingRecursive(BucketGraph* G, int k, int* numRec)
+unordered_map<int, bool>* vcVertexBranchingRecursive(BucketGraph* G, int k, int* numRec)
 {
     //TODO: call data reductions
 
@@ -42,7 +41,7 @@ vector<int>* vcVertexBranchingRecursive(BucketGraph* G, int k, int* numRec)
     //no vertices left
     if (vertex == -1)
     {
-        vector<int>* vc = new vector<int>();
+        unordered_map<int, bool>* vc = new unordered_map<int, bool>();
         G->unreduce(&k, previousK, vc);
         return vc;
     }
@@ -51,7 +50,7 @@ vector<int>* vcVertexBranchingRecursive(BucketGraph* G, int k, int* numRec)
 	//graph has no edges left
 	if (vertexDeg == 0)
 	{
-		vector<int>* vc = new vector<int>();
+		unordered_map<int, bool>* vc = new unordered_map<int, bool>();
         G->unreduce(&k, previousK, vc);
         return vc;
 	}
@@ -60,14 +59,15 @@ vector<int>* vcVertexBranchingRecursive(BucketGraph* G, int k, int* numRec)
 	//delete first vertex from graph and explore solution
     G->setInactive(vertex);
     //cout << "before branching" << endl;
-	vector<int>* S = vcVertexBranchingRecursive(G, k - 1, numRec);
+	unordered_map<int, bool>* S = vcVertexBranchingRecursive(G, k - 1, numRec);
 	if (S != nullptr)
 	{
         //revert changes for multiple executions of the algorithm
         G->setActive(vertex);
         G->unreduce(&k, previousK, S);
 		//return results
-		S->push_back(vertex);
+        S->insert({vertex, true});
+		//S->push_back(vertex);
 		return S;
 	}
 	else
@@ -104,7 +104,8 @@ vector<int>* vcVertexBranchingRecursive(BucketGraph* G, int k, int* numRec)
 		//return results
         for (int i = 0; i < (int) neighbours->size(); i++)
         {
-            S->push_back(neighbours->at(i));
+            //S->push_back(neighbours->at(i));
+            S->insert({neighbours->at(i), true});
         }
         return S;
 	}
@@ -125,12 +126,12 @@ vector<int>* vcVertexBranchingRecursive(BucketGraph* G, int k, int* numRec)
     return nullptr;
 }
 
-vector<int>* vcSolverRecursive(BucketGraph* G, int* numRec)
+unordered_map<int, bool>* vcSolverRecursive(BucketGraph* G, int* numRec)
 {
 	int k = G->getLowerBoundVC();
     //int k = 0;
 
-	vector<int> *vc;
+	unordered_map<int, bool>* vc;
 
 	while (true)
 	{
@@ -368,7 +369,7 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
         if(printVC)
         {
             int numRecursiveSteps = 0;
-            std::vector<int>* vc = vcSolverRecursive(G, &numRecursiveSteps);
+            unordered_map<int, bool>* vc = vcSolverRecursive(G, &numRecursiveSteps);
             writeSolutionToConsole(G->getStringsFromVertexIndices(vc));
             cout << "#recursive steps: " << numRecursiveSteps << endl;
 
@@ -393,13 +394,13 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
 
         //G->print();
         int numRecursiveSteps = 0;
-        std::vector<int>* vc = vcSolverRecursive(G, &numRecursiveSteps);
+        unordered_map<int, bool>* vc = vcSolverRecursive(G, &numRecursiveSteps);
 
         //G->reduce(); //TODO:
         G->printEdgesToConsole();
 
         G->resetLPBoundDataStructures();
-        std::vector<int>* reducedVc = vcSolverRecursive(G, &numRecursiveSteps);
+        unordered_map<int, bool>* reducedVc = vcSolverRecursive(G, &numRecursiveSteps);
         cout << "#difference: " << to_string((vc->size() - reducedVc->size())) << endl;
     }
     else
