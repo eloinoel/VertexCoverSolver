@@ -132,7 +132,7 @@ BucketGraph* BucketGraph::readStandardInput()
     G->initAdjMap(); //sets references in adjacency lists of vertices
     G->initBucketQueue(); // initialise bucket queue
     G->initMatching(); // LP Bound matching fields
-//    G->reductions = new Reductions();
+    G->reductions = new Reductions();
     return G;
 }
 
@@ -975,6 +975,23 @@ int BucketGraph::getFirstVertexOfDegree(int degree)
     return -1;
 }
 
+int BucketGraph::getFirstActiveNeighbour(int vertex)
+{
+    if(vertex >= (int) vertexReferences.size())
+    {
+        throw std::invalid_argument("getFirstActiveNeighbour: vertex");
+    }
+    Vertex* v = vertexReferences[vertex];
+    for(int i = 0; i < (int) v->adj->size(); i++)
+    {
+        if(vertexReferences[v->adj->at(i)]->isActive)
+        {
+            return v->adj->at(i);
+        }
+    }
+    return -1;
+}
+
 int BucketGraph::getNumVertices()
 {
     return numVertices;
@@ -1001,19 +1018,28 @@ int BucketGraph::bruteForceCalculateNumEdges()
 
 bool BucketGraph::reduce(int* k)
 {
-    RULE_APPLICATION_RESULT highDegreeResult = reductions->rule_HighDegree(this, k);
-    if(highDegreeResult == INSUFFIENT_BUDGET) return true; //cut
-    RULE_APPLICATION_RESULT degreeZeroResult = reductions->rule_DegreeZero(this);
-    if(highDegreeResult == INAPPLICABLE && degreeZeroResult == INAPPLICABLE)
+    while(true)
     {
-        if(reductions->rule_Buss(this, k, getNumVertices(), getNumEdges()) == APPLICABLE)
-            return true;
+        RULE_APPLICATION_RESULT highDegreeResult = reductions->rule_HighDegree(this, k);
+        if(highDegreeResult == INSUFFIENT_BUDGET) return true; //cut
+        RULE_APPLICATION_RESULT degreeZeroResult = reductions->rule_DegreeZero(this);
+        if(highDegreeResult == INAPPLICABLE && degreeZeroResult == INAPPLICABLE)
+        {
+            if(reductions->rule_Buss(this, k, getNumVertices(), getNumEdges()) == APPLICABLE)
+                return true;
+        }
+        //print();
+        RULE_APPLICATION_RESULT degreeOneResult = reductions->rule_DegreeOne(this, k);
+        if(degreeOneResult == INSUFFIENT_BUDGET) return true; //cut
+        //print();
+        
+        //TODO:
+        //bool degreeTwoResult = reductions->rule_DegreeTwo(k);
+        if(highDegreeResult == INAPPLICABLE && degreeZeroResult == INAPPLICABLE && degreeOneResult == INAPPLICABLE) //TODO: add conditions for other rules
+        {
+            return false;
+        }
     }
-    RULE_APPLICATION_RESULT degreeOneResult = reductions->rule_DegreeOne(this, k);
-    if(degreeOneResult == INSUFFIENT_BUDGET) return true; //cut
-
-    //TODO:
-    //bool degreeTwoResult = reductions->rule_DegreeTwo(k);
     return false;
 }
 
