@@ -56,7 +56,7 @@ vector<int>* vcVertexBranchingRecursive(BucketGraph* G, int k, int* numRec)
         return vc;
 	}
 
-    //cout << "before setInactive" << endl;
+    //cout << "choosing vertex " << vertex << endl;
 	//delete first vertex from graph and explore solution
     G->setInactive(vertex);
     //cout << "before branching" << endl;
@@ -85,8 +85,13 @@ vector<int>* vcVertexBranchingRecursive(BucketGraph* G, int k, int* numRec)
         return nullptr;
     }
 
-    //cout << "before getNeighbours" << endl;
+    //cout << "choosing neighbours of vertex " << vertex << ": ";
     vector<int>* neighbours = G->getNeighbours(vertex);
+    /* for(int i = 0; i < (int) neighbours->size(); i++)
+    {
+        cout << neighbours->at(i) << ", ";
+    }
+    cout << endl; */
     G->setInactive(neighbours);
 	S = vcVertexBranchingRecursive(G, k - neighbours->size(), numRec);
 	if (S != nullptr)
@@ -404,8 +409,8 @@ int main(int argc, char* argv[]) {
 	try
 	{
         //chooseImplementationAndOutput(0, false, false, false, false, true, false);
-        chooseImplementationAndOutput(1, true, false, false, true, true, false);
-        //chooseImplementationAndOutput(1, false, false, false, false, true, false);
+        //chooseImplementationAndOutput(1, true, false, false, true, true, false); //print alot
+        chooseImplementationAndOutput(1, false, false, false, false, true, false);
 	}
 	catch (const exception& e)
 	{
