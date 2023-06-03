@@ -3,22 +3,32 @@
 
 #include <vector>
 
-#include "BucketGraph.h"
-
-
-enum RULE{
+enum RULE
+{
     DEGREE_ZERO,        // = 0
     DEGREE_ONE,         // = 1
     DEGREE_TWO,         // = 2
     HIGH_DEGREE,        // = 3
-    DOMINATION          // = 4
+    DOMINATION,         // = 4
+    LPFLOW              // = 5
 };
 
-class Reduction{
+enum RULE_APPLICATION_RESULT
+{
+    APPLICABLE,
+    INAPPLICABLE,
+    INSUFFIENT_BUDGET //k doesn't allow for more vertex deletions -> no possible vertex cover of size k
+};
+
+class BucketGraph;
+
+class Reduction
+{
 public:
     RULE rule;
     int kDecrement;
     std::vector<int>* deletedVertices; // First idx is always to add in VC if(rule!=0)
+    std::vector<int>* deletedVCVertices;
     std::vector<int>* savedAdjacency;
 
     Reduction() {};
@@ -29,13 +39,12 @@ public:
         this->kDecrement = kDecrement;
         this->deletedVertices = deletedVertices;
     };
-
-    Reduction(RULE rule, int kDecrement, std::vector<int>* deletedVertices, std::vector<int>* saveAdjacency)
+    Reduction(RULE rule, int kDecrement, std::vector<int>* deletedVertices, std::vector<int>* deletedVCVertices)
     {
         this->rule = rule;
         this->kDecrement = kDecrement;
         this->deletedVertices = deletedVertices;
-        this->savedAdjacency = saveAdjacency;
+        this->deletedVCVertices = deletedVCVertices;
     };
 };
 
@@ -59,6 +68,20 @@ public:
 //    bool printDebug;
 
 public:
+    //rules return true if they were applicable
+
+    RULE_APPLICATION_RESULT rule_HighDegree(BucketGraph* G, int* k);
+    RULE_APPLICATION_RESULT rule_DegreeZero(BucketGraph* G);
+    /* only call if rule_HighDegree and rule_DegreeZero return false, returns true if no vertex cover of size k exists in graph */
+    RULE_APPLICATION_RESULT rule_Buss(BucketGraph* G, int* k, int numVertices, int numEdges);
+    RULE_APPLICATION_RESULT rule_DegreeOne(BucketGraph* G, int* k);
+
+    //TODO:
+
+    RULE_APPLICATION_RESULT rule_DegreeTwo(int* k);
+
+    RULE_APPLICATION_RESULT rule_LPFlow(BucketGraph* G, int* k);
+
     // return bool indicating if no vertex cover possible
 //    bool applyReductionRules(int* k, std::vector<ReductionVertices>* reductionArray, bool printDebug);
 
@@ -88,33 +111,6 @@ public:
 //    void rule_Domination(int* k, std::vector<ReductionVertices>* reductionArray, bool printDebug);
     //===============================================================
 
-    /*
-    // return bool indicating if no vertex cover possible
-//    bool applyReductionRules(int* k, std::vector<ReductionVertices>* reductionArray, bool printDebug);
-
-    // Adds the deleted vertices from the reduction rules to the vertex cover
-    void addReducedVertices(std::vector<int>* S, std::vector<ReductionVertices>* reductionArray, bool printDebug);
-
-    // Restores the initial kernel problem
-    void addBackReducedVertices(int *k, std::vector<ReductionVertices>* reductionArray, bool printDebug);
-
-    void initRuleCounter();
-
-    void printReductionRules(std::vector<ReductionVertices>* reductionArray);
-
-    bool rule_DegreeTwo(int* k);
-
-    //------------------------ Reduction Rules -----------------------
-    //================================================================
-    bool rule_HighDegree(int *k, std::vector<ReductionVertices>* reductionVertices, bool printDebug);
-    bool rule_DegreeZero(std::vector<ReductionVertices>* reductionArray, bool printDebug);
-
-    bool rule_Buss(int* k, bool printDebug);
-
-    void rule_DegreeOne(int* k, std::vector<ReductionVertices>* reductionArray, bool printDebug);
-//    void rule_DegreeTwo(int* k, std::vector<ReductionVertices>* reductionArray, bool printDebug);
-//    void rule_Domination(int* k, std::vector<ReductionVertices>* reductionArray, bool printDebug);
-    *///================================================================
 };
 
 bool reduce(int* k, Reductions* reductions);

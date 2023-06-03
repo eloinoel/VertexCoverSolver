@@ -95,7 +95,7 @@ set(BOOST_ROOT "../boost_1_82_0")
 include_directories(${INCLUDE_DIRECTORIES} ${BOOST_ROOT} include)
 
 # Create an executable
-add_executable(VertexCoverSolver VertexCoverSolver.cpp utils/ArrayGraph.cpp utils/BipartiteArrayGraph.cpp utils/BucketGraph.cpp)
+add_executable(VertexCoverSolver VertexCoverSolver.cpp utils/ArrayGraph.cpp utils/BipartiteArrayGraph.cpp utils/BucketGraph.cpp utils/Reductions.cpp)
 
 # Add header-only dependencies
 #target_include_directories(ex2 PRIVATE "${polyscope_SOURCE_DIR}/deps/args")

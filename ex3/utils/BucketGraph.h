@@ -4,19 +4,19 @@
 #include <string>
 #include <vector>
 #include <queue>
+#include <stack>
 #include <utility>
 #include <functional>
 #include <limits.h>
 
 
 #include <unordered_map> //O(1) for insert and access instead of O(log n) for ordered maps
-
 #include <algorithm>
 
 #include <boost/intrusive/list.hpp>
 #include <boost/functional/hash.hpp>
 
-
+class Reductions;
 
 using namespace boost::intrusive;
 
@@ -120,7 +120,7 @@ private:
     int numEdges;
     int numVertices;
 
-//    Reductions* reductions;
+    Reductions* reductions;
 
     /* each index represents a degree, that maps to a Bucket object that may be contained in the bucketQueue */
     std::vector<Bucket*> bucketReferences;
@@ -141,10 +141,7 @@ private:
     int currentLPBound;
     bool didInitialMatchingCalculation = false;
 
-    std::vector<std::vector<int>> capacities;
-
-    /* Initialized to 0 and of size Vertex*/
-    std::vector<int> neighbourArray;
+    std::vector<std::vector<int>> flow;
 
 //functions
 public:
@@ -176,7 +173,7 @@ public:
     inline list<Vertex>* getActiveList() { return &activeList; }
     /* returns -1 if no vertex of degree */
     int getFirstVertexOfDegree(int degree);
-    inline Vertex* getVertex(int index) { if(index <(int) vertexReferences.size()) return vertexReferences[index]; else return nullptr; }
+    inline Vertex* getVertex(int index) { if(index < (int) vertexReferences.size()) return vertexReferences[index]; else return nullptr; }
 
     void print();
     void printActiveList();
@@ -187,12 +184,15 @@ public:
     int getLowerBoundVC();
     int getCliqueBound(int k = INT_MAX);
     int getLPBound();
+    int getFlow();
 
     void resetLPBoundDataStructures();
 
-    /* apply data reduction rules to graph */
-//    void reduce(int* k, Reductions* reductions);
-//    void reduce(int* k, Reductions* reductions);
+    /* apply data reduction rules to graph, returns true if no vertex cover can be found for this k */
+    bool reduce(int* k);
+
+    void getBipartMatchingFlowComponents(std::vector<int>* L, std::vector<int>* R);
+    int edmondsKarpFlow();
 
 private:
 
@@ -227,42 +227,10 @@ private:
     // Note: if the number of vertices changes all previously calculated mappings are invalid
     // Thus storing mapped indices for a period of time where this may occur is not very wise
 
-    int virtualToRealIndex(int virtualIndex) {
-        if (virtualIndex > (int) vertexReferences.size()*2-1) {
-            throw std::invalid_argument("virtualToRealIndex: no real counterpart vertex exists!");
-        }
-        return virtualIndex % vertexReferences.size();
-    }
-
-    int realToVirtualIndex(int realIndex, bool toLeftSide) {
-        if (realIndex < 0 || realIndex > (int) vertexReferences.size()-1) {
-            throw std::invalid_argument("realToVirtualIndex: no real vertex with this index exists!");
-        }
-        if(!toLeftSide) {
-            return realIndex+vertexReferences.size();
-        }
-        return realIndex;
-    }
-
-    std::vector<int>* getVirtualBipartitionEdges(int virtualIndex)
-    {
-        return {};
-    }
-
-    std::vector<int>* getVirtualFlowEdges(int virtualIndex)
-    {
-        return {};
-    }
-
     bool matchingBFS();
     bool matchingDFS(int u);
     int hopcroftKarpMatchingSize();
     std::pair<int, std::pair<std::vector<int>*, std::vector<int>*>> hopcroftKarpMatching();
-
-    int edmondsKarp()
-    {
-        return -1;
-    }
 
     //------------------------------ Bounds ------------------------------
 

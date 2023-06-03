@@ -16,6 +16,8 @@ using namespace std;
 
 vector<int>* vcVertexBranchingRecursive(BucketGraph* G, int k, int* numRec)
 {
+    //TODO: call data reductions
+
     (*numRec)++;
 	if (k < 0)
     {
@@ -354,15 +356,12 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
             G->printBucketQueue();
         }
 
-        
-
         if(printVC)
         {
             int numRecursiveSteps = 0;
             std::vector<int>* vc = vcSolverRecursive(G, &numRecursiveSteps);
             writeSolutionToConsole(G->getStringsFromVertexIndices(vc));
-//            cout << "#VC SIZE: " << (int) vc->size() << endl;
-//            cout << "#recursive steps: " << numRecursiveSteps << endl;
+            cout << "#recursive steps: " << numRecursiveSteps << endl;
         }
 
         if(printBounds)
@@ -382,7 +381,7 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
         int numRecursiveSteps = 0;
         std::vector<int>* vc = vcSolverRecursive(G, &numRecursiveSteps);
 
-//        reduce();
+        //G->reduce(); //TODO:
         G->printEdgesToConsole();
 
         G->resetLPBoundDataStructures();
