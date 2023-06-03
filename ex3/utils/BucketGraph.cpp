@@ -1018,21 +1018,28 @@ int BucketGraph::bruteForceCalculateNumEdges()
 
 bool BucketGraph::reduce(int* k)
 {
-    RULE_APPLICATION_RESULT highDegreeResult = reductions->rule_HighDegree(this, k);
-    if(highDegreeResult == INSUFFIENT_BUDGET) return true; //cut
-    RULE_APPLICATION_RESULT degreeZeroResult = reductions->rule_DegreeZero(this);
-    if(highDegreeResult == INAPPLICABLE && degreeZeroResult == INAPPLICABLE)
+    while(true)
     {
-        if(reductions->rule_Buss(this, k, getNumVertices(), getNumEdges()) == APPLICABLE)
-            return true;
+        RULE_APPLICATION_RESULT highDegreeResult = reductions->rule_HighDegree(this, k);
+        if(highDegreeResult == INSUFFIENT_BUDGET) return true; //cut
+        RULE_APPLICATION_RESULT degreeZeroResult = reductions->rule_DegreeZero(this);
+        if(highDegreeResult == INAPPLICABLE && degreeZeroResult == INAPPLICABLE)
+        {
+            if(reductions->rule_Buss(this, k, getNumVertices(), getNumEdges()) == APPLICABLE)
+                return true;
+        }
+        //print();
+        RULE_APPLICATION_RESULT degreeOneResult = reductions->rule_DegreeOne(this, k);
+        if(degreeOneResult == INSUFFIENT_BUDGET) return true; //cut
+        //print();
+        
+        //TODO:
+        //bool degreeTwoResult = reductions->rule_DegreeTwo(k);
+        if(highDegreeResult == INAPPLICABLE && degreeZeroResult == INAPPLICABLE && degreeOneResult == INAPPLICABLE) //TODO: add conditions for other rules
+        {
+            return false;
+        }
     }
-    //print();
-    RULE_APPLICATION_RESULT degreeOneResult = reductions->rule_DegreeOne(this, k);
-    if(degreeOneResult == INSUFFIENT_BUDGET) return true; //cut
-    //print();
-    
-    //TODO:
-    //bool degreeTwoResult = reductions->rule_DegreeTwo(k);
     return false;
 }
 
