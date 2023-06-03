@@ -124,15 +124,31 @@ RULE_APPLICATION_RESULT Reductions::rule_LPFlow(BucketGraph* G, int* k)
 /*----------------------------------------------------------*/
 /*------------------   Reduction Rules   -------------------*/
 /*----------------------------------------------------------*/
-//void Reductions::initRuleCounter()
-//{
-//    rule_0 = 0;
-//    rule_1 = 0;
-//    rule_2 = 0;
-//    rule_3 = 0;
-//    rule_4 = 0;
-//    rule_5 = 0;
-//}
+void Reductions::initRuleCounter()
+{
+    rule_0 = 0;
+    rule_1 = 0;
+    rule_2 = 0;
+    rule_High = 0;
+    rule_LPF = 0;
+    rule_Dom = 0;
+}
+
+void Reductions::printCounters()
+{
+    std::string r0 =  "Rule 0 = " + std::to_string(rule_0);
+    std::cout << ColorPrint::dye(r0, 'r') << std::endl ;
+    std::string r1 =  "Rule 1 = " + std::to_string(rule_1);
+    std::cout << ColorPrint::dye(r1, 'r') << std::endl ;
+    std::string r2 =  "Rule 2 = " + std::to_string(rule_2);
+    std::cout << ColorPrint::dye(r2, 'r') << std::endl ;
+    std::string rH =  "Rule High Degree = " + std::to_string(rule_High);
+    std::cout << ColorPrint::dye(rH, 'r') << std::endl ;
+    std::string rD =  "Rule Domination = " + std::to_string(rule_Dom);
+    std::cout << ColorPrint::dye(rD, 'r') << std::endl ;
+    std::string rL =  "Rule LP-Flow = " + std::to_string(rule_LPF);
+    std::cout << ColorPrint::dye(rL, 'r') << std::endl ;
+}
 
 void Reductions::printReductionRules()
 {
@@ -150,16 +166,48 @@ void Reductions::printReductionRules()
         }
         std::cout << ColorPrint::dye(deleteV, 'c') << std::endl ;
 
-        if(reductionR->rule == DEGREE_TWO)
-        {
-            std::string savedAdj = "Saved Adjacency List: ";
-            for (int k = 0; k < (int) std::get<1>(*reductionR->mergeVertexInfo)->size(); ++k)
-            {
-                savedAdj += std::to_string(std::get<1>(*reductionR->mergeVertexInfo)->at(k)) + ", ";
-            }
-            std::cout << ColorPrint::dye(savedAdj, 'c') << std::endl;
+//        if(reductionR->rule == DEGREE_TWO)
+//        {
+//            std::string savedAdj = "Saved Adjacency List: ";
+//            for (int k = 0; k < (int) reductionR->savedAdjacency->size(); ++k)
+//            {
+//                savedAdj += std::to_string(reductionR->savedAdjacency->at(k)) + ", ";
+//            }
+//            std::cout << ColorPrint::dye(savedAdj, 'c') << std::endl;
+//        }
+//        std::cout << std::endl;
+    }
+
+}
+
+void Reductions::printDominationSets()
+{
+    if(!isThereDomination) return;
+
+    bool printDebug = true;
+
+    int cnt = 0;
+
+    // Take first out of sorted Dominator
+    std::vector<int>* dominationSet;
+    int maxSubsetIdx = (int)dominationSets->size();
+    std::cout << "There are " << maxSubsetIdx << " dominators" << std::endl;
+
+    while(cnt < maxSubsetIdx) {
+        dominationSet = dominationSets->at(cnt);
+
+        std::string enterPrint = "Domination Nr: " + std::to_string(cnt + 1);
+        enterPrint += " of Vertex " + std::to_string(dominationSet->back());
+        std::cout << ColorPrint::dye(enterPrint, 'r') << std::endl;
+
+        std::cout << "It dominates " << (int) dominationSet->size()-1 << std::endl;
+        std::string iterPrint;
+        for (int i = 0; i < (int) dominationSet->size() - 1; ++i) {
+//            std::cout << i  << ", ";
+            iterPrint += std::to_string(dominationSet->at(i)) + ", ";
         }
-        std::cout << std::endl;
+        std::cout << ColorPrint::dye(iterPrint, 'c') << std::endl;
+        cnt++;
     }
 }
 
@@ -206,5 +254,312 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeTwo(BucketGraph* G, int* k)
         }
         appliedRules->push_back(delVer);
     }
+    return APPLICABLE;
+}
+
+bool Reductions::isDominated(BucketGraph* G, int dom, bool printDebug)
+{
+    if (printDebug)
+    {
+        std::string enterPrint =  "For neighbour: " + std::to_string(dom);
+        std::cout << ColorPrint::dye(enterPrint, 'r') << std::endl ;
+    }
+
+    std::vector<int> * neighbour = G->getNeighbours(dom);
+
+    for (int i = 0; i < (int) neighbour->size(); ++i) {
+        int n = neighbour->at(i);
+        if(G->dominationHelper->at(n) == 0)
+        {
+            if (printDebug)
+            {
+                std::string notNeig =  "No subset because of " + std::to_string(n);
+                std::cout << ColorPrint::dye(notNeig, 'c') << std::endl ;
+            }
+            return false;
+        }
+    }
+    return true;
+}
+
+void Reductions::initDominationVector(BucketGraph *G)
+{
+    int cnt = 0;
+
+
+    int maxDeg = G->getMaxDegree();
+    if(maxDeg < 3)
+    {
+        isThereDomination = false;
+        return;
+    }
+
+    while(maxDeg > 2) {
+
+        list<BucketVertex>* degDom = G->getVerticesOfDegree(maxDeg);
+
+        if( degDom->empty()) {
+            maxDeg--;
+            continue;
+        }
+
+        // Go through all vertices of degree Bucket
+        for(auto it = degDom->begin(); it != degDom->end(); it++)
+        {
+            std::vector<int>* curSubsets = new std::vector<int>();
+            int v = it->index;
+
+            // Get neighbours
+            std::vector<int>* neighbours = G->getNeighbours(v);
+
+            // Set flags to neighbours O(deg(v))
+            G->dominationHelper->at(v) = 1;
+            for (int i = 0; i < (int) neighbours->size(); ++i) {
+                G->dominationHelper->at(neighbours->at(i)) = 1;
+            }
+
+            // Check if v has one neighbour that is dominated by it
+            for (int i = 0; i < (int) neighbours->size(); ++i) {
+                // Cannot be dominated
+                if(G->getVertexDegree(neighbours->at(i)) > maxDeg) {
+                    continue;
+                }
+                if (isDominated(G, neighbours->at(i), false)){
+                    curSubsets->push_back(neighbours->at(i));
+                    cnt++;
+                }
+            }
+
+            // Reset flags from neighbours
+            G->dominationHelper->at(v) = 0;
+            for (int i = 0; i < (int) neighbours->size(); ++i) {
+                G->dominationHelper->at(neighbours->at(i)) = 0;
+            }
+            // Put the dominant Vertex at the end
+            if(!curSubsets->empty()) {
+                curSubsets->push_back(v);
+                dominationSets->push_back(curSubsets);
+            }
+        }
+
+        maxDeg--;
+    }
+
+//    std::sort(dominationSets->begin(), dominationSets->end(), [](const std::vector<int>* a, const std::vector<int>* b){ return a->size() < b->size(); });
+
+    if(cnt == 0)
+        isThereDomination = false;
+    else
+        isThereDomination = true;
+}
+
+RULE_APPLICATION_RESULT Reductions::rule_Domination(BucketGraph* G, int* k)
+{
+    bool printDebug = false;
+    bool enterDebug = false;
+    if(enterDebug){
+        std::string enterPrint = "IN DOMINATION RULE";
+        std::cout << ColorPrint::dye(enterPrint, 'y') << std::endl ;
+        std::cout << std::endl;
+    }
+
+    int cnt = 0;
+    int del = 0;
+
+    int maxDeg = G->getMaxDegree();
+    if(maxDeg < 3)
+        return INAPPLICABLE;
+
+    Reduction* reduction = new Reduction(RULE::DOMINATION, 0, nullptr, new std::vector<int>());
+
+    //
+    while(maxDeg > 2) {
+        if(*k == 0) return INSUFFICIENT_BUDGET; //cannot delete more vertices, no possible vertex cover exists
+
+        if (printDebug)
+        {
+            std::string enterPrint =  "Treating Domination Rule with Degree: " + std::to_string(maxDeg);
+            std::cout << ColorPrint::dye(enterPrint, 'r') << std::endl ;
+            G->printBucketQueue();
+            std::cout << std::endl;
+        }
+
+        list<BucketVertex>* degDom = G->getVerticesOfDegree(maxDeg);
+
+        if( degDom->empty()) {
+            maxDeg--;
+            continue;
+        }
+
+        // Go through all vertices of degree Bucket
+        for(auto it = degDom->begin(); it != degDom->end(); it++)
+        {
+            int v = it->index;
+            if (printDebug)
+            {
+                std::string enterPrint =  "For Vertex : " + std::to_string(v);
+                std::cout << ColorPrint::dye(enterPrint, 'y') << std::endl ;
+            }
+
+            // Get neighbours
+            std::vector<int>* neighbours = G->getNeighbours(v);
+
+            // Set flags to neighbours O(deg(v))
+            G->dominationHelper->at(v) = 1;
+            for (int i = 0; i < (int) neighbours->size(); ++i) {
+                G->dominationHelper->at(neighbours->at(i)) = 1;
+            }
+
+            // Check if v has one neighbour that is dominated by it
+            for (int i = 0; i < (int) neighbours->size(); ++i) {
+                // Cannot be dominated
+                if(G->getVertexDegree(neighbours->at(i)) > maxDeg) {
+                    continue;
+                }
+                if (isDominated(G, neighbours->at(i), printDebug)){
+                    if (printDebug)
+                    {
+                        std::string appliedOn = "Vertex " + std::to_string(v) + " dominates "+ std::to_string(neighbours->at(i)) + " of size "+ std::to_string(G->getVertexDegree(neighbours->at(i)));
+                        std::cout << ColorPrint::dye(appliedOn, 'c') << std::endl ;
+                        std::cout << std::endl;
+                    }
+                    reduction->kDecrement++;
+                    reduction->deletedVCVertices->push_back(v);
+                    (*k) = (*k) - 1;
+//                    G->setInactive(v);
+                    cnt++;
+                    break;
+                }
+                else{
+                    if (printDebug)
+                    {
+                        std::string notappl = "Not Applied";
+                        std::cout << ColorPrint::dye(notappl, 'c') << std::endl ;
+                        std::cout << std::endl;
+                    }
+                }
+            }
+
+            // Reset flags from neighbours
+            G->dominationHelper->at(v) = 0;
+            for (int i = 0; i < (int) neighbours->size(); ++i) {
+                G->dominationHelper->at(neighbours->at(i)) = 0;
+            }
+        }
+
+        // Currently setting Inactive here because of looping through the buckets
+        // because it will corrupt the buckets pointer
+        for (int i = del; i < cnt; ++i) {
+            G->setInactive(reduction->deletedVCVertices->at(i));
+        }
+        del = cnt;
+        maxDeg--;
+    }
+
+    rule_Dom += reduction->kDecrement;
+    appliedRules->push_back(reduction);
+
+    if(enterDebug){
+        std::string cntapp = "DOMINATION RULE APPLIED " + std::to_string(reduction->kDecrement);
+        std::cout << ColorPrint::dye(cntapp, 'p') << std::endl ;
+        std::cout << std::endl;
+    }
+
+    if(cnt == 0)
+        return INAPPLICABLE;
+    return APPLICABLE;
+}
+
+RULE_APPLICATION_RESULT Reductions::rule_DominationMitInit(BucketGraph* G, int* k)
+{
+    if(!isThereDomination) return INAPPLICABLE;
+
+    bool printDebug = false;
+    bool enterDebug = false;
+
+    if(enterDebug){
+        std::string enterPrint = "IN DOMINATION RULE";
+        std::cout << ColorPrint::dye(enterPrint, 'y') << std::endl ;
+        std::cout << std::endl;
+    }
+
+    int cnt = 0;
+    int del = 0;
+
+    // Take first out of sorted Dominator
+    std::vector<int>* dominationSet;
+    int maxSubsetIdx = (int)dominationSets->size() -1;
+    int maxDeg = G->getVertexDegree(dominationSets->at(0)->back());
+    if(maxDeg < 3)
+        return INAPPLICABLE;
+
+    Reduction* reduction = new Reduction(RULE::DOMINATION, 0, nullptr, new std::vector<int>());
+
+    if (printDebug)
+    {
+        std::string domPrint =  "There are " + std::to_string(maxSubsetIdx) + " dominators";
+        std::cout << ColorPrint::dye(domPrint, 'c') << std::endl ;
+    }
+
+    while(cnt < maxSubsetIdx)
+    {
+        if(*k == 0) return INSUFFICIENT_BUDGET; //cannot delete more vertices, no possible vertex cover exists
+
+        // if current Vertex inactive
+        if(!G->isActive(dominationSets->at(cnt)->back()))
+        {
+//            std::cout << "Am I here breaking?" << std::endl ;
+            cnt++;
+            continue;
+        }
+
+        dominationSet = dominationSets->at(cnt);
+        int dominatorIdx = dominationSet->back();
+
+        if (printDebug)
+        {
+            std::string enterPrint =  "Domination Nr: " + std::to_string(cnt+1);
+            enterPrint += " of Vertex " + std::to_string(dominatorIdx);
+            std::cout << ColorPrint::dye(enterPrint, 'r') << std::endl ;
+        }
+
+
+        std::string iterPrint;
+        for (int i = 0; i < (int) dominationSet->size() - 1; ++i) {
+
+            iterPrint +=  std::to_string(dominationSet->at(i)) + ", ";
+
+
+            if(G->isActive(dominationSet->at(i)) && G->getVertexDegree(dominationSet->at(i)) > 0)
+            {
+//                std::cout << "Am I here?" << std::endl ;
+                reduction->kDecrement++;
+                reduction->deletedVCVertices->push_back(dominatorIdx);
+                (*k) = (*k) - 1;
+                G->setInactive(dominatorIdx);
+//                G->printBucketQueue();
+//                G->print();
+            }
+            else
+            {
+//                std::cout << "Or There ?" << std::endl ;
+                continue;
+            }
+            if (printDebug)
+            {
+                std::cout << ColorPrint::dye(iterPrint, 'r') << std::endl ;
+            }
+            break;
+
+        }
+//        std::cout << "Am I here though?" << std::endl ;
+        cnt++;
+    }
+
+    rule_Dom += reduction->kDecrement;
+    appliedRules->push_back(reduction);
+
+    if(rule_Dom == 0)
+        return INAPPLICABLE;
     return APPLICABLE;
 }

@@ -111,6 +111,9 @@ public:
 class BucketGraph
 {
 //variables
+public:
+    // Size n
+    std::vector<int>* dominationHelper;
 private:
     /* each index represents a vertex, that maps to a node object that may be contained in the activeList */
     std::vector<Vertex*> vertexReferences;
@@ -209,6 +212,8 @@ public:
     int hopcroftKarpMatchingSize();
     int edmondsKarpFlow();
 
+    //----------------------- Domination Rule ------------------------------------
+    bool isActive(int vertexIndex){ return vertexReferences[vertexIndex]->isActive;};
 private:
 
     //------------------------ Graph Construction ------------------------
@@ -223,6 +228,7 @@ private:
     void initMatching();
     bool isAdjMapConsistent();
 
+    void initDominationHelper(){dominationHelper = new std::vector<int> (getNumVertices(), 0);};
     //-------------------------- Graph Utility --------------------------
 
     int bruteForceCalculateNumEdges();

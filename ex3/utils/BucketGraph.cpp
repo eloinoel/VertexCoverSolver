@@ -134,6 +134,10 @@ BucketGraph* BucketGraph::readStandardInput()
     G->initBucketQueue(); // initialise bucket queue
     G->initMatching(); // LP Bound matching fields
     G->reductions = new Reductions();
+
+    G->initDominationHelper(); // Domination
+//    G->reductions->initDominationVector(G);
+//    G->reductions->printDominationSets();
     return G;
 }
 
@@ -1074,13 +1078,17 @@ bool BucketGraph::reduce(int* k)
         }
         RULE_APPLICATION_RESULT degreeOneResult = reductions->rule_DegreeOne(this, k);
         if(degreeOneResult == INSUFFICIENT_BUDGET) return true; //cut
-        
+
+        //        RULE_APPLICATION_RESULT dominationResult = reductions->rule_Domination(this, k);
+//        RULE_APPLICATION_RESULT dominationResult = reductions->rule_DominationMitInit(this, k);
+        RULE_APPLICATION_RESULT dominationResult = INAPPLICABLE;
+
         //TODO: debug merge 
         /* print();
         RULE_APPLICATION_RESULT degreeTwoResult = reductions->rule_DegreeTwo(this, k);
         print(); */
         RULE_APPLICATION_RESULT degreeTwoResult = INAPPLICABLE;
-        if(highDegreeResult == INAPPLICABLE && degreeZeroResult == INAPPLICABLE && degreeOneResult == INAPPLICABLE && degreeTwoResult == INAPPLICABLE) //TODO: add conditions for other rules
+        if(highDegreeResult == INAPPLICABLE && degreeZeroResult == INAPPLICABLE && degreeOneResult == INAPPLICABLE && degreeTwoResult == INAPPLICABLE && dominationResult == INAPPLICABLE) //TODO: add conditions for other rules
         {
             return false;
         }
@@ -1162,7 +1170,12 @@ void BucketGraph::unreduce(int* k, int previousK, std::unordered_map<int, bool>*
                 }
                 break;
             case DOMINATION:
-                //TODO:
+//                *k = *k + rule->kDecrement;
+//                setActive(rule->deletedVCVertices);
+//                if(vc != nullptr)
+//                {
+//                    vc->insert(vc->end(), rule->deletedVCVertices->begin(), rule->deletedVCVertices->end());
+//                }
                 break;
             case LPFLOW:
                 *k = *k + rule->kDecrement;

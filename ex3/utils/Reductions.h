@@ -52,19 +52,30 @@ public:
 class Reductions
 {
 public:
-    //int rule_0 , rule_1, rule_2 , rule_3,  rule_4, rule_5;
+    public:
+    int rule_0 , rule_1, rule_2 , rule_High,  rule_Dom, rule_LPF, rule_B;
+
+    // TODO: eventually set it to false once no dominating vertex is active
+    bool isThereDomination;
 
     std::vector<Reduction*>* appliedRules;
+    std::vector<std::vector<int>*>* dominationSets;
 
     Reductions()
     {
         appliedRules = new std::vector<Reduction*>();
+        dominationSets = new std::vector<std::vector<int>*>();
     }
 
 public:
-//    void initRuleCounter();
+
+    bool isDominated(BucketGraph* G, int dom , bool printDebug);
+    void initRuleCounter();
+    void initDominationVector(BucketGraph* G);
 
     void printReductionRules();
+    void printCounters();
+    void printDominationSets();
 
     //rules return true if they were applicable
     RULE_APPLICATION_RESULT rule_HighDegree(BucketGraph* G, int* k);
@@ -76,6 +87,8 @@ public:
     RULE_APPLICATION_RESULT rule_DegreeTwo(BucketGraph* G, int* k);
 
     RULE_APPLICATION_RESULT rule_LPFlow(BucketGraph* G, int* k);
+    RULE_APPLICATION_RESULT rule_Domination(BucketGraph* G, int* k);
+    RULE_APPLICATION_RESULT rule_DominationMitInit(BucketGraph* G, int* k);
 };
 
 #endif
