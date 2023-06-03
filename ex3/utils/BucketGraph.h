@@ -202,6 +202,10 @@ public:
     void unmerge(Reduction* mergeRule);
 
     void getBipartMatchingFlowComponents(std::vector<int>* L, std::vector<int>* R);
+    void setBipartMatchingFlowComponentsInactive(std::vector<int>* L, std::vector<int>* R);
+    void setBipartMatchingFlowComponentsInactiveRecursive(std::vector<int>* L, std::vector<int>* R);
+    bool getFlowComponent(int current, int target, std::vector<bool>* visited, std::vector<bool>* valid, std::vector<int>* componentL, std::vector<int>* componentR);
+    int hopcroftKarpMatchingSize();
     int edmondsKarpFlow();
 
 private:
@@ -240,7 +244,6 @@ private:
 
     bool matchingBFS();
     bool matchingDFS(int u);
-    int hopcroftKarpMatchingSize();
     std::pair<int, std::pair<std::vector<int>*, std::vector<int>*>> hopcroftKarpMatching();
 
     //------------------------------ Bounds ------------------------------

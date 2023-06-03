@@ -3,6 +3,7 @@
 #include "boost/intrusive/list.hpp"
 #include "BucketGraph.h"
 #include <iostream>
+#include <chrono>
 
 using namespace boost::intrusive;
 
@@ -17,7 +18,7 @@ RULE_APPLICATION_RESULT Reductions::rule_HighDegree(BucketGraph* G, int* k)
     //delete vertices that have to be in the vertex cover
     while(G->getMaxDegree() > *k)
     {
-        if(*k == 0) return INSUFFIENT_BUDGET; //cannot delete more vertices, no possible vertex cover exists
+        if(*k == 0) return INSUFFICIENT_BUDGET; //cannot delete more vertices, no possible vertex cover exists
         int maxDegVertex = G->getMaxDegreeVertex();
         reduction->kDecrement++;
         reduction->deletedVCVertices->push_back(maxDegVertex);
@@ -49,7 +50,6 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeZero(BucketGraph* G)
         //std::cout << first->index << ", ";
     }
     //std::cout << "}" << std::endl;
-    //G->print();
     return APPLICABLE;
 }
 
@@ -58,7 +58,7 @@ RULE_APPLICATION_RESULT Reductions::rule_Buss(BucketGraph* G, int* k, int numVer
     int k_square = std::pow((*k), 2);
 
     if((numVertices > k_square + *k) || (numEdges > k_square))
-        return INSUFFIENT_BUDGET;
+        return INSUFFICIENT_BUDGET;
     return INAPPLICABLE;
 }
 
@@ -74,7 +74,7 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeOne(BucketGraph* G, int* k)
     //std::cout << "DEGONE Culling vertices: {";
     while(!degOneBucket->empty())
     {
-        if(*k == 0) return INSUFFIENT_BUDGET; //cannot delete more vertices, no possible vertex cover exists
+        if(*k == 0) return INSUFFICIENT_BUDGET; //cannot delete more vertices, no possible vertex cover exists
         auto it = degOneBucket->begin();
         int neighbourToDelete = G->getNthActiveNeighbour(it->index, 0);
         reduction->deletedVCVertices->push_back(neighbourToDelete);
@@ -91,23 +91,34 @@ RULE_APPLICATION_RESULT Reductions::rule_LPFlow(BucketGraph* G, int* k)
 {
     std::vector<int>* delVertices = new std::vector<int>();
     std::vector<int>* delVCVertices = new std::vector<int>();
-
+    G->hopcroftKarpMatchingSize();
+    //std::cout << "LPFlow" << std::endl;
+    //auto start = std::chrono::high_resolution_clock::now();
     G->edmondsKarpFlow();
-    G->getBipartMatchingFlowComponents(delVertices, delVCVertices);
-    if((int) delVCVertices->size() > *k)
-    {
-        return INSUFFIENT_BUDGET;
-    }
-    if((int) delVCVertices->size() == 0 && (int) delVertices->size() == 0)
-    {
-        return INAPPLICABLE;
-    }
-    G->setInactive(delVertices);
-    G->setInactive(delVCVertices);
+    //std::cout << "executed edmondsKarp" << std::endl;
+    //auto start = std::chrono::high_resolution_clock::now();
+    G->setBipartMatchingFlowComponentsInactive(delVertices, delVCVertices);
+    //auto stop = std::chrono::high_resolution_clock::now();
+    //std::cout << "Computed flow reduction with vc_verts=" << delVCVertices->size() << ", verts=" << delVertices->size() << " in " << (std::chrono::duration_cast<std::chrono::microseconds>(stop - start).count() / 1000) / (double) 1000 << " seconds" << std::endl;
+    //std::cout << "determined strongly connected components" << std::endl;
     Reduction* reduction = new Reduction(RULE::LPFLOW, delVCVertices->size(), delVertices, delVCVertices);
     appliedRules->push_back(reduction);
-    *k = *k - delVCVertices->size();
-    return APPLICABLE;
+    if((int) delVCVertices->size() == 0 && (int) delVertices->size() == 0)
+    {
+        //std::cout << "LPFlow: INAPPLICABLE" << std::endl;
+        appliedRules->pop_back();
+        return INAPPLICABLE;
+    }
+    if((int) delVCVertices->size() > *k)
+    {
+        //std::cout << "LPFlow: INSUFFICENT_BUDGET" << std::endl;
+        /* G->setActive(delVertices);
+        G->setActive(delVCVertices); */
+        appliedRules->pop_back();
+        return INSUFFICIENT_BUDGET;
+    }
+    *k = *k - delVCVertices->size();    // TODO: im getting core dumps, when restoring
+    return APPLICABLE;                  // it should be correct to set vertices back to active, but this doesnt work
 }
 
 /*----------------------------------------------------------*/
@@ -160,7 +171,7 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeTwo(BucketGraph* G, int* k)
 
     while(!degTwoBucket->empty())
     {
-        if(*k == 0) return INSUFFIENT_BUDGET; //cannot delete more vertices, no possible vertex cover exists
+        if(*k == 0) return INSUFFICIENT_BUDGET; //cannot delete more vertices, no possible vertex cover exists
 
         auto it = degTwoBucket->begin();
         std::pair<int, int>* neighbours = G->getFirstTwoActiveNeighbours(it->index); //should always return valid vertices

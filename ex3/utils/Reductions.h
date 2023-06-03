@@ -18,7 +18,7 @@ enum RULE_APPLICATION_RESULT
 {
     INAPPLICABLE,
     APPLICABLE,
-    INSUFFIENT_BUDGET //k doesn't allow for more vertex deletions -> no possible vertex cover of size k
+    INSUFFICIENT_BUDGET //k doesn't allow for more vertex deletions -> no possible vertex cover of size k
 };
 
 class BucketGraph;
