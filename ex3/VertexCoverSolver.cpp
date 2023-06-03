@@ -86,7 +86,7 @@ vector<int>* vcVertexBranchingRecursive(BucketGraph* G, int k, int* numRec)
         return nullptr;
     }
 
-    //cout << "deleting neighbours of vertex " << vertex << ": ";
+    //cout << "deleting neighbourhood of vertex " << vertex << ": ";
     vector<int>* neighbours = G->getNeighbours(vertex);
     /* for(int i = 0; i < (int) neighbours->size(); i++)
     {
@@ -113,7 +113,12 @@ vector<int>* vcVertexBranchingRecursive(BucketGraph* G, int k, int* numRec)
 		G->setActive(neighbours);
         G->unreduce(&k, previousK);
 	}
-    cout << "restoring neighbourhood of vertex: " << vertex << endl;
+    /* cout << "restoring neighbourhood of vertex " << vertex << ": ";
+    for(int i = 0; i < (int) neighbours->size(); i++)
+    {
+        cout << neighbours->at(i) << ", ";
+    }
+    cout << endl; */
 
     G->unreduce(&k, previousK);
     return nullptr;

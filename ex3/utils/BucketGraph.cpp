@@ -1001,19 +1001,21 @@ int BucketGraph::bruteForceCalculateNumEdges()
 
 bool BucketGraph::reduce(int* k)
 {
-    RULE_APPLICATION_RESULT highDegreeResult = reductions->rule_HighDegree(this, k);
-    if(highDegreeResult == INSUFFIENT_BUDGET) return true; //cut
+    /* RULE_APPLICATION_RESULT highDegreeResult = reductions->rule_HighDegree(this, k);
+    if(highDegreeResult == INSUFFICIENT_BUDGET) return true; //cut
     RULE_APPLICATION_RESULT degreeZeroResult = reductions->rule_DegreeZero(this);
     if(highDegreeResult == INAPPLICABLE && degreeZeroResult == INAPPLICABLE)
     {
         if(reductions->rule_Buss(this, k, getNumVertices(), getNumEdges()) == APPLICABLE)
             return true;
-    }
-    RULE_APPLICATION_RESULT degreeOneResult = reductions->rule_DegreeOne(this, k);
-    if(degreeOneResult == INSUFFIENT_BUDGET) return true; //cut
-    
+    } */
+    /* RULE_APPLICATION_RESULT degreeOneResult = reductions->rule_DegreeOne(this, k);
+    if(degreeOneResult == INSUFFICIENT_BUDGET) return true; */ //cut
     //TODO:
     //bool degreeTwoResult = reductions->rule_DegreeTwo(k);
+
+    RULE_APPLICATION_RESULT LPFlowResult = reductions->rule_LPFlow(this, k);
+    if(LPFlowResult == INSUFFICIENT_BUDGET) return true;
     return false;
 }
 
@@ -1356,7 +1358,7 @@ int BucketGraph::edmondsKarpFlow()
 
                     pairU[p] = NIL;
                     pairV[pred[p]-nv] = NIL;
-                    std::cout << "-" << "(" << p << ", " << pred[p]-nv << ") ";
+                    //std::cout << "-" << "(" << p << ", " << pred[p]-nv << ") ";
                 }
                 // using forward edge
                 else
@@ -1366,11 +1368,11 @@ int BucketGraph::edmondsKarpFlow()
 
                     pairU[pred[p]] = p-nv;
                     pairV[p-nv] = pred[p];
-                    std::cout << "+" << "(" << pred[p] << ", " << p-nv << ") ";
+                    //std::cout << "+" << "(" << pred[p] << ", " << p-nv << ") ";
                 }
             }
-            std::cout << std::endl;
-            printMatching();
+            /* std::cout << std::endl;
+            printMatching(); */
             flow_amt++;
             //std::cout << "Processed flow-improving path" << std::endl;
         }
@@ -1420,28 +1422,179 @@ void BucketGraph::getBipartMatchingFlowComponents(std::vector<int>* L, std::vect
         }
         if(isNotComp) { continue; }
         // found component
-        // TODO: iterate through componentL and calc component right vertices
-        //std::cout << "Components left vertices: {";
+        // iteration through componentL to calc component right vertices
         for (int j=0; j<(int) componentL.size(); j++)
         {
-            //std::cout << componentL[j] << ", ";
             L->push_back(componentL[j]);
             for (auto v=vertexReferences[componentL[j]]->adj->begin(); v != vertexReferences[componentL[j]]->adj->end(); ++v)
             {
                 R->push_back(*v);
             }
         }
-        //std::cout << "}" << std::endl;
-        //std::cout << "Components right vertices: {";
-        /* for (int j=0; j<(int) componentL.size(); j++)
+    }
+}
+
+void BucketGraph::setBipartMatchingFlowComponentsInactive(std::vector<int>* L, std::vector<int>* R)
+{
+    std::stack<int> S = std::stack<int>();
+    std::vector<bool> visited = std::vector<bool>(pairU.size());
+    bool isNotComp = false;
+    std::cout << "Searching for sources: 0-" << pairU.size()-1 << std::endl;
+    // for each possible connected component (We exclude degree 0 connected components here)
+    for (int i=0; i<(int) pairU.size(); i++)
+    {
+        std::cout << "Setting up for search from source: " << i << std::endl;
+        if (!vertexReferences[i]->isActive || pairU[i] == NIL/* this culls deg=0 rule */) { continue; }
+        for(int j=0; j<(int) visited.size(); j++) { visited[j] = false; }
+        while(!S.empty()) { S.pop(); }
+        isNotComp = false;
+        S.push(i);
+        std::vector<int> componentL = std::vector<int>();
+        std::vector<int> componentR = std::vector<int>();
+        std::cout << "Started search from source: " << i << std::endl;
+        // until component is closed
+        while (!S.empty())
         {
-            for (auto v=vertexReferences[componentL[j]]->adj->begin(); v != vertexReferences[componentL[j]]->adj->end(); ++v)
+            int current = S.top();
+            std::cout << "Popped: " << current << " from stack" << std::endl;
+            if (!vertexReferences[current]->isActive) { isNotComp = true; break; } // TODO:
+            // add vertex to component, if visited
+            if(visited[current])
             {
-                std::cout << *v << ", ";
+                std::cout << "Traversing back up from: " << current << std::endl;
+                S.pop();
+                continue;
             }
-        } */
-        //std::cout << "}" << std::endl;
-        // TODO: delete vertices from graph via Reductions for  E F F I C I E N C Y
+
+            // expand node
+            isNotComp = true;
+            visited[current] = true;
+            std::cout << "Expanding: " << current << std::endl;
+            for (auto v=vertexReferences[current]->adj->begin(); v != vertexReferences[current]->adj->end(); ++v)
+            {
+                // We skip inactive vertices and the matched right vertex and vertices of which we already visited their left matched vertex
+                if(!vertexReferences[*v]->isActive) { continue; }
+                // if we find an unmatched right vertex, abort immediately (This cannot be a component)
+                if(pairV[*v] == NIL || !vertexReferences[pairV[*v]]->isActive) {
+                    std::cout << "Current: " << current << " has no left matched vertex." << std::endl;
+                    isNotComp = true; break;
+                }
+                if(i == pairV[*v]) { isNotComp = false; continue; }
+                // We skip the matched right vertex and vertices of which we already visited their left matched vertex
+                if(current == pairV[*v] || visited[*v] || visited[pairV[*v]]) { continue; }
+                // push next left vertex
+                S.push(pairV[*v]);
+                isNotComp = false;
+                std::cout << "Pushing neighbour: " << pairV[*v] << " from matching (" << pairV[*v] << ", " << *v <<")" << " to stack" << std::endl;
+            }
+            if(isNotComp) {
+                std::cout << "Current: " << current << " has no successor vertex." << std::endl;
+                break;
+            }
+
+            //std::cout << "Adding " << current << " and: " << pairU[current] << " into the solution" << std::endl;
+            componentL.push_back(current);
+            componentR.push_back(pairU[current]);
+        }
+        //std::cout << "Checking if component was found" << std::endl;
+        if(isNotComp) { continue; }
+        // found component
+        // iterate through componentL and calc component right vertices
+        std::cout << "Found component: {";
+        for (int j=0; j<(int) componentL.size(); j++)
+        {
+            //if(!vertexReferences[componentL[j]]->isActive) { continue; }    // TODO: to cull duplicates
+            std::cout << componentL[j] << ", " << std::endl;
+            setInactive(componentL[j]);
+            L->push_back(componentL[j]);
+        }
+        std::cout << "} / ";
+        std::cout << "{";
+        for (int j=0; j<(int) componentR.size(); j++)
+        {
+            //if(!vertexReferences[componentR[j]]->isActive) { continue; }    // TODO: to cull duplicates
+            std::cout << componentR[j] << ", " << std::endl;
+            setInactive(componentR[j]);
+            R->push_back(componentR[j]);
+        }
+        std::cout << "}" << std::endl;
+    }
+}
+
+bool BucketGraph::getFlowComponent(int current, int target, std::vector<bool>* visited, std::vector<bool>* valid, std::vector<int>* componentL, std::vector<int>* componentR)
+{
+    // expand node
+    std::cout << "Expanding: " << current << " with visited=" << visited->at(current) << std::endl;
+    //if((int) vertexReferences[current]->adj->size()==0) { (*valid)[current] = false; return false; }
+    bool foundTarget = false;
+    (*visited)[current] = true;
+    for (auto v=vertexReferences[current]->adj->begin(); v != vertexReferences[current]->adj->end(); ++v)
+    {
+        //std::cout << "Is current:  " << current << " neighbour: " << pairV[*v] << " eligible for evaluation?" << std::endl;
+        // We skip inactive vertices and the matched right vertex and vertices of which we already visited their left matched vertex
+        if(!vertexReferences[*v]->isActive) { continue; }
+        // if we find an unmatched right vertex, abort immediately (This cannot be a component)
+        if(pairV[*v] == NIL || !vertexReferences[pairV[*v]]->isActive || !(*valid)[pairV[*v]]) { (*valid)[current] = false; return false; }
+        // We skip the matched right vertex and vertices of which we already visited their left matched vertex
+        if(current == pairV[*v] || visited->at(pairV[*v])) { continue; }
+        if(target == pairV[*v]) { foundTarget = true; continue; }
+        std::cout << "Checking current: " << current << " neighbour: " << pairV[*v] << std::endl;
+        //if(valid->at(pairV[*v])) { return true; }
+        // push next left vertex
+        //foundTarget = true;
+        if(!getFlowComponent(pairV[*v], target, visited, valid, componentL, componentR))
+        {
+            std::cout << "Current: " << current << " neighbour: " << pairV[*v] << " is invalid!" << std::endl;
+            (*valid)[current] = false;
+            return false;
+        }
+        foundTarget = true;
+        std::cout << "Current: " << current << " neighbour: " << pairV[*v] << " is valid!" << std::endl;
+    }
+    if(!foundTarget) { (*valid)[current] = false; return false; }
+    std::cout << current << " is valid. Traversing up." << std::endl;
+    componentL->push_back(current);
+    componentR->push_back(current);
+    (*valid)[current] = true;
+    return true;
+}
+
+void BucketGraph::setBipartMatchingFlowComponentsInactiveRecursive(std::vector<int>* L, std::vector<int>* R)
+{
+    std::vector<bool>* valid = new std::vector<bool>(pairU.size());
+    std::vector<bool>* visited = new std::vector<bool>(pairU.size());
+    //std::cout << "Searching for sources: 0-" << pairU.size()-1 << std::endl;
+    // for each possible connected component (We exclude degree 0 connected components here)
+    for (int i=0; i<(int) pairU.size(); i++)
+    {
+        std::cout << "Setting up for search from source: " << i << std::endl;
+        if (!vertexReferences[i]->isActive || pairU[i] == NIL/* this culls deg=0 rule */) { continue; }
+        for(int j=0; j<(int) valid->size(); j++) { (*valid)[j] = true; (*visited)[j] = false; }
+        std::vector<int>* componentL = new std::vector<int>();
+        std::vector<int>* componentR = new std::vector<int>();
+
+
+        if(!getFlowComponent(i, i, visited, valid, componentL, componentR)) { continue; }
+        // found component
+        // iterate through componentL and calc component right vertices
+        std::cout << "Found component: {";
+        for (int j=0; j<(int) componentL->size(); j++)
+        {
+            //if(!vertexReferences[componentL->at(j)]->isActive) { continue; }    // TODO: to cull duplicates
+            setInactive(componentL->at(j));
+            L->push_back(componentL->at(j));
+            std::cout << componentL->at(j) << ", " << std::endl;
+        }
+        std::cout << "} / ";
+        std::cout << "{";
+        for (int j=0; j<(int) componentR->size(); j++)
+        {
+            //if(!vertexReferences[componentR->at(j)]->isActive) { continue; }    // TODO: to cull duplicates
+            setInactive(componentR->at(j));
+            R->push_back(componentR->at(j));
+            std::cout << componentR->at(j) << ", " << std::endl;
+        }
+        std::cout << "}" << std::endl;
     }
 }
 
