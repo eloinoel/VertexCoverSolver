@@ -51,21 +51,12 @@ public:
 class Reductions
 {
 public:
-    Reductions(BucketGraph* _G){G = _G;
-        initRuleCounter();
-    };
-
-    BucketGraph* G;
     std::vector<Reduction*>* appliedRules;
 
-    int rule_0;
-    int rule_1;
-    int rule_2;
-    int rule_3;
-    int rule_4;
-    int rule_5;
-
-//    bool printDebug;
+    Reductions()
+    {
+        appliedRules = new std::vector<Reduction*>();
+    }
 
 public:
     //rules return true if they were applicable
@@ -81,38 +72,6 @@ public:
     RULE_APPLICATION_RESULT rule_DegreeTwo(int* k);
 
     RULE_APPLICATION_RESULT rule_LPFlow(BucketGraph* G, int* k);
-
-    // return bool indicating if no vertex cover possible
-//    bool applyReductionRules(int* k, std::vector<ReductionVertices>* reductionArray, bool printDebug);
-
-    // Adds the deleted vertices from the reduction rules to the vertex cover
-    void addReducedVertices(std::vector<int>* S, bool printDebug);
-
-    // Restores the initial kernel problem
-    void addBackReducedVertices(int *k, bool printDebug);
-
-    void initRuleCounter();
-
-    void printReductionRules();
-
-    bool rule_DegreeTwo(int* k);
-
-    int size(){return (int)appliedRules->size();};
-
-    //------------------------ Reduction Rules -----------------------
-    //================================================================
-    bool rule_HighDegree(int *k, bool printDebug);
-    bool rule_DegreeZero(bool printDebug);
-
-    bool rule_Buss(int* k, bool printDebug);
-
-    void rule_DegreeOne(int* k, bool printDebug);
-//    void rule_DegreeTwo(int* k, std::vector<ReductionVertices>* reductionArray, bool printDebug);
-//    void rule_Domination(int* k, std::vector<ReductionVertices>* reductionArray, bool printDebug);
-    //===============================================================
-
 };
-
-bool reduce(int* k, Reductions* reductions);
 
 #endif

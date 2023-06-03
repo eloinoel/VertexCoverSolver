@@ -1015,7 +1015,64 @@ bool BucketGraph::reduce(int* k)
     //TODO:
     //bool degreeTwoResult = reductions->rule_DegreeTwo(k);
     return false;
+}
 
+void BucketGraph::unreduce(int* k, int previousK, std::vector<int>* vc)
+{
+    if(reductions->appliedRules->empty())
+        return;
+
+    //pop rules
+    while(*k < previousK || (!reductions->appliedRules->empty() && reductions->appliedRules->back()->kDecrement == 0))
+    {
+        Reduction* rule = reductions->appliedRules->back();
+        switch(rule->rule)
+        {
+            case DEGREE_ZERO:
+                setActive(rule->deletedVertices);
+                break;
+            case DEGREE_ONE:
+                *k = *k + rule->kDecrement;
+                setActive(rule->deletedVCVertices);
+                if(vc != nullptr)
+                {
+                    vc->insert(vc->end(), rule->deletedVCVertices->begin(), rule->deletedVCVertices->end());
+                }
+                break;
+            case DEGREE_TWO:
+                //TODO:
+                break;
+            case HIGH_DEGREE:
+                *k = *k + rule->kDecrement;
+                setActive(rule->deletedVCVertices);
+                if(vc != nullptr)
+                {
+                    vc->insert(vc->end(), rule->deletedVCVertices->begin(), rule->deletedVCVertices->end());
+                }
+                break;
+            case DOMINATION:
+                //TODO:
+                break;
+            case LPFLOW:
+                *k = *k + rule->kDecrement;
+                setActive(rule->deletedVertices);
+                setActive(rule->deletedVCVertices);
+                if(vc != nullptr)
+                {
+                    vc->insert(vc->end(), rule->deletedVCVertices->begin(), rule->deletedVCVertices->end());
+                }
+                break;
+            default:
+                throw std::invalid_argument("unreduce error: unknown rule");
+                break;
+        }
+        reductions->appliedRules->pop_back();
+        //TODO: delete debug at the end
+        if(*k > previousK)
+        {
+            throw std::invalid_argument("unreduce error: inconsistency, stop coding garbage");
+        }
+    }
 }
 
 

@@ -190,6 +190,8 @@ public:
 
     /* apply data reduction rules to graph, returns true if no vertex cover can be found for this k */
     bool reduce(int* k);
+    /* vc is not nullptr, if deleted vertices should be appended to vc*/
+    void unreduce(int* k, int previousK, std::vector<int>* vc = nullptr);
 
     void getBipartMatchingFlowComponents(std::vector<int>* L, std::vector<int>* R);
     int edmondsKarpFlow();
