@@ -343,6 +343,7 @@ RULE_APPLICATION_RESULT Reductions::rule_Domination(BucketGraph* G, int* k)
                     (*k) = (*k) - 1;
                     break;
                 }
+
             }
 
             // Reset flags from neighbours
@@ -352,11 +353,7 @@ RULE_APPLICATION_RESULT Reductions::rule_Domination(BucketGraph* G, int* k)
             }
 
             if(*k == 0){
-                if(printDebug) {
-                    std::cout << "Am I here?" << std::endl;
-                    std::cout << "I canceled " << reduction->kDecrement << " reductions." << std::endl;
-                }
-                for (int i = del; i < cnt; ++i) {
+                for (int i = del; i < reduction->kDecrement; ++i) {
                     G->setInactive(reduction->deletedVCVertices->at(i));
                 }
                 appliedRules->push_back(reduction);
@@ -378,12 +375,6 @@ RULE_APPLICATION_RESULT Reductions::rule_Domination(BucketGraph* G, int* k)
     if(reduction->kDecrement == 0){
         delete reduction;
         return INAPPLICABLE;
-    }
-
-    if(printDebug){
-        std::string cntapp = "DOMINATION RULE APPLIED " + std::to_string(reduction->kDecrement);
-        std::cout << ColorPrint::dye(cntapp, 'p') << std::endl ;
-        std::cout << std::endl;
     }
 
     appliedRules->push_back(reduction);
@@ -463,8 +454,8 @@ RULE_APPLICATION_RESULT Reductions::rule_DominationMitInit(BucketGraph* G, int* 
 {
     if(!isThereDomination) return INAPPLICABLE;
 
-    bool printDebug = false;
-    bool enterDebug = false;
+    bool printDebug = true;
+    bool enterDebug = true;
 
     if(enterDebug){
         std::string enterPrint = "IN DOMINATION RULE";

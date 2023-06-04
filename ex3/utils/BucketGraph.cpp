@@ -136,8 +136,8 @@ BucketGraph* BucketGraph::readStandardInput()
     G->reductions = new Reductions();
 
     G->initDominationHelper(); // Domination
-    G->reductions->initDominationVector(G);
-    G->reductions->printDominationSets();
+//    G->reductions->initDominationVector(G);
+//    G->reductions->printDominationSets();
     return G;
 }
 
