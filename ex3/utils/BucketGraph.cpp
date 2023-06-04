@@ -1072,8 +1072,10 @@ bool BucketGraph::reduce(int* k)
         degreeOneResult = reductions->rule_DegreeOne(this, k);
         if(degreeOneResult == INSUFFICIENT_BUDGET) return true; //cut
 
-        //dominationResult = reductions->rule_Domination(this, k);
-        //dominationResult = reductions->rule_DominationMitInit(this, k);
+        RULE_APPLICATION_RESULT dominationResult = reductions->rule_Domination(this, k);
+        //RULE_APPLICATION_RESULT dominationResult = INAPPLICABLE;
+        //RULE_APPLICATION_RESULT dominationResult = reductions->rule_DominationMitInit(this, k);
+        if(dominationResult == INSUFFICIENT_BUDGET) return true; //cut
 
         //TODO: debug merge 
         /* degreeTwoResult = reductions->rule_DegreeTwo(this, k);
@@ -1083,15 +1085,14 @@ bool BucketGraph::reduce(int* k)
             return true; //cut
         } */
 
-        
+        //RULE_APPLICATION_RESULT LPFlowResult = reductions->rule_LPFlow(this, k);
+        //if(LPFlowResult == INSUFFICIENT_BUDGET) return true;
+
         if(highDegreeResult == INAPPLICABLE && degreeZeroResult == INAPPLICABLE && degreeOneResult == INAPPLICABLE
          && degreeTwoResult == INAPPLICABLE && dominationResult == INAPPLICABLE) //TODO: add conditions for other rules
         {
             return false;
         }
-        /* RULE_APPLICATION_RESULT LPFlowResult = reductions->rule_LPFlow(this, k);
-        if(LPFlowResult == INSUFFICIENT_BUDGET) return true;
-        break; */
     }
     return false;
 }
@@ -1177,12 +1178,18 @@ void BucketGraph::unreduce(int* k, int previousK, std::unordered_map<int, bool>*
                 }
                 break;
             case DOMINATION:
-//                *k = *k + rule->kDecrement;
-//                setActive(rule->deletedVCVertices);
-//                if(vc != nullptr)
-//                {
-//                    vc->insert(vc->end(), rule->deletedVCVertices->begin(), rule->deletedVCVertices->end());
-//                }
+//                if((int) rule->deletedVCVertices->size() == 0)
+//                    break;
+
+                *k = *k + rule->kDecrement;
+                setActive(rule->deletedVCVertices);
+                if(vc != nullptr)
+                {
+                    for(int i = 0; i < (int) rule->deletedVCVertices->size(); i++)
+                    {
+                        vc->insert({rule->deletedVCVertices->at(i), true});
+                    }
+                }
                 break;
             case LPFLOW:
                 *k = *k + rule->kDecrement;

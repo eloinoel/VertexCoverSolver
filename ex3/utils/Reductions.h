@@ -58,6 +58,9 @@ public:
 
     // TODO: eventually set it to false once no dominating vertex is active
     bool isThereDomination;
+    bool enterDebug = false;
+
+    int numberOfDominators;
 
     std::vector<Reduction*>* appliedRules;
     std::vector<std::vector<int>*>* dominationSets;

@@ -130,6 +130,9 @@ unordered_map<int, bool>* vcSolverRecursive(BucketGraph* G, int* numRec)
 	int k = G->getLowerBoundVC();
     //int k = 0;
 
+//    G->printBucketQueue();
+//    G->print();
+
 	unordered_map<int, bool>* vc;
 
 	while (true)
@@ -371,6 +374,7 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
             unordered_map<int, bool>* vc = vcSolverRecursive(G, &numRecursiveSteps);
             writeSolutionToConsole(G->getStringsFromVertexIndices(vc));
             cout << "#recursive steps: " << numRecursiveSteps << endl;
+//            cout << "#recursive steps: " << vc->size()    << endl;
 
             if(printVCSize)
             {
