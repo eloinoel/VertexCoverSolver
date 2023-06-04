@@ -104,28 +104,46 @@ RULE_APPLICATION_RESULT Reductions::rule_LPFlow(BucketGraph* G, int* k)
     G->edmondsKarpFlow();
     //std::cout << "executed edmondsKarp" << std::endl;
     //auto start = std::chrono::high_resolution_clock::now();
-    G->setBipartMatchingFlowComponentsInactive(delVertices, delVCVertices);
+    G->setBipartMatchingFlowComponentsInactive(delVertices, delVCVertices, *k, 0.25);
+    /* G->getBipartMatchingFlowComponents(delVertices, delVCVertices);
+    for (int i=0; i < (int) delVertices->size(); i++)
+    {
+        G->setInactive(delVertices->at(i));
+        G->setInactive(delVCVertices->at(i));
+    } */
     //auto stop = std::chrono::high_resolution_clock::now();
     //std::cout << "Computed flow reduction with vc_verts=" << delVCVertices->size() << ", verts=" << delVertices->size() << " in " << (std::chrono::duration_cast<std::chrono::microseconds>(stop - start).count() / 1000) / (double) 1000 << " seconds" << std::endl;
     //std::cout << "determined strongly connected components" << std::endl;
     Reduction* reduction = new Reduction(RULE::LPFLOW, delVCVertices->size(), delVertices, delVCVertices);
     appliedRules->push_back(reduction);
+    *k = *k - delVCVertices->size();
     if((int) delVCVertices->size() == 0 && (int) delVertices->size() == 0)
     {
         //std::cout << "LPFlow: INAPPLICABLE" << std::endl;
-        appliedRules->pop_back();
+        //appliedRules->pop_back();
         return INAPPLICABLE;
     }
-    if((int) delVCVertices->size() > *k)
+    /* std::cout << "Deleted component: {";
+    for (int j=0; j<(int) delVertices->size(); j++)
     {
-        //std::cout << "LPFlow: INSUFFICENT_BUDGET" << std::endl;
+        std::cout << delVertices->at(j) << ", ";
+    }
+    std::cout << "} / ";
+    std::cout << "{";
+    for (int j=0; j<(int) delVCVertices->size(); j++)
+    {
+        std::cout << delVCVertices->at(j) << ", ";
+    }
+    std::cout << "}" << std::endl; */
+    if(*k < 0)
+    {
+        //std::cout << "LPFlow: INSUFFICIENT_BUDGET" << std::endl;
         /* G->setActive(delVertices);
         G->setActive(delVCVertices); */
-        appliedRules->pop_back();
+        //appliedRules->pop_back();
         return INSUFFICIENT_BUDGET;
     }
-    *k = *k - delVCVertices->size();    // TODO: im getting core dumps, when restoring
-    return APPLICABLE;                  // it should be correct to set vertices back to active, but this doesnt work
+    return APPLICABLE;
 }
 
 void Reductions::initRuleCounter()

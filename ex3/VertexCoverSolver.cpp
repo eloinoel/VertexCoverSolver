@@ -12,12 +12,13 @@
 #include <stdio.h>
 
 using namespace std;
+typedef ColorPrint cp;
 
 /*----------------------------------------------------------*/
 /*---------------   Exercise 3 Solver Code   ---------------*/
 /*----------------------------------------------------------*/
 
-unordered_map<int, bool>* vcVertexBranchingRecursive(BucketGraph* G, int k, int* numRec)
+unordered_map<int, bool>* vcVertexBranchingRecursive(BucketGraph* G, int k, int depth, int* numRec)
 {
     //TODO: call data reductions
 
@@ -28,15 +29,16 @@ unordered_map<int, bool>* vcVertexBranchingRecursive(BucketGraph* G, int k, int*
 	}
 
     int previousK = k;
-    bool cut = G->reduce(&k);
-
+    bool cut = false;
+    //if(depth % 10 == 0) { cut = G->reduce(&k); }
+    cut = G->reduce(&k);
     if(cut)
     {
         G->unreduce(&k, previousK);
         return nullptr;
     }
 
-    /* std::cout << "> calculated LPBound: " << G->getLPBound() << " with k=" << k << std::endl; */
+    //std::cout << "> calculated LPBound: " << G->getLPBound() << " with k=" << k << std::endl;
     if (k < G->getLPBound()) {
         G->unreduce(&k, previousK);
         return nullptr;
@@ -53,6 +55,8 @@ unordered_map<int, bool>* vcVertexBranchingRecursive(BucketGraph* G, int k, int*
     }
     //cout << "before getVertexDegree: " << vertex << endl;
     int vertexDeg = G->getVertexDegree(vertex);
+    //cout << "got maxDegree vertex: " << vertex << endl;
+    //G->print();
 	//graph has no edges left
 	if (vertexDeg == 0)
 	{
@@ -61,11 +65,11 @@ unordered_map<int, bool>* vcVertexBranchingRecursive(BucketGraph* G, int k, int*
         return vc;
 	}
 
-    //cout << ColorPrint::dye("branching: choosing vertex: " + std::to_string(vertex), 'b') << endl;
+    //cout << cp::dye("branching: choosing vertex: " + std::to_string(vertex), 'b') << endl;
 	//delete first vertex from graph and explore solution
     G->setInactive(vertex);
     //cout << "before branching" << endl;
-	unordered_map<int, bool>* S = vcVertexBranchingRecursive(G, k - 1, numRec);
+	unordered_map<int, bool>* S = vcVertexBranchingRecursive(G, k - 1, depth-1, numRec);
 	if (S != nullptr)
 	{
         //revert changes for multiple executions of the algorithm
@@ -82,7 +86,7 @@ unordered_map<int, bool>* vcVertexBranchingRecursive(BucketGraph* G, int k, int*
 		G->setActive(vertex);
         G->unreduce(&k, previousK);
 	}
-    //cout << "restoring vertex: " << vertex << endl;
+    //cout << cp::dye("restoring vertex: ", 'g') << vertex << endl;
 
 	//cannot fully explore neighbours
     if (vertexDeg > k)
@@ -100,7 +104,7 @@ unordered_map<int, bool>* vcVertexBranchingRecursive(BucketGraph* G, int k, int*
     }
     cout << endl; */
     G->setInactive(neighbours);
-	S = vcVertexBranchingRecursive(G, k - neighbours->size(), numRec);
+	S = vcVertexBranchingRecursive(G, k - neighbours->size(), depth-1, numRec);
 	if (S != nullptr)
 	{
         //revert changes for multiple executions of the algorithm
@@ -119,8 +123,8 @@ unordered_map<int, bool>* vcVertexBranchingRecursive(BucketGraph* G, int k, int*
 		G->setActive(neighbours);
         G->unreduce(&k, previousK);
 	}
-    /* cout << "restoring neighbourhood of vertex " << vertex << ": ";
-    for(int i = 0; i < (int) neighbours->size(); i++)
+    //cout << "restoring neighbourhood of vertex " << vertex << ": ";
+    /* for(int i = 0; i < (int) neighbours->size(); i++)
     {
         cout << neighbours->at(i) << ", ";
     }
@@ -133,7 +137,6 @@ unordered_map<int, bool>* vcVertexBranchingRecursive(BucketGraph* G, int k, int*
 unordered_map<int, bool>* vcSolverRecursive(BucketGraph* G, int* numRec)
 {
 	int k = G->getLowerBoundVC();
-    //int k = 0;
 
 //    G->printBucketQueue();
 //    G->print();
@@ -148,8 +151,7 @@ unordered_map<int, bool>* vcSolverRecursive(BucketGraph* G, int* numRec)
         // Apply Reduction Rules for the first time
        /*  if(G->applyReductionRules(&k, reductionVertices))
             return nullptr; */
-
-		vc = vcVertexBranchingRecursive(G, k, numRec);
+		vc = vcVertexBranchingRecursive(G, k, 0, numRec);
 		if (vc != nullptr)
 		{
             // Add Reduced Vertices to Vertex Cover
