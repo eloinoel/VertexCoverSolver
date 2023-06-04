@@ -644,25 +644,10 @@ void BucketGraph::addToBucketQueue(int vertex)
                 break;
             }
         }
-
         if(it == bucketQueue.end())
         {
             bucketQueue.insert(bucketQueue.end(), *bucketReferences[degree]);
         }
-        // ---------------------------------------------
-        /* auto it = *bucketReferences[degree];
-        for(; it != bucketQueue.end(); ++it)
-        {
-            if(it->degree > degree) {
-                bucketQueue.insert(it, *bucketReferences[degree]);
-                break;
-            }
-        }
-
-        if(it == bucketQueue.end())
-        {
-            bucketQueue.insert(bucketQueue.end(), *bucketReferences[degree]);
-        } */
     }
     bucketReferences[degree]->insert(vertexReferences[vertex]->bucketVertex);
 }
@@ -713,10 +698,14 @@ void BucketGraph::moveToBiggerBucket(int degree, int vertex)
 
 void BucketGraph::moveToSmallerBucket(int degree, int vertex)
 {
+    //std::cout << "moveToSmallerBucket: deg = " << degree << std::endl;
+    //printBucketQueue();
     //remove from current bucket
     Bucket* curBucket = bucketReferences[degree];
     curBucket->remove(vertexReferences[vertex]->bucketVertex);
+    //std::cout << "after removeFromBucket: deg = " << degree << std::endl;
 
+    //get iterator to previous bucket
     auto cur_bucket_it = bucketQueue.iterator_to(*curBucket);
     auto previous_bucket_it = cur_bucket_it;
     bool curBucketIsBegin = false;
@@ -761,10 +750,8 @@ void BucketGraph::moveToSmallerBucket(int degree, int vertex)
 void BucketGraph::setActive(int vertexIndex)
 {
     Vertex* v = vertexReferences[vertexIndex];
-    if(v == nullptr || v->adj == nullptr)
-    {
-        throw std::invalid_argument("setActive: vertex " + std::to_string(vertexIndex) + " is nullptr");
-    }
+    if(v == nullptr || v->adj == nullptr) throw std::invalid_argument("setActive: vertex " + std::to_string(vertexIndex) + " is nullptr");
+    if(v->isActive) throw std::invalid_argument("setActive: vertex " + std::to_string(vertexIndex) + "is already active");
 
     v->isActive = true;
     numVertices++;
@@ -775,10 +762,8 @@ void BucketGraph::setActive(int vertexIndex)
     //update degree of all adjacent nodes
     for(int i = 0; i < (int) v->adj->size(); i++)
     {
-        if(vertexReferences[i] == nullptr)
-        {
-            throw std::invalid_argument("setActive: tried updating degree of vertex pointing to nullptr");
-        }
+        if(vertexReferences[i] == nullptr) throw std::invalid_argument("setActive: tried updating degree of vertex pointing to nullptr");
+
         vertexReferences[(*v->adj)[i]]->degree++;
         if(!vertexReferences[(*v->adj)[i]]->isActive) { continue; }
         numEdges++;
@@ -791,10 +776,8 @@ void BucketGraph::setActive(int vertexIndex)
 void BucketGraph::setInactive(int vertexIndex)
 {
     Vertex* v = vertexReferences[vertexIndex];
-    if(v == nullptr || v->adj == nullptr)
-    {
-        throw std::invalid_argument("setInactive: vertex " + std::to_string(vertexIndex) + " is nullptr");
-    }
+    if(v == nullptr || v->adj == nullptr) throw std::invalid_argument("setInactive: vertex " + std::to_string(vertexIndex) + " is nullptr");
+    if(!v->isActive) throw std::invalid_argument("setInactive: vertex " + std::to_string(vertexIndex) + "is already not active");
 
     v->isActive = false;
     numVertices--;
@@ -802,19 +785,22 @@ void BucketGraph::setInactive(int vertexIndex)
     //auto iter = activeList.iterator_to(*v);
     //activeList.erase(iter);
 
+    //std::cout << "before removing from queue: " << v->index << std::endl;
     removeFromBucketQueue(v->index);
     //update degree of all adjacent nodes
     for(int i = 0; i < (int) v->adj->size(); i++)
     {
-        if(vertexReferences[i] == nullptr)
-        {
-            throw std::invalid_argument("setInactive: tried updating degree of vertex pointing to nullptr");
-        }
+        if(vertexReferences[i] == nullptr) throw std::invalid_argument("setInactive: tried updating degree of vertex pointing to nullptr");
+        
         vertexReferences[(*v->adj)[i]]->degree--;
         if(!vertexReferences[(*v->adj)[i]]->isActive) { continue; }
         numEdges--;
+        //std::cout << "before moving neighbour " << (*v->adj)[i] << " to smaller bucket" << std::endl;
         moveToSmallerBucket(vertexReferences[(*v->adj)[i]]->degree + 1, (*v->adj)[i]);
+        //std::cout << "after moving neighbour " << (*v->adj)[i] << " to smaller bucket" << std::endl;
     }
+
+    //std::cout << "setInactive: after updating neighbours" << std::endl;
     // update matching
     //std::cout << "Checking edge (" << vertexIndex << ", " << pairU[vertexIndex] << "), when deleting " << vertexIndex;
     if(pairU[vertexIndex] != NIL) {
@@ -1069,35 +1055,46 @@ bool BucketGraph::reduce(int* k)
     int c = 0;
     while(true)
     {
-        /* RULE_APPLICATION_RESULT highDegreeResult = reductions->rule_HighDegree(this, k);
+        //initialisise
+        RULE_APPLICATION_RESULT degreeTwoResult = INAPPLICABLE;
+        RULE_APPLICATION_RESULT highDegreeResult = INAPPLICABLE;
+        RULE_APPLICATION_RESULT degreeZeroResult = INAPPLICABLE;
+        RULE_APPLICATION_RESULT degreeOneResult = INAPPLICABLE;
+        RULE_APPLICATION_RESULT dominationResult = INAPPLICABLE;
+        RULE_APPLICATION_RESULT LPFlowResult = INAPPLICABLE;
+
+        highDegreeResult = reductions->rule_HighDegree(this, k);
         if(highDegreeResult == INSUFFICIENT_BUDGET) return true; //cut
-        RULE_APPLICATION_RESULT degreeZeroResult = reductions->rule_DegreeZero(this);
+        degreeZeroResult = reductions->rule_DegreeZero(this);
         if(highDegreeResult == INAPPLICABLE && degreeZeroResult == INAPPLICABLE)
         {
             if(reductions->rule_Buss(this, k, getNumVertices(), getNumEdges()) == APPLICABLE)
                 return true;
         }
-        RULE_APPLICATION_RESULT degreeOneResult = reductions->rule_DegreeOne(this, k);
-        if(degreeOneResult == INSUFFICIENT_BUDGET) return true; */ //cut
+        degreeOneResult = reductions->rule_DegreeOne(this, k);
+        if(degreeOneResult == INSUFFICIENT_BUDGET) return true; //cut
 
-        //        RULE_APPLICATION_RESULT dominationResult = reductions->rule_Domination(this, k);
-        //        RULE_APPLICATION_RESULT dominationResult = reductions->rule_DominationMitInit(this, k);
-        RULE_APPLICATION_RESULT dominationResult = INAPPLICABLE;
+        dominationResult = reductions->rule_Domination(this, k);
+        //RULE_APPLICATION_RESULT dominationResult = INAPPLICABLE;
+        //RULE_APPLICATION_RESULT dominationResult = reductions->rule_DominationMitInit(this, k);
+        if(dominationResult == INSUFFICIENT_BUDGET) return true; //cut
 
         //TODO: debug merge 
-        /* print();
-        RULE_APPLICATION_RESULT degreeTwoResult = reductions->rule_DegreeTwo(this, k);
-        print(); */
-        /* RULE_APPLICATION_RESULT degreeTwoResult = INAPPLICABLE;
-        if(highDegreeResult == INAPPLICABLE && degreeZeroResult == INAPPLICABLE && degreeOneResult == INAPPLICABLE && degreeTwoResult == INAPPLICABLE && dominationResult == INAPPLICABLE) //TODO: add conditions for other rules
+        /* degreeTwoResult = reductions->rule_DegreeTwo(this, k);
+        if(degreeTwoResult == INSUFFICIENT_BUDGET)
+        {
+            std::cout << cp::dye("deg2 cut", 'y') << std::endl;
+            return true; //cut
+        } */
+
+        LPFlowResult = reductions->rule_LPFlow(this, k);
+        if(LPFlowResult == INSUFFICIENT_BUDGET) return true;
+
+        if(highDegreeResult == INAPPLICABLE && degreeZeroResult == INAPPLICABLE && degreeOneResult == INAPPLICABLE
+         && degreeTwoResult == INAPPLICABLE && dominationResult == INAPPLICABLE && LPFlowResult == INAPPLICABLE) //TODO: add conditions for other rules
         {
             return false;
-        } */
-        //if(c>0) { continue; }
-        RULE_APPLICATION_RESULT LPFlowResult = reductions->rule_LPFlow(this, k);
-        if(LPFlowResult == INSUFFICIENT_BUDGET) return true;
-        c++;
-        break;
+        }
     }
     return false;
 }
@@ -1129,11 +1126,17 @@ void BucketGraph::unreduce(int* k, int previousK, std::unordered_map<int, bool>*
                 }
                 break;
             case DEGREE_TWO:
+                //std::cout << "deg2 unreduce" << std::endl;
                 *k = *k + rule->kDecrement;
-                unmerge(rule);
-                if(vc != nullptr)
+                if(rule->mergeVertexInfo == nullptr)
                 {
-                    if(rule->mergeVertexInfo == nullptr)
+                    for(int i = 0; i < (int) rule->deletedVCVertices->size(); i++)
+                    {
+                        setActive(rule->deletedVCVertices->at(i));
+                    }
+                    setActive(rule->deletedVertices->front());
+                    //add to solution
+                    if(vc != nullptr)
                     {
                         //didn't merge, take neighbours of deg2 vertex
                         for(int i = 0; i < (int) rule->deletedVCVertices->size(); i++)
@@ -1141,7 +1144,11 @@ void BucketGraph::unreduce(int* k, int previousK, std::unordered_map<int, bool>*
                             vc->insert({rule->deletedVCVertices->at(i), true});
                         }
                     }
-                    else
+                }
+                else
+                {
+                    unmerge(rule); //handles setting vertices back active
+                    if(vc != nullptr)
                     {
                         //if vc contains vertex that was merged into, add neighbours of deg2 vertex to the solution
                         auto it = vc->find(std::get<0>(*rule->mergeVertexInfo));
@@ -1173,12 +1180,18 @@ void BucketGraph::unreduce(int* k, int previousK, std::unordered_map<int, bool>*
                 }
                 break;
             case DOMINATION:
-//                *k = *k + rule->kDecrement;
-//                setActive(rule->deletedVCVertices);
-//                if(vc != nullptr)
-//                {
-//                    vc->insert(vc->end(), rule->deletedVCVertices->begin(), rule->deletedVCVertices->end());
-//                }
+//                if((int) rule->deletedVCVertices->size() == 0)
+//                    break;
+
+                *k = *k + rule->kDecrement;
+                setActive(rule->deletedVCVertices);
+                if(vc != nullptr)
+                {
+                    for(int i = 0; i < (int) rule->deletedVCVertices->size(); i++)
+                    {
+                        vc->insert({rule->deletedVCVertices->at(i), true});
+                    }
+                }
                 break;
             case LPFLOW:
                 *k = *k + rule->kDecrement;
@@ -1221,8 +1234,9 @@ void BucketGraph::unreduce(int* k, int previousK, std::unordered_map<int, bool>*
     }
 }
 
-std::tuple<int, std::vector<int>*, std::unordered_map<int, bool>*>* BucketGraph::merge(int v0, int v1, int v2)
+std::tuple<int, std::vector<int>*, std::unordered_map<int, bool>*, std::vector<int>*>* BucketGraph::merge(int v0, int v1, int v2)
 {
+
     //we merge into the vertex with the max degree, for less duplicate checks
     int maxDegVertex = v2;
     int mergev0 = v0;
@@ -1237,67 +1251,199 @@ std::tuple<int, std::vector<int>*, std::unordered_map<int, bool>*>* BucketGraph:
     {
         int tmp = maxDegVertex;
         maxDegVertex = mergev1;
-        mergev1 = maxDegVertex;
-    } 
+        mergev1 = tmp;
+    }
+    std::cout << cp::dye("merging into vertex " + std::to_string(maxDegVertex) + " <-- " + std::to_string(mergev0) + ", " + std::to_string(mergev1), 'p') << std::endl;
 
-    //set vertices that will be merged inactive
-    setInactive(mergev0);
-    setInactive(mergev1);
+    /* std::cout << "Neighbour " << mergev0 << " (" << getVertexDegree(mergev0) << ") " << " neighbours: ";
+    std::vector<int>* neighboursOfFirst = getNeighbours(mergev0);
+    for(auto ne = neighboursOfFirst->begin(); ne != neighboursOfFirst->end(); ++ne)
+    {
+        std::cout << *ne << ", ";
+    }
+    std::cout << std::endl;
+    std::cout << "Neighbour " << mergev1 << " with deg=" << getVertexDegree(mergev1) << " neighbours: ";
+    neighboursOfFirst = getNeighbours(mergev1);
+    for(auto ne = neighboursOfFirst->begin(); ne != neighboursOfFirst->end(); ++ne)
+    {
+        std::cout << *ne << ", ";
+    }
+    std::cout << std::endl; */
+    
+    /* if(mergev1 == 18)
+    {
+        print();
+    } */
+    //std::cout << "merge: maxDegv: " << maxDegVertex << ", mergev0: " << mergev0 << ", mergev1: " << mergev1 << std::endl;
+
+    //std::cout << "merge_debug1.5" << std::endl;
 
     //save adjacency list of vertex to merge into
     std::vector<int>* adj_copy = new std::vector<int>(*vertexReferences[maxDegVertex]->adj);
     std::unordered_map<int, bool>* adj_map_copy = new std::unordered_map<int, bool>(*vertexReferences[maxDegVertex]->adj_map);
+    std::vector<int>* added_vertices = new std::vector<int>();
 
+    //std::cout << "changing adj lists " << std::endl;
     removeFromBucketQueue(maxDegVertex);
     //add edges of merging vertices to adj of vertex to merge into
     for(int i = 0; i < (int) vertexReferences[mergev0]->adj->size(); i++)
     {
         int neighbour = (int) vertexReferences[mergev0]->adj->at(i);
-        if(neighbour != maxDegVertex && !vertexHasEdgeTo(maxDegVertex, neighbour))
+        if(isActive(neighbour) && neighbour != maxDegVertex && neighbour != mergev1 && !vertexHasEdgeTo(maxDegVertex, neighbour))
         {
+            //std::cout << "added " << neighbour << std::endl;
             vertexReferences[maxDegVertex]->adj->push_back(neighbour);
             vertexReferences[maxDegVertex]->adj_map->insert({neighbour, true});
+            //moveToBiggerBucket(vertexReferences[maxDegVertex]->degree, maxDegVertex);
             vertexReferences[maxDegVertex]->degree++;
+
+            //also change adj lists of neighbour
+
+            vertexReferences[neighbour]->adj->push_back(maxDegVertex);
+            vertexReferences[neighbour]->adj_map->insert({maxDegVertex, true});
+            vertexReferences[neighbour]->degree++; //because of previously setting inactive, degree is -1 and needs to be incremented, if edge to merge vertex is inserted
+            moveToBiggerBucket(vertexReferences[neighbour]->degree-1, neighbour);
+
+            //save for unmerging later
+            added_vertices->push_back(neighbour);
         }
     }
     for(int i = 0; i < (int) vertexReferences[mergev1]->adj->size(); i++)
     {
         int neighbour = (int) vertexReferences[mergev1]->adj->at(i);
-        if(vertexReferences[neighbour]->isActive && neighbour != maxDegVertex && !vertexHasEdgeTo(maxDegVertex, neighbour))
+        if(isActive(neighbour) && neighbour != maxDegVertex && neighbour != mergev0 && !vertexHasEdgeTo(maxDegVertex, neighbour))
         {
+            //std::cout << "added " << neighbour << std::endl;
             vertexReferences[maxDegVertex]->adj->push_back(neighbour);
             vertexReferences[maxDegVertex]->adj_map->insert({neighbour, true});
+            //moveToBiggerBucket(vertexReferences[maxDegVertex]->degree, maxDegVertex);
             vertexReferences[maxDegVertex]->degree++;
+
+            //also change adj lists of neighbour
+            vertexReferences[neighbour]->adj->push_back(maxDegVertex);
+            vertexReferences[neighbour]->adj_map->insert({maxDegVertex, true});
+            vertexReferences[neighbour]->degree++;
+            moveToBiggerBucket(vertexReferences[neighbour]->degree-1, neighbour);
+
+            //save for unmerging later
+            added_vertices->push_back(neighbour);
         }
     }
+    //std::cout << "merge_debug3" << std::endl;
     //add merge vertex back to appropriate bucket
     addToBucketQueue(maxDegVertex);
 
+    //std::cout << "merge_debug4" << std::endl;
+    /* if(maxDegVertex == 18)
+    {
+        print();
+    } */
 
-    std::tuple<int, std::vector<int>*, std::unordered_map<int, bool>*>* mergeInfo = new std::tuple<int, std::vector<int>*, std::unordered_map<int, bool>*>(maxDegVertex, adj_copy, adj_map_copy);
+    //print();
+    //printBucketQueue();
+
+    //set vertices that will be merged inactive
+    //std::cout << "set inactive: " << mergev0 << std::endl;
+    setInactive(mergev0);
+    /* if(mergev1 == 18)
+    {
+        print();
+        
+    } */
+
+    //std::cout << "set inactive: " << mergev1 << std::endl;
+    setInactive(mergev1);
+
+    /* if(maxDegVertex == 18)
+    {
+        print();
+    } */
+    /* print();
+    printBucketQueue(); */
+    std::tuple<int, std::vector<int>*, std::unordered_map<int, bool>*, std::vector<int>*>* mergeInfo = new std::tuple<int, std::vector<int>*,
+     std::unordered_map<int, bool>*, std::vector<int>*>(maxDegVertex, adj_copy, adj_map_copy, added_vertices);
     return mergeInfo;
 }
 
+
 void BucketGraph::unmerge(Reduction* mergeRule)
 {
+    //print();
+    //printBucketQueue();
+    /* print();
+    printBucketQueue(); */
+    /* if(mergeRule->mergeVertexInfo == nullptr)
+    {
+        std::cout << "nullptr" << std::endl;
+    } */
     //restore adjacency list and other fields of the merge vertex
     int mergeVertex = std::get<0>(*mergeRule->mergeVertexInfo);
-    removeFromBucketQueue(mergeVertex);
-
-    vertexReferences[mergeVertex]->adj = std::get<1>(*mergeRule->mergeVertexInfo);
-    vertexReferences[mergeVertex]->adj_map = std::get<2>(*mergeRule->mergeVertexInfo);
-    vertexReferences[mergeVertex]->degree = vertexReferences[mergeVertex]->adj->size();
-
-    addToBucketQueue(mergeVertex);
-
-    //set merged vertices active again
-    for(int i = 0; i < (int) mergeRule->deletedVertices->size(); i++)
+    std::cout << cp::dye("unmerging vertex " + std::to_string(mergeVertex), 'g') << std::endl;
+    /* for(int i = 0; i < (int) mergeRule->deletedVertices->size(); i++)
     {
         if(mergeRule->deletedVertices->at(i) != mergeVertex)
         {
             setActive(mergeRule->deletedVertices->at(i));
         }
+    } */
+    int v0 = mergeRule->deletedVertices->front();
+    int v1 = mergeRule->deletedVCVertices->at(0);
+    int v2 = mergeRule->deletedVCVertices->at(1);
+    
+    if(mergeVertex != v0) { setActive(v0); }
+    if(mergeVertex != v1) { setActive(v1); }
+    if(mergeVertex != v2) { setActive(v2); }
+
+    //std::cout << "mergeVertex: " << mergeVertex << ", N's: " << v0 << ", " << v1 << ", " << v2 << std::endl;
+
+
+
+    //std::cout << "before remove from bucket queue" << std::endl;
+    removeFromBucketQueue(mergeVertex);
+    //std::cout << "after remove from bucket queue" << std::endl;
+    //TODO: delete merge vertex from adjacency lists of neighbours that he didn't have before merge
+    //std::cout << "unmerge_debug1" << std::endl;
+    std::vector<int>* added_vertices = std::get<3>(*mergeRule->mergeVertexInfo);
+    for(int i = 0; i < (int) added_vertices->size(); i++)
+    {
+        //std::cout << "decrementing added vertex " << added_vertices->at(i) << std::endl;
+        vertexReferences[added_vertices->at(i)]->adj->pop_back(); //should work if all rules are popped in right order
+        /* for(auto jt = vertexReferences[added_vertices->at(i)]->adj->begin(); jt != vertexReferences[added_vertices->at(i)]->adj->end(); ++jt) //TODO: more efficient way
+        {
+            if(*jt == mergeVertex)
+            {
+                vertexReferences[added_vertices->at(i)]->adj->erase(jt);
+                break;
+            }
+        } */
+        //std::cout << "after pop" << std::endl;
+        vertexReferences[added_vertices->at(i)]->adj_map->erase(vertexReferences[added_vertices->at(i)]->adj_map->find(mergeVertex));
+        //std::cout << "after adj map" << std::endl;
+        vertexReferences[added_vertices->at(i)]->degree--;
+        //std::cout << "moving vertex " << added_vertices->at(i) << " with deg=" << vertexReferences[added_vertices->at(i)]->degree+1 << " to smaller bucket" << std::endl;
+        /* print();
+        printBucketQueue(); */
+        if(vertexReferences[added_vertices->at(i)]->isActive) { moveToSmallerBucket(vertexReferences[added_vertices->at(i)]->degree+1, added_vertices->at(i)); }
+        if(!vertexReferences[added_vertices->at(i)]->isActive) { std::cout << cp::dye("inconsistency, should be active while unmerging: ", 'r') << added_vertices->at(i) << std::endl; }
+        //std::cout << "after move to smaller bucket" << std::endl;
+        //moving to smaller bucket not needed because still inactive
     }
+    //std::cout << "after added vertices edge decrement" << std::endl;
+    //std::cout << "mergevertex adj size:" << vertexReferences[mergeVertex]->degree << std::endl;
+    vertexReferences[mergeVertex]->adj = std::get<1>(*mergeRule->mergeVertexInfo);
+    vertexReferences[mergeVertex]->adj_map = std::get<2>(*mergeRule->mergeVertexInfo);
+    vertexReferences[mergeVertex]->degree = vertexReferences[mergeVertex]->adj->size();
+    //std::cout << "mergevertex saved adj size:" << vertexReferences[mergeVertex]->degree << std::endl;
+
+    //std::cout << "after mergevertex reset" << std::endl;
+    //std::cout << "unmerge_debug2" << std::endl;
+    addToBucketQueue(mergeVertex);
+    //std::cout << "after add to bucket queue" << std::endl;
+    //std::cout << "mergeVertex: " << mergeVertex << ", N's: " << v0 << ", " << v1 << ", " << v2 << std::endl;
+
+    //std::cout << "unmerge_debug3" << std::endl;
+    //set merged vertices active again
+    //std::cout << "unmerge_debug4" << std::endl;
 }
 
 

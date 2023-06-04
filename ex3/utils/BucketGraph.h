@@ -201,7 +201,7 @@ public:
     /* vc is not nullptr, if deleted vertices should be appended to vc*/
     void unreduce(int* k, int previousK, std::unordered_map<int, bool>* vc = nullptr);
     /* merge three vertices into one for degree 2 rule, returns vertex that was merged into and its previous adjacency list */
-    std::tuple<int, std::vector<int>*, std::unordered_map<int, bool>*>* merge(int v0, int v1, int v2);
+    std::tuple<int, std::vector<int>*, std::unordered_map<int, bool>*, std::vector<int>*>* merge(int v0, int v1, int v2);
     /* restores previous previously merged vertices into 3 seperate vertices */
     void unmerge(Reduction* mergeRule);
 
