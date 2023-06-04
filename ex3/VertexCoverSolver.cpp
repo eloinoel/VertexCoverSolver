@@ -24,6 +24,7 @@ unordered_map<int, bool>* vcVertexBranchingRecursive(BucketGraph* G, int k, int*
 
     int previousK = k;
     bool cut = G->reduce(&k);
+
     if(cut)
     {
         G->unreduce(&k, previousK);
@@ -34,7 +35,7 @@ unordered_map<int, bool>* vcVertexBranchingRecursive(BucketGraph* G, int k, int*
     if (k < G->getLPBound()) {
         G->unreduce(&k, previousK);
         return nullptr;
-    }
+    } //TODO: put this back in for final submission
 
     //cout << "before getMaxDegreeVertex" << endl;
 	int vertex = G->getMaxDegreeVertex();
@@ -55,7 +56,7 @@ unordered_map<int, bool>* vcVertexBranchingRecursive(BucketGraph* G, int k, int*
         return vc;
 	}
 
-    //cout << "deleting vertex: " << vertex << endl;
+    //cout << ColorPrint::dye("branching: choosing vertex: " + std::to_string(vertex), 'b') << endl;
 	//delete first vertex from graph and explore solution
     G->setInactive(vertex);
     //cout << "before branching" << endl;
@@ -64,9 +65,8 @@ unordered_map<int, bool>* vcVertexBranchingRecursive(BucketGraph* G, int k, int*
 	{
         //revert changes for multiple executions of the algorithm
         G->setActive(vertex);
-        G->unreduce(&k, previousK, S);
-		//return results
-        S->insert({vertex, true});
+        S->insert({vertex, true}); //push results
+        G->unreduce(&k, previousK, S); //unreduce needs correct vc für unmerge of deg2rule
 		//S->push_back(vertex);
 		return S;
 	}
@@ -88,10 +88,10 @@ unordered_map<int, bool>* vcVertexBranchingRecursive(BucketGraph* G, int k, int*
 
     //cout << "deleting neighbourhood of vertex " << vertex << ": ";
     vector<int>* neighbours = G->getNeighbours(vertex);
-    /* cout << "choosing neighbours of vertex " << vertex << ": ";
+    /* cout << ColorPrint::dye("branching: choosing neighbours of vertex " + std::to_string(vertex) + ": ", 'b');
     for(int i = 0; i < (int) neighbours->size(); i++)
     {
-        cout << neighbours->at(i) << ", ";
+        cout <<  ColorPrint::dye(std::to_string(neighbours->at(i)) + ", ", 'b');
     }
     cout << endl; */
     G->setInactive(neighbours);
@@ -100,13 +100,12 @@ unordered_map<int, bool>* vcVertexBranchingRecursive(BucketGraph* G, int k, int*
 	{
         //revert changes for multiple executions of the algorithm
         G->setActive(neighbours);
-        G->unreduce(&k, previousK, S);
-		//return results
         for (int i = 0; i < (int) neighbours->size(); i++)
         {
             //S->push_back(neighbours->at(i));
-            S->insert({neighbours->at(i), true});
+            S->insert({neighbours->at(i), true}); //push results
         }
+        G->unreduce(&k, previousK, S); //unreduce needs correct vc für unmerge of deg2rule
         return S;
 	}
 	else
@@ -362,8 +361,8 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
         if (printGraph)
         {
             G->print();
-            G->printActiveList();
-            G->printBucketQueue();
+            //G->printActiveList();
+            //G->printBucketQueue();
         }
 
         if(printVC)
@@ -423,7 +422,7 @@ int main(int argc, char* argv[]) {
 	}
 	catch (const exception& e)
 	{
-		cerr << "Error while running vertex cover solver.\n";
-        cerr << e.what();
+		cerr << ColorPrint::dye("Error while running vertex cover solver.\n", 'r');
+        cerr << ColorPrint::dye(e.what() ,'r');
 	}
 }

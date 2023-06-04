@@ -30,7 +30,8 @@ public:
     int kDecrement;
     std::vector<int>* deletedVertices; // First idx is always to add in VC if(rule!=0)
     std::vector<int>* deletedVCVertices;
-    std::tuple<int, std::vector<int>*, std::unordered_map<int, bool>*>* mergeVertexInfo;
+    /* mergeVertex, original adj, original adj_map, added vertices */
+    std::tuple<int, std::vector<int>*, std::unordered_map<int, bool>*, std::vector<int>*>* mergeVertexInfo;
 
     Reduction() {};
     Reduction(RULE rule) { this->rule = rule; };

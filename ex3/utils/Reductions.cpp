@@ -121,9 +121,6 @@ RULE_APPLICATION_RESULT Reductions::rule_LPFlow(BucketGraph* G, int* k)
     return APPLICABLE;                  // it should be correct to set vertices back to active, but this doesnt work
 }
 
-/*----------------------------------------------------------*/
-/*------------------   Reduction Rules   -------------------*/
-/*----------------------------------------------------------*/
 void Reductions::initRuleCounter()
 {
     rule_0 = 0;
@@ -217,43 +214,68 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeTwo(BucketGraph* G, int* k)
 
     if(degTwoBucket == nullptr || degTwoBucket->empty()) return INAPPLICABLE;
 
-    std::cout << "DEGTWO Culling vertices: ";
+    //std::cout << "DEGTWO Culling vertices: " << std::endl;
     while(!degTwoBucket->empty())
     {
+        //std::cout << "start of while loop" << std::endl;
         if(*k == 0) return INSUFFICIENT_BUDGET; //cannot delete more vertices, no possible vertex cover exists
 
         auto it = degTwoBucket->begin();
-        std::pair<int, int>* neighbours = G->getFirstTwoActiveNeighbours(it->index); //should always return valid vertices
 
+        std::pair<int, int>* neighbours = G->getFirstTwoActiveNeighbours(it->index); //should always return valid vertices
+        if(neighbours->first == -1 || neighbours->second == -1)
+        {
+            G->print();
+            throw std::invalid_argument("rule_DegreeTwo: deg2 vertex " + std::to_string(it->index) + " doesn't have two active neighbours\n");
+        }
+
+
+        //std::cout << "degree of deg2 vertex: " << G->getVertexDegree(it->index) << std::endl;
+        //G->print();
         // save deleted vertex
-        Reduction* delVer = new Reduction(RULE::DEGREE_TWO, 0, new std::vector<int>());
+        Reduction* delVer = new Reduction(RULE::DEGREE_TWO, 0, new std::vector<int>(), new std::vector<int>());
 
         //if no merge, take neighbours, otherwise case destinction whether merged vertex is in vc
         delVer->deletedVCVertices->push_back(neighbours->first);
         delVer->deletedVCVertices->push_back(neighbours->second);
         delVer->deletedVertices->push_back(it->index);
 
-        std::cout << it->index  << ", " << neighbours->first << ", " << neighbours->second;
+        //std::cout << it->index  << ", " << neighbours->first << ", " << neighbours->second << std::endl;
 
         delVer->mergeVertexInfo = nullptr;
+
         // CASE The neighbours know each other, take them into vc
         if(G->vertexHasEdgeTo(neighbours->first, neighbours->second))
         {
+            //std::cout << " before nomerge" << std::endl;
             delVer->kDecrement = 2;
+            //G->print();
+            //std::cout << "before setting delVertices inactive: " << it->index << std::endl;
             G->setInactive(delVer->deletedVertices);
+            //std::cout << "before setting delVCVertices inactive: " << neighbours->first << ", " << neighbours->second << std::endl;
+            //G->print();
             G->setInactive(delVer->deletedVCVertices);
+            //std::cout << " after setting inactive" << std::endl;
+            //G->print();
             (*k) = (*k) - 2;
         }
         // CASE Neighbours don't know each other => setInactive or do that in addReducedVertices?
         else
         {
+            //G->print();
+            //G->printBucketQueue();
+            //std::cout << " before  merge " << std::endl;
             delVer->kDecrement = 1;
             delVer->mergeVertexInfo = G->merge(it->index, neighbours->first, neighbours->second); //sets merged vertices inactive
             (*k) = (*k) - 1;
-            std::cout << " | merging into " << std::get<0>(*delVer->mergeVertexInfo);
+            //std::cout << " | merging into " << std::get<0>(*delVer->mergeVertexInfo) << std::endl;
+            //G->print();
+            //G->printBucketQueue();
         }
         appliedRules->push_back(delVer);
+        //std::cout << "---------" << std::endl;
     }
+    //std::cout << "----end----" << std::endl;
     return APPLICABLE;
 }
 
