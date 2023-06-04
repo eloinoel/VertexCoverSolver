@@ -553,27 +553,53 @@ void BucketGraph::printMatching()
     }
 }
 
-void BucketGraph::printEdgesToConsole()
+std::vector<std::string>* BucketGraph::getEdgesToConsoleString()
 {
-    std::unordered_map<std::pair<int, int>, bool, boost::hash<std::pair<int, int>>>* edges = new std::unordered_map<std::pair<int, int>, bool, boost::hash<std::pair<int, int>>>();
+    std::vector<std::string>* str = new std::vector<std::string>();
+    std::unordered_map<std::pair<int, int>, bool, boost::hash<std::pair<int, int>>>* edges_map = new std::unordered_map<std::pair<int, int>, bool, boost::hash<std::pair<int, int>>>();
     //for each active vertex
-    for(auto it = activeList.begin(); it != activeList.end(); ++it)
+    for(int j = 0; j < (int) vertexReferences.size(); j++)
     {
-        //iterate through edges
-        for(int i = 0; i < (int) it->adj->size(); i++)
+        Vertex* v = vertexReferences.at(j);
+        if(v && v->isActive)
         {
-            //if edge already in edges map, skip
-            auto map_entry = edges->find(std::make_pair(it->index, it->adj->at(i)));
-            if(map_entry != edges->end()) continue;
-            map_entry = edges->find(std::make_pair(it->adj->at(i), it->index));
-            if(map_entry != edges->end()) continue;
+            //iterate through edges
+            for(int i = 0; i < (int) v->adj->size(); i++)
+            {
+                if(isActive(v->adj->at(i)))
+                {
+                    //if edge already in edges map, skip
+                    auto map_entry = edges_map->find(std::make_pair(v->index, v->adj->at(i)));
+                    if(map_entry != edges_map->end()) continue;
+                    map_entry = edges_map->find(std::make_pair(v->adj->at(i), v->index));
+                    if(map_entry != edges_map->end()) continue;
 
-            //else insert edge
-            (*edges)[std::make_pair(it->index, it->adj->at(i))] = true;
-            std::cout << it->strName << " " << vertexReferences[it->adj->at(i)]->strName << std::endl;
+                    //else insert edge
+                    (*edges_map)[std::make_pair(v->index, v->adj->at(i))] = true;
+                    //std::cout << it->strName << " " << vertexReferences[it->adj->at(i)]->strName << std::endl;
+                    str->push_back(v->strName + " " + vertexReferences[v->adj->at(i)]->strName + "\n");
+                    //str += v->strName + " " + vertexReferences[v->adj->at(i)]->strName + "\n";
+                }
+            }
         }
     }
-    //std::cout << edges->size() << std::endl; //debug
+    return str;
+}
+
+std::vector<std::string>* BucketGraph::getOriginalEdgesToConsoleString()
+{
+    std::vector<std::string>* str = new std::vector<std::string>();
+    for(int i = 0; i < (int) edges.size(); i++)
+    {
+        str->push_back(edges.at(i).first + " " + edges.at(i).second + "\n");
+        //std::cout << edges.at(i).first << " " << edges.at(i).second << std::endl;
+    }
+    return str;
+}
+
+int BucketGraph::getOriginalEdgeCount()
+{
+    return edges.size();
 }
 
 std::vector<std::string>* BucketGraph::getStringsFromVertexIndices(std::vector<int>* vertices)
@@ -1072,10 +1098,10 @@ bool BucketGraph::reduce(int* k)
         degreeOneResult = reductions->rule_DegreeOne(this, k);
         if(degreeOneResult == INSUFFICIENT_BUDGET) return true; //cut
 
-        dominationResult = reductions->rule_Domination(this, k);
+        //dominationResult = reductions->rule_Domination(this, k);
         //RULE_APPLICATION_RESULT dominationResult = INAPPLICABLE;
         //RULE_APPLICATION_RESULT dominationResult = reductions->rule_DominationMitInit(this, k);
-        if(dominationResult == INSUFFICIENT_BUDGET) return true; //cut
+        //if(dominationResult == INSUFFICIENT_BUDGET) return true; //cut
 
         //TODO: debug merge 
         /* degreeTwoResult = reductions->rule_DegreeTwo(this, k);
@@ -1384,7 +1410,7 @@ void BucketGraph::unmerge(Reduction* mergeRule)
     //std::cout << "before remove from bucket queue" << std::endl;
     removeFromBucketQueue(mergeVertex);
     //std::cout << "after remove from bucket queue" << std::endl;
-    //TODO: delete merge vertex from adjacency lists of neighbours that he didn't have before merge
+    //delete merge vertex from adjacency lists of neighbours that he didn't have before merge
     //std::cout << "unmerge_debug1" << std::endl;
     std::vector<int>* added_vertices = std::get<3>(*mergeRule->mergeVertexInfo);
     for(int i = 0; i < (int) added_vertices->size(); i++)

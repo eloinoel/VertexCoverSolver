@@ -6,6 +6,11 @@
 #include "utils/ColorPrint.h"
 #include "utils/BucketGraph.h"
 
+
+#include <signal.h>
+#include <stdlib.h>
+#include <stdio.h>
+
 using namespace std;
 
 /*----------------------------------------------------------*/
@@ -315,6 +320,21 @@ void writeSolutionToConsole(vector<string>* vc)
 /*----------------------------------------------------------*/
 
 
+BucketGraph* bucketGraph = nullptr;
+
+void my_sig_handler(sig_atomic_t s)
+{
+    //print original edges if timeout in data reduction for (b) on exercise sheet
+    if(bucketGraph != nullptr)
+    {
+        std::vector<std::string>* str = bucketGraph->getOriginalEdgesToConsoleString();
+        for(int i = 0; i < (int) str->size(); i++)
+        {
+            cout << str->at(i);
+        }
+        cout << "#difference: " << 0 << endl;
+    }
+}
 
 /** Execute specific version of program with optional arguments for more prints
  * version
@@ -326,6 +346,7 @@ void writeSolutionToConsole(vector<string>* vc)
 void chooseImplementationAndOutput(int version = 1, bool printGraph = false, bool printMappings = false, 
 bool printDebug = false, bool printVCSize = false, bool printVC = true, bool printBounds = false)
 {
+
     if(version == 0)
     {
         std::vector<int>* vc;
@@ -374,7 +395,6 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
             unordered_map<int, bool>* vc = vcSolverRecursive(G, &numRecursiveSteps);
             writeSolutionToConsole(G->getStringsFromVertexIndices(vc));
             cout << "#recursive steps: " << numRecursiveSteps << endl;
-//            cout << "#recursive steps: " << vc->size()    << endl;
 
             if(printVCSize)
             {
@@ -391,20 +411,25 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
     }
     else if(version == 5)
     {
-        BucketGraph* G = BucketGraph::readStandardInput();
-        if (G == nullptr)
+        bucketGraph = BucketGraph::readStandardInput();
+        if (bucketGraph == nullptr)
             throw invalid_argument("Error constructing graph from input file.");
 
-        //G->print();
         int numRecursiveSteps = 0;
-        unordered_map<int, bool>* vc = vcSolverRecursive(G, &numRecursiveSteps);
+        unordered_map<int, bool>* vc = vcSolverRecursive(bucketGraph, &numRecursiveSteps);
 
-        //G->reduce(); //TODO:
-        G->printEdgesToConsole();
+        int tmpK = vc->size();
+        bucketGraph->reduce(&tmpK);
+        
+        std::vector<std::string>* str = bucketGraph->getEdgesToConsoleString();
 
-        G->resetLPBoundDataStructures();
-        unordered_map<int, bool>* reducedVc = vcSolverRecursive(G, &numRecursiveSteps);
-        cout << "#difference: " << to_string((vc->size() - reducedVc->size())) << endl;
+        //bucketGraph->resetLPBoundDataStructures();
+        //unordered_map<int, bool>* reducedVc = vcSolverRecursive(bucketGraph, &numRecursiveSteps);
+        for(int i = 0; i < (int) str->size(); i++)
+        {
+            cout << str->at(i);
+        }
+        cout << "#difference: " << to_string((bucketGraph->getOriginalEdgeCount() - str->size())) << endl;
     }
     else
     {
@@ -422,7 +447,8 @@ int main(int argc, char* argv[]) {
 	{
         //chooseImplementationAndOutput(0, false, false, false, false, true, false);
         //chooseImplementationAndOutput(1, true, false, false, true, true, false); //print alot
-        chooseImplementationAndOutput(1, false, false, false, false, true, false);
+        signal(SIGINT, my_sig_handler); //catches SIGINT to output anything
+        chooseImplementationAndOutput(5, false, false, false, false, true, false);
 	}
 	catch (const exception& e)
 	{

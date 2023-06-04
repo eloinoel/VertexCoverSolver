@@ -186,7 +186,9 @@ public:
     void print();
     void printActiveList();
     void printBucketQueue();
-    void printEdgesToConsole();
+    std::vector<std::string>* getEdgesToConsoleString();
+    std::vector<std::string>* getOriginalEdgesToConsoleString();
+    int getOriginalEdgeCount();
     void printMatching();
 
     int getLowerBoundVC();
