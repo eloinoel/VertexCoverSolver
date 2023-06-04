@@ -205,12 +205,12 @@ public:
     /* restores previous previously merged vertices into 3 seperate vertices */
     void unmerge(Reduction* mergeRule);
 
+    void strongconnect(std::stack<int>* S, int vertex, int index, std::vector<int>* indices, std::vector<int>* lowlink, std::vector<bool>* onStack, std::vector<int>* L, std::vector<int>* R);
     void getBipartMatchingFlowComponents(std::vector<int>* L, std::vector<int>* R);
-    void setBipartMatchingFlowComponentsInactive(std::vector<int>* L, std::vector<int>* R);
-    void setBipartMatchingFlowComponentsInactiveRecursive(std::vector<int>* L, std::vector<int>* R);
-    bool getFlowComponent(int current, int target, std::vector<bool>* visited, std::vector<bool>* valid, std::vector<int>* componentL, std::vector<int>* componentR);
+    void setBipartMatchingFlowComponentsInactive(std::vector<int>* L, std::vector<int>* R, int k, double maxExecTime);
     int hopcroftKarpMatchingSize();
     int edmondsKarpFlow();
+    inline void resetMatching() { void initMatching(); };
 
     //----------------------- Domination Rule ------------------------------------
     bool isActive(int vertexIndex){ return vertexReferences[vertexIndex]->isActive;};
