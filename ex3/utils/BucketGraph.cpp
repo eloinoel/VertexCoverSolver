@@ -136,8 +136,8 @@ BucketGraph* BucketGraph::readStandardInput()
     G->reductions = new Reductions();
 
     G->initDominationHelper(); // Domination
-//    G->reductions->initDominationVector(G);
-//    G->reductions->printDominationSets();
+    G->reductions->initDominationVector(G);
+    G->reductions->printDominationSets();
     return G;
 }
 
@@ -1066,6 +1066,11 @@ int BucketGraph::bruteForceCalculateNumEdges()
 
 bool BucketGraph::reduce(int* k)
 {
+    int p = 1;
+
+    bool dominationDebug = false;
+
+//    reductions->initRuleCounter();
     while(true)
     {
         RULE_APPLICATION_RESULT highDegreeResult = reductions->rule_HighDegree(this, k);
@@ -1076,20 +1081,30 @@ bool BucketGraph::reduce(int* k)
             if(reductions->rule_Buss(this, k, getNumVertices(), getNumEdges()) == APPLICABLE)
                 return true;
         }
+
+        RULE_APPLICATION_RESULT dominationResult = reductions->rule_Domination(this, k);
+        if(dominationResult == INSUFFICIENT_BUDGET) return true; //cut
+
         RULE_APPLICATION_RESULT degreeOneResult = reductions->rule_DegreeOne(this, k);
         if(degreeOneResult == INSUFFICIENT_BUDGET) return true; //cut
 
-        //        RULE_APPLICATION_RESULT dominationResult = reductions->rule_Domination(this, k);
+//        RULE_APPLICATION_RESULT dominationResult = INAPPLICABLE;
 //        RULE_APPLICATION_RESULT dominationResult = reductions->rule_DominationMitInit(this, k);
-        RULE_APPLICATION_RESULT dominationResult = INAPPLICABLE;
+
 
         //TODO: debug merge 
         /* print();
         RULE_APPLICATION_RESULT degreeTwoResult = reductions->rule_DegreeTwo(this, k);
         print(); */
         RULE_APPLICATION_RESULT degreeTwoResult = INAPPLICABLE;
+
         if(highDegreeResult == INAPPLICABLE && degreeZeroResult == INAPPLICABLE && degreeOneResult == INAPPLICABLE && degreeTwoResult == INAPPLICABLE && dominationResult == INAPPLICABLE) //TODO: add conditions for other rules
         {
+            if(dominationDebug){
+                std::string cntapp = "No Rule applied";
+                std::cout << ColorPrint::dye(cntapp, 'g') << std::endl ;
+            }
+
             return false;
         }
         /* RULE_APPLICATION_RESULT LPFlowResult = reductions->rule_LPFlow(this, k);
@@ -1103,6 +1118,14 @@ void BucketGraph::unreduce(int* k, int previousK, std::unordered_map<int, bool>*
 {
     if(reductions->appliedRules->empty())
         return;
+
+    bool printDebug = false;
+
+    if (printDebug)
+    {
+        std::string appliedOn = "In unreduce";
+        std::cout << ColorPrint::dye(appliedOn, 'r') << std::endl ;
+    }
 
     //pop rules
     while(*k < previousK || (!reductions->appliedRules->empty() && reductions->appliedRules->back()->kDecrement == 0))
@@ -1170,12 +1193,41 @@ void BucketGraph::unreduce(int* k, int previousK, std::unordered_map<int, bool>*
                 }
                 break;
             case DOMINATION:
-//                *k = *k + rule->kDecrement;
-//                setActive(rule->deletedVCVertices);
-//                if(vc != nullptr)
-//                {
-//                    vc->insert(vc->end(), rule->deletedVCVertices->begin(), rule->deletedVCVertices->end());
-//                }
+                if((int) rule->deletedVCVertices->size() == 0) {
+                    if (printDebug)
+                    {
+                        std::string nothing = "Nothing to add";
+                        std::cout << ColorPrint::dye(nothing, 'p') << std::endl ;
+                        std::cout << rule->kDecrement << std::endl;
+
+                    }
+                    break;
+                }
+                *k = *k + rule->kDecrement;
+                setActive(rule->deletedVCVertices);
+                if(vc != nullptr)
+                {
+                    if (printDebug)
+                        reductions->printCounters();
+                    for(int i = 0; i < (int) rule->deletedVCVertices->size(); i++)
+                    {
+                        if (printDebug)
+                        {
+                            std::string addingV2VC = "Adding to VC vertex: " + std::to_string(rule->deletedVCVertices->at(i));
+                            std::cout << ColorPrint::dye(addingV2VC, 'c') << std::endl ;
+                        }
+
+                        vc->insert({rule->deletedVCVertices->at(i), true});
+                    }
+                }
+                else{
+                    if (printDebug)
+                    {
+                        std::string notVC = "Reverting Rule, no VC";
+                        std::cout << ColorPrint::dye(notVC, 'c') << std::endl ;
+                    }
+                }
+
                 break;
             case LPFLOW:
                 *k = *k + rule->kDecrement;
@@ -1193,6 +1245,11 @@ void BucketGraph::unreduce(int* k, int previousK, std::unordered_map<int, bool>*
             default:
                 throw std::invalid_argument("unreduce error: unknown rule");
                 break;
+        }
+        if (printDebug)
+        {
+            std::cout << "Rule: " << rule->rule << std::endl;
+            std::cout << "Decrement: " <<rule->kDecrement << std::endl;
         }
         reductions->appliedRules->pop_back();
         //TODO: delete debug at the end

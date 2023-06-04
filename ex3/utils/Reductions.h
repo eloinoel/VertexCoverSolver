@@ -54,9 +54,11 @@ class Reductions
 public:
     public:
     int rule_0 , rule_1, rule_2 , rule_High,  rule_Dom, rule_LPF, rule_B;
+    int cnt = 0;
 
     // TODO: eventually set it to false once no dominating vertex is active
     bool isThereDomination;
+    bool enterDebug = false;
 
     std::vector<Reduction*>* appliedRules;
     std::vector<std::vector<int>*>* dominationSets;
