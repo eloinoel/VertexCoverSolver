@@ -1207,11 +1207,29 @@ void BucketGraph::unreduce(int* k, int previousK, std::unordered_map<int, bool>*
                 }
                 break;
             case DOMINATION:
+                std::cout << cp::dye("Domination unreduce", 'g') << std::endl;
 //                if((int) rule->deletedVCVertices->size() == 0)
 //                    break;
+                //print();
+                /* std::cout << "{";
+                if(rule->deletedVCVertices != nullptr)
+                {
+                    for (int j=0; j<(int) rule->deletedVCVertices->size(); j++)
+                    {
+                        if(vertexReferences[rule->deletedVCVertices->at(j)]->isActive) { std::cout << "!"; }
+                        std::cout << rule->deletedVCVertices->at(j) << ", ";
+                    }
+                
+                    std::cout << "}" << std::endl;
+                }
+                else
+                {
+                    std::cout << "nullptr" << std::endl;
+                } */
 
                 *k = *k + rule->kDecrement;
                 setActive(rule->deletedVCVertices);
+                //std::cout << "after set active" << std::endl;
                 if(vc != nullptr)
                 {
                     for(int i = 0; i < (int) rule->deletedVCVertices->size(); i++)
@@ -1219,6 +1237,7 @@ void BucketGraph::unreduce(int* k, int previousK, std::unordered_map<int, bool>*
                         vc->insert({rule->deletedVCVertices->at(i), true});
                     }
                 }
+                std::cout << "after unreduce" << std::endl;
                 break;
             case LPFLOW:
                 *k = *k + rule->kDecrement;
@@ -1235,7 +1254,7 @@ void BucketGraph::unreduce(int* k, int previousK, std::unordered_map<int, bool>*
                 std::cout << "{";
                 for (int j=0; j<(int) rule->deletedVCVertices->size(); j++)
                 {
-                    if(vertexReferences[rule->deletedVertices->at(j)]->isActive) { std::cout << "!"; }
+                    if(vertexReferences[rule->deletedVCVertices->at(j)]->isActive) { std::cout << "!"; }
                     std::cout << rule->deletedVCVertices->at(j) << ", ";
                 }
                 std::cout << "}" << std::endl; */
