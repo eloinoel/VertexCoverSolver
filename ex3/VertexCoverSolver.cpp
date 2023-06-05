@@ -447,10 +447,10 @@ int main(int argc, char* argv[]) {
 
 	try
 	{
-        //chooseImplementationAndOutput(0, false, false, false, false, true, false);
+        chooseImplementationAndOutput(1, false, false, false, false, true, false);
         //chooseImplementationAndOutput(1, true, false, false, true, true, false); //print alot
         signal(SIGINT, my_sig_handler); //catches SIGINT to output anything
-        chooseImplementationAndOutput(5, false, false, false, false, true, false);
+        //chooseImplementationAndOutput(5, false, false, false, false, true, false);
 	}
 	catch (const exception& e)
 	{
