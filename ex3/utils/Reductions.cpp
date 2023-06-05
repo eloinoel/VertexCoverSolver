@@ -232,15 +232,16 @@ RULE_APPLICATION_RESULT Reductions::rule_Domination_BE(BucketGraph* G, int* k)
     {
         //std::cout << "Iterating through bucket " << curDeg << std::endl;
         //G->printBucketQueue();
-        list<BucketVertex>* bucket = G->getVerticesOfDegree(curDeg);
-        if(bucket->empty())
+        //list<BucketVertex>* bucket = G->getVerticesOfDegree(curDeg);
+        Bucket* bucket = G->getBucket(curDeg);
+        if(bucket->vertices.empty())
         {
             continue;
         }
 
         //loop through vertices of bucket
-        auto u_it = bucket->begin(); // ++bucket->begin(); // TODO: sometimes randomly u_it is an inactive vertex
-        while(u_it != bucket->end())
+        auto u_it = bucket->getStableIterator(); // ++bucket->begin(); // TODO: sometimes randomly u_it is an inactive vertex
+        while(*u_it != bucket->vertices.end())
         {
             //std::cout << "Checking iterator for vertex u=" << u_it->index << std::endl;
             //if no budget left
@@ -253,7 +254,7 @@ RULE_APPLICATION_RESULT Reductions::rule_Domination_BE(BucketGraph* G, int* k)
             }
             bool dominates = true;
             //loop through u's neighbours
-            Vertex* u = G->getVertex(u_it->index);
+            Vertex* u = G->getVertex((*u_it)->index);
             if(!u->getActive()) { continue; }   // TODO: this guards against random inactive vertices
             //std::cout << "Checking vertex u=" << u->getIndex() << std::endl;
             for(int i = 0; i < (int) u->getAdj()->size(); i++)

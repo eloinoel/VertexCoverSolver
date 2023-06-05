@@ -36,6 +36,7 @@ class Bucket : public list_base_hook<>
 public:
     int degree;
     list<BucketVertex> vertices;
+    boost::intrusive::list<BucketVertex>::iterator stable_iterator;
 
 public:
     Bucket(int _degree, std::vector<BucketVertex*>& _vertices)
@@ -46,6 +47,7 @@ public:
         {
             vertices.push_back(*vertex);
         }
+        stable_iterator = vertices.begin();
     }
 
     inline void insert(BucketVertex* vertex)
@@ -55,6 +57,7 @@ public:
 
     inline void remove(BucketVertex* vertex)
     {
+        if(vertices.iterator_to(*vertex)->index == stable_iterator->index) { ++stable_iterator; }
         vertices.erase(vertices.iterator_to(*vertex));
     }
 
@@ -70,9 +73,20 @@ public:
     {
         for(BucketVertex* vertex : *_vertices)
         {
+            if(vertices.iterator_to(*vertex)->index == stable_iterator->index) { ++stable_iterator; }
             auto it = vertices.iterator_to(*vertex);
             vertices.erase(it);
         }
+    }
+
+    /*  The stable iterator allows for deletion from-, and insertion into a bucket, while iterating through it
+    *   Whenever the element, the iterator points to is deleted, the iterator is incremented
+    *   When a new element is inserted into the bucket during iteration, the iterator will iterate over it later
+    */
+    inline boost::intrusive::list<BucketVertex>::iterator* getStableIterator()
+    {
+        stable_iterator = vertices.begin();
+        return &stable_iterator;
     }
 };
 
@@ -185,7 +199,8 @@ public:
     std::pair<int, int>* getFirstTwoActiveNeighbours(int vertex);
 
     int getMaxDegree();
-    list<Bucket>* getBucketQueue() { return &bucketQueue; };
+    inline list<Bucket>* getBucketQueue() { return &bucketQueue; };
+    inline Bucket* getBucket(int degree) { return bucketReferences[degree]; };
     int getMaxDegreeVertex();
     /* heuristic from paper which generally worsens performance a bit but reduces number of recursive steps */
     int getMaxDegreeVertexMinimisingNeighbourEdges();
