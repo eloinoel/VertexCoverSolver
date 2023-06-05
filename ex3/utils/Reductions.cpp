@@ -485,7 +485,7 @@ RULE_APPLICATION_RESULT Reductions::rule_Domination(BucketGraph* G, int* k)
 
     // While there are Nodes with at least Deg 3
     while(maxDeg > 2) {
-        if(*k - reduction->kDecrement == 0) {
+        if(*k - reduction->kDecrement <= 0) {
             reduction->deletedVCVertices->clear();
             return INSUFFICIENT_BUDGET; //cannot delete more vertices, no possible vertex cover exists
         }
@@ -574,7 +574,7 @@ RULE_APPLICATION_RESULT Reductions::rule_Domination(BucketGraph* G, int* k)
 
     rule_Dom += reduction->kDecrement;
     if(reduction->kDecrement == 0){
-        //reduction->deletedVCVertices = {};
+        //reduction->deletedVCVertices->clear();
         return INAPPLICABLE;
     }
 
