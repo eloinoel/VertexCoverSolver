@@ -1088,16 +1088,16 @@ bool BucketGraph::reduce(int* k)
         RULE_APPLICATION_RESULT dominationResult = INAPPLICABLE;
         RULE_APPLICATION_RESULT LPFlowResult = INAPPLICABLE;
 
-        /* highDegreeResult = reductions->rule_HighDegree(this, k);
+        highDegreeResult = reductions->rule_HighDegree(this, k);
         if(highDegreeResult == INSUFFICIENT_BUDGET) return true; //cut
-        degreeZeroResult = reductions->rule_DegreeZero(this);
+        /*degreeZeroResult = reductions->rule_DegreeZero(this);
         if(highDegreeResult == INAPPLICABLE && degreeZeroResult == INAPPLICABLE)
         {
             if(reductions->rule_Buss(this, k, getNumVertices(), getNumEdges()) == APPLICABLE)
                 return true;
         }
         degreeOneResult = reductions->rule_DegreeOne(this, k);
-        if(degreeOneResult == INSUFFICIENT_BUDGET) return true; //cut */
+        if(degreeOneResult == INSUFFICIENT_BUDGET) return true; */ //cut
 
         //dominationResult = reductions->rule_Domination(this, k);
         dominationResult = reductions->rule_Domination(this, k);
@@ -1135,6 +1135,7 @@ void BucketGraph::unreduce(int* k, int previousK, std::unordered_map<int, bool>*
     while(*k < previousK || (!reductions->appliedRules->empty() && reductions->appliedRules->back()->kDecrement == 0))
     {
         Reduction* rule = reductions->appliedRules->back();
+        //std::cout << "> unreducing: ";
         switch(rule->rule)
         {
             case DEGREE_ZERO:
@@ -1207,7 +1208,7 @@ void BucketGraph::unreduce(int* k, int previousK, std::unordered_map<int, bool>*
                 }
                 break;
             case DOMINATION:
-                std::cout << cp::dye("Domination unreduce", 'g') << std::endl;
+                //std::cout << cp::dye("Domination unreduce", 'g') << std::endl;
 //                if((int) rule->deletedVCVertices->size() == 0)
 //                    break;
                 //print();
@@ -1237,7 +1238,8 @@ void BucketGraph::unreduce(int* k, int previousK, std::unordered_map<int, bool>*
                         vc->insert({rule->deletedVCVertices->at(i), true});
                     }
                 }
-                std::cout << "after unreduce" << std::endl;
+                //std::cout << "after unreduce" << std::endl;
+                //print();
                 break;
             case LPFLOW:
                 *k = *k + rule->kDecrement;
