@@ -8,6 +8,9 @@ boost_1_65_0
 .vscode
 .vs
 
+*.zip
+*/AbgabeFiles/
+
 # User-specific files
 *.rsuser
 *.suo

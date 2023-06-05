@@ -76,7 +76,7 @@ public:
 
 public:
 
-    bool isDominated(BucketGraph* G, int dom, std::vector<bool>* pendingDeletions , bool printDebug);
+    bool isDominated(BucketGraph* G, int dom, /* std::vector<bool>* pendingDeletions , */ bool printDebug);
     void initRuleCounter();
     void initDominationVector(BucketGraph* G);
 
@@ -96,6 +96,8 @@ public:
     RULE_APPLICATION_RESULT rule_LPFlow(BucketGraph* G, int* k);
     
     RULE_APPLICATION_RESULT rule_Domination(BucketGraph* G, int* k);
+
+    RULE_APPLICATION_RESULT rule_Domination_BE(BucketGraph* G, int* k);
     //    RULE_APPLICATION_RESULT rule_DominationMitInit(BucketGraph* G, int* k);
 //    RULE_APPLICATION_RESULT rule_Domination_Upgraded(BucketGraph* G, int* k);
 };

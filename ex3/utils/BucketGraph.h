@@ -99,6 +99,13 @@ private:
     friend class Reductions;
 public:
 
+    inline std::vector<int>* getAdj() { return adj; }
+
+    inline bool getActive() { return isActive; }
+    inline int getDegree() { return degree; }
+    inline int getIndex() { return index; }
+
+
     Vertex(std::vector<int>* adjVertices, std::string orginalName, int _index, int startingDegree)
      : adj(adjVertices), strName(orginalName), index(_index), degree(startingDegree)
     {
@@ -178,6 +185,7 @@ public:
     std::pair<int, int>* getFirstTwoActiveNeighbours(int vertex);
 
     int getMaxDegree();
+    list<Bucket>* getBucketQueue() { return &bucketQueue; };
     int getMaxDegreeVertex();
     /* heuristic from paper which generally worsens performance a bit but reduces number of recursive steps */
     int getMaxDegreeVertexMinimisingNeighbourEdges();
