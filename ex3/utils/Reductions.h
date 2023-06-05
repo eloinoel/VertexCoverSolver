@@ -54,7 +54,7 @@ class Reductions
 {
 public:
     public:
-    int rule_0 , rule_1, rule_2 , rule_High,  rule_Dom, rule_LPF, rule_B;
+    int rule_0 , rule_1, rule_2 , rule_High, rule_Dom, rule_LPF, rule_B;
 
     bool dominationHeuristic = true;
     int cntDom = 0;
@@ -76,7 +76,7 @@ public:
 
 public:
 
-    bool isDominated(BucketGraph* G, int dom , bool printDebug);
+    bool isDominated(BucketGraph* G, int dom, std::vector<bool>* pendingDeletions , bool printDebug);
     void initRuleCounter();
     void initDominationVector(BucketGraph* G);
 
