@@ -56,11 +56,14 @@ public:
     public:
     int rule_0 , rule_1, rule_2 , rule_High,  rule_Dom, rule_LPF, rule_B;
 
-    // TODO: eventually set it to false once no dominating vertex is active
-    bool isThereDomination;
-    bool enterDebug = false;
+    bool dominationHeuristic = true;
+    int cntDom = 0;
 
-    int numberOfDominators;
+    bool printDebug = false;
+    bool printTimer = false;
+
+    // max Degree to treat
+    int arbitraryDegreeLimiter = 100;
 
     std::vector<Reduction*>* appliedRules;
     std::vector<std::vector<int>*>* dominationSets;
@@ -91,8 +94,10 @@ public:
     RULE_APPLICATION_RESULT rule_DegreeTwo(BucketGraph* G, int* k);
 
     RULE_APPLICATION_RESULT rule_LPFlow(BucketGraph* G, int* k);
+    
     RULE_APPLICATION_RESULT rule_Domination(BucketGraph* G, int* k);
-    RULE_APPLICATION_RESULT rule_DominationMitInit(BucketGraph* G, int* k);
+    //    RULE_APPLICATION_RESULT rule_DominationMitInit(BucketGraph* G, int* k);
+//    RULE_APPLICATION_RESULT rule_Domination_Upgraded(BucketGraph* G, int* k);
 };
 
 #endif

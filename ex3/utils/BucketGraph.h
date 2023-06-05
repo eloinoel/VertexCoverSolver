@@ -236,6 +236,7 @@ private:
     bool isAdjMapConsistent();
 
     void initDominationHelper(){dominationHelper = new std::vector<int> (getNumVertices(), 0);};
+    void clearDominationHelper(){ delete dominationHelper; }
     //-------------------------- Graph Utility --------------------------
 
     int bruteForceCalculateNumEdges();
