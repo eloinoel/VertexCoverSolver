@@ -1125,8 +1125,7 @@ bool BucketGraph::reduce(int* k)
         degreeOneResult = reductions->rule_DegreeOne(this, k);
         if(degreeOneResult == INSUFFICIENT_BUDGET) return true; //cut
 
-        dominationResult = reductions->rule_Domination(this, k);
-        //RULE_APPLICATION_RESULT dominationResult = INAPPLICABLE;
+        //dominationResult = reductions->rule_Domination(this, k);
         /* dominationResult = reductions->rule_DominationMitInit(this, k);*/
         if(dominationResult == INSUFFICIENT_BUDGET) return true; //cut
 
@@ -1570,8 +1569,12 @@ bool BucketGraph::matchingDFS(int u)
             {
                 if (matchingDFS(pairV[*v]))
                 {
+                    /* flow[u][pairU[u]] = 0;
+                    flow[*v][pairV[*v]] = 0; */
                     pairV[*v] = u;
                     pairU[u] = *v;
+                    /* flow[u][pairU[u]] = 0;
+                    flow[pairV[*v]][*v] = 0; */
                     return true;
                 }
             }
