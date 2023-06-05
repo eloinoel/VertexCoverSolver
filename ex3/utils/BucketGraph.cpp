@@ -1090,14 +1090,14 @@ bool BucketGraph::reduce(int* k)
 
         highDegreeResult = reductions->rule_HighDegree(this, k);
         if(highDegreeResult == INSUFFICIENT_BUDGET) return true; //cut
-        /*degreeZeroResult = reductions->rule_DegreeZero(this);
+        degreeZeroResult = reductions->rule_DegreeZero(this);
         if(highDegreeResult == INAPPLICABLE && degreeZeroResult == INAPPLICABLE)
         {
             if(reductions->rule_Buss(this, k, getNumVertices(), getNumEdges()) == APPLICABLE)
                 return true;
         }
         degreeOneResult = reductions->rule_DegreeOne(this, k);
-        if(degreeOneResult == INSUFFICIENT_BUDGET) return true; */ //cut
+        if(degreeOneResult == INSUFFICIENT_BUDGET) return true;  //cut
 
         //dominationResult = reductions->rule_Domination(this, k);
         dominationResult = reductions->rule_Domination(this, k);

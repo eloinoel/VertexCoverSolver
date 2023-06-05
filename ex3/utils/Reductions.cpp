@@ -481,11 +481,12 @@ RULE_APPLICATION_RESULT Reductions::rule_Domination(BucketGraph* G, int* k)
     for (int i=0; i<(int) pendingDeletions.size(); i++) { pendingDeletions[i] = false; }
 
     Reduction* reduction = new Reduction(RULE::DOMINATION, 0, nullptr, new std::vector<int>());
-    appliedRules->push_back(reduction);
+
 
     // While there are Nodes with at least Deg 3
     while(maxDeg > 2) {
         if(*k - reduction->kDecrement == 0) {
+            (*k) = (*k) + reduction->kDecrement;
             reduction->deletedVCVertices->clear();
             return INSUFFICIENT_BUDGET; //cannot delete more vertices, no possible vertex cover exists
         }
@@ -524,7 +525,6 @@ RULE_APPLICATION_RESULT Reductions::rule_Domination(BucketGraph* G, int* k)
                 //std::cout << ColorPrint::dye("checking neighbour ", 'y') << neighbours->at(i) << ColorPrint::dye(" is dominated", 'y') << std::endl;
 
                 if (isDominated(G, neighbours->at(i), &pendingDeletions, false)){
-                    reduction->kDecrement++;
                     for(int j = 0; j < (int) reduction->deletedVCVertices->size(); j++)
                     {
                         if(reduction->deletedVCVertices->at(j) == v)
@@ -532,9 +532,10 @@ RULE_APPLICATION_RESULT Reductions::rule_Domination(BucketGraph* G, int* k)
                             std::cout << ColorPrint::dye("domination duplicate", 'r') << std::endl;
                         }
                     }
+                    reduction->kDecrement++;
                     //std::cout << ColorPrint::dye("---> neighbour ", 'g') << neighbours->at(i) << ColorPrint::dye(" is dominated", 'g') << std::endl;
                     reduction->deletedVCVertices->push_back(v);
-                    (*k) = (*k) - 1;
+//                    (*k) = (*k) - 1;
                     //G->setInactive(v);
                     pendingDeletions[v] = true;
                     //std::cout << ColorPrint::dye("---> set ", 'g') << v << ColorPrint::dye(" inactive", 'g') << std::endl;
@@ -549,10 +550,10 @@ RULE_APPLICATION_RESULT Reductions::rule_Domination(BucketGraph* G, int* k)
             }
             //std::cout << ColorPrint::dye("reset domination helper", 'y') << std::endl;
 
-            /* if(*k - reduction->kDecrement == 0){
+            if(*k - reduction->kDecrement == 0){
                 delete reduction;
                 return INSUFFICIENT_BUDGET;
-            } */
+            }
         }
         //std::cout << ColorPrint::dye("*******terminated examining bucket********", 'y') << std::endl;
 
@@ -572,7 +573,6 @@ RULE_APPLICATION_RESULT Reductions::rule_Domination(BucketGraph* G, int* k)
         maxDeg--;
     }
 
-    rule_Dom += reduction->kDecrement;
     if(reduction->kDecrement == 0){
         //reduction->deletedVCVertices = {};
         return INAPPLICABLE;
@@ -595,6 +595,9 @@ RULE_APPLICATION_RESULT Reductions::rule_Domination(BucketGraph* G, int* k)
     if(printTimer)
         if(cntDom < 100)
             std::cout << "This " << cntDom << "-nth reducing of " << reduction->kDecrement << " Vertices took " << duration.count() << "ms." << std::endl;
+
+    (*k) = (*k) - reduction->kDecrement;
+    appliedRules->push_back(reduction);
 
     cntDom++;
     return APPLICABLE;
