@@ -1,9 +1,9 @@
 #include "ColorPrint.h"
 #include "Reductions.h"
-#include "boost/intrusive/list.hpp"
 #include "BucketGraph.h"
 #include <iostream>
 #include <chrono>
+#include "boost/intrusive/list.hpp"
 
 using namespace boost::intrusive;
 
@@ -392,7 +392,7 @@ void Reductions::printDominationSets()
     }
 }
 
-bool Reductions::isDominated(BucketGraph* G, int dom, /* std::vector<bool>* pendingDeletions, */ bool printDebug)
+bool Reductions::isDominated(BucketGraph* G, int dom, std::vector<bool>* pendingDeletions, bool printDebug)
 {
     if (printDebug)
     {
@@ -422,7 +422,7 @@ bool Reductions::isDominated(BucketGraph* G, int dom, /* std::vector<bool>* pend
     return true;
 }
 
-RULE_APPLICATION_RESULT Reductions::rule_Domination(BucketGraph* G, int* k)
+/* RULE_APPLICATION_RESULT Reductions::rule_Domination(BucketGraph* G, int* k)
 {
     int maxDeg = G->getMaxDegree();
     if(maxDeg < 3)
@@ -543,8 +543,8 @@ RULE_APPLICATION_RESULT Reductions::rule_Domination(BucketGraph* G, int* k)
 
     cntDom++;
     return APPLICABLE;
-}
-/* 
+} */
+
 RULE_APPLICATION_RESULT Reductions::rule_Domination(BucketGraph* G, int* k)
 {
     //std::cout << "----------Domination Rule Start-----------" << std::endl;
@@ -684,7 +684,7 @@ RULE_APPLICATION_RESULT Reductions::rule_Domination(BucketGraph* G, int* k)
 
     cntDom++;
     return APPLICABLE;
-} */
+}
 
 /* RULE_APPLICATION_RESULT Reductions::rule_DegreeOne(BucketGraph* G, int* k)
 {
