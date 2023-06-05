@@ -1088,7 +1088,7 @@ bool BucketGraph::reduce(int* k)
         RULE_APPLICATION_RESULT dominationResult = INAPPLICABLE;
         RULE_APPLICATION_RESULT LPFlowResult = INAPPLICABLE;
 
-        /* highDegreeResult = reductions->rule_HighDegree(this, k);
+        highDegreeResult = reductions->rule_HighDegree(this, k);
         if(highDegreeResult == INSUFFICIENT_BUDGET) return true; //cut
         degreeZeroResult = reductions->rule_DegreeZero(this);
         if(highDegreeResult == INAPPLICABLE && degreeZeroResult == INAPPLICABLE)
@@ -1097,11 +1097,11 @@ bool BucketGraph::reduce(int* k)
                 return true;
         }
         degreeOneResult = reductions->rule_DegreeOne(this, k);
-        if(degreeOneResult == INSUFFICIENT_BUDGET) return true; //cut */
+        if(degreeOneResult == INSUFFICIENT_BUDGET) return true; //cut
 
         //dominationResult = reductions->rule_Domination(this, k);
-        dominationResult = reductions->rule_Domination(this, k);
-        if(dominationResult == INSUFFICIENT_BUDGET) return true; //cut
+        /* dominationResult = reductions->rule_Domination(this, k);
+        if(dominationResult == INSUFFICIENT_BUDGET) return true; */ //cut
 
         //TODO: debug merge 
         /* degreeTwoResult = reductions->rule_DegreeTwo(this, k);
@@ -1111,7 +1111,7 @@ bool BucketGraph::reduce(int* k)
             return true; //cut
         } */
 
-        /* if(c > 0)
+        /* if(c < 1)
         {
             LPFlowResult = reductions->rule_LPFlow(this, k);
             if(LPFlowResult == INSUFFICIENT_BUDGET) return true;
@@ -1660,9 +1660,9 @@ int BucketGraph::edmondsKarpFlow()
         {
             flow[i][j] = 0;
         }
-    } */
+    }
     // set left to right flow according to matching
-    /* for (int i=0; i<(int) pairU.size(); i++)
+    for (int i=0; i<(int) pairU.size(); i++)
     {
         if(pairU[i] != NIL)
         {
