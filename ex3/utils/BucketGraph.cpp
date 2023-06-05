@@ -344,6 +344,31 @@ void BucketGraph::initMatching()
     dist[NIL] = INT32_MAX;
     // run matching algorithm to calculate initial matching
     hopcroftKarpMatchingSize();
+
+    // init flow
+    nv = vertexReferences.size();
+    s = nv*2;
+    t = nv*2+1;
+    pred = std::vector<int>(nv*2+2);
+    flow = std::vector<std::vector<int>>(nv*2+2);
+    for(int i=0; i<nv*2+2; i++)
+    {
+        flow[i] = std::vector<int>(nv*2+2);
+        pred[i] = -1;
+        for(int j=0; j<nv*2+2; j++)
+        {
+            flow[i][j] = 0;
+        }
+    }
+    for (int i=0; i<(int) pairU.size(); i++)
+    {
+        if(pairU[i] != NIL)
+        {
+            flow[s][i] = 1;
+            flow[i][pairU[i]] = 1;
+            flow[pairU[i]][t] = 1;
+        }
+    }
 }
 
 bool BucketGraph::isAdjMapConsistent()
@@ -1074,7 +1099,7 @@ bool BucketGraph::reduce(int* k)
         degreeOneResult = reductions->rule_DegreeOne(this, k);
         if(degreeOneResult == INSUFFICIENT_BUDGET) return true; //cut
 
-        dominationResult = reductions->rule_Domination(this, k);
+        //dominationResult = reductions->rule_Domination(this, k);
         //RULE_APPLICATION_RESULT dominationResult = INAPPLICABLE;
         //RULE_APPLICATION_RESULT dominationResult = reductions->rule_DominationMitInit(this, k);
         if(dominationResult == INSUFFICIENT_BUDGET) return true; //cut
@@ -1595,18 +1620,17 @@ int BucketGraph::edmondsKarpFlow()
     //std::cout << ".";
     //std::cout << "Beginning flow" << std::endl;
     // number of vertices helper variable (only for clarity)
-    const int nv = vertexReferences.size();
+    //onst int nv = vertexReferences.size();
 
     int flow_amt = 0;
-    int s = nv*2;
-    int t = nv*2+1;
-    std::vector<int> pred = std::vector<int>(nv*2+2);
+    /* int s = nv*2;
+    int t = nv*2+1; */
+    //std::vector<int> pred = std::vector<int>(nv*2+2);
     std::queue<int> Q = std::queue<int>();
     int current;
 
     // init flow
-    // TODO: see how much of this can be saved across iterations
-    flow = std::vector<std::vector<int>>(nv*2+2);
+    /* flow = std::vector<std::vector<int>>(nv*2+2);
     for(int i=0; i<nv*2+2; i++)
     {
         flow[i] = std::vector<int>(nv*2+2);
@@ -1615,9 +1639,9 @@ int BucketGraph::edmondsKarpFlow()
         {
             flow[i][j] = 0;
         }
-    }
+    } */
     // set left to right flow according to matching
-    for (int i=0; i<(int) pairU.size(); i++)
+    /* for (int i=0; i<(int) pairU.size(); i++)
     {
         if(pairU[i] != NIL)
         {
@@ -1625,7 +1649,7 @@ int BucketGraph::edmondsKarpFlow()
             flow[i][pairU[i]] = 1;
             flow[pairU[i]][t] = 1;
         }
-    }
+    } */
     //std::cout << "Initialized flow" << std::endl;
     pred[t] = 1;
     // Until no augmenting path was found last iteration

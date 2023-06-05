@@ -145,6 +145,11 @@ private:
     int currentLPBound;
     bool didInitialMatchingCalculation = false;
 
+    // predecessor & flow fields
+    int nv;
+    int s;
+    int t;
+    std::vector<int> pred;
     std::vector<std::vector<int>> flow;
 
 //functions
