@@ -1135,6 +1135,7 @@ void BucketGraph::unreduce(int* k, int previousK, std::unordered_map<int, bool>*
     while(*k < previousK || (!reductions->appliedRules->empty() && reductions->appliedRules->back()->kDecrement == 0))
     {
         Reduction* rule = reductions->appliedRules->back();
+        //std::cout << "> unreducing: ";
         switch(rule->rule)
         {
             case DEGREE_ZERO:
@@ -1207,7 +1208,7 @@ void BucketGraph::unreduce(int* k, int previousK, std::unordered_map<int, bool>*
                 }
                 break;
             case DOMINATION:
-                std::cout << cp::dye("Domination unreduce", 'g') << std::endl;
+                //std::cout << cp::dye("Domination unreduce", 'g') << std::endl;
 //                if((int) rule->deletedVCVertices->size() == 0)
 //                    break;
                 //print();
@@ -1237,7 +1238,8 @@ void BucketGraph::unreduce(int* k, int previousK, std::unordered_map<int, bool>*
                         vc->insert({rule->deletedVCVertices->at(i), true});
                     }
                 }
-                std::cout << "after unreduce" << std::endl;
+                //std::cout << "after unreduce" << std::endl;
+                //print();
                 break;
             case LPFLOW:
                 *k = *k + rule->kDecrement;
@@ -1565,8 +1567,12 @@ bool BucketGraph::matchingDFS(int u)
             {
                 if (matchingDFS(pairV[*v]))
                 {
+                    /* flow[u][pairU[u]] = 0;
+                    flow[*v][pairV[*v]] = 0; */ // TODO: update flow, when updating matching
                     pairV[*v] = u;
                     pairU[u] = *v;
+                    /* flow[u][pairU[u]] = 0;
+                    flow[pairV[*v]][*v] = 0; */
                     return true;
                 }
             }
