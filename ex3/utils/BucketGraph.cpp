@@ -342,11 +342,11 @@ void BucketGraph::initMatching()
         dist[i] = INT32_MAX;
     }
     dist[NIL] = INT32_MAX;
-    // run matching algorithm to calculate initial matching
-    hopcroftKarpMatchingSize();
 
     // init flow
+    // number of vertices helper variable (only for clarity)
     nv = vertexReferences.size();
+    // source & sink vertex definition
     s = nv*2;
     t = nv*2+1;
     pred = std::vector<int>(nv*2+2);
@@ -369,6 +369,10 @@ void BucketGraph::initMatching()
             flow[pairU[i]][t] = 1;
         }
     }
+
+
+    // run matching algorithm to calculate initial matching and setup flow
+    hopcroftKarpMatchingSize();
 }
 
 bool BucketGraph::isAdjMapConsistent()
@@ -867,6 +871,15 @@ void BucketGraph::setInactive(int vertexIndex)
         currentLPBound--;
     }
     //std::cout << std::endl;
+    flow[s][vertexIndex] = 0;
+    pred[vertexIndex] = -1;
+    if(pairU[vertexIndex] != NIL)
+    {
+        flow[vertexIndex][pairU[vertexIndex]+nv] = 0;
+        flow[pairU[vertexIndex]+nv][vertexIndex] = 0;
+        flow[pairU[vertexIndex]+nv][t] = 0;
+        pred[pairU[vertexIndex]+nv] = -1;
+    }
     dist[vertexIndex] = INT32_MAX;
     pairV[pairU[vertexIndex]] = NIL;
     pairU[pairV[vertexIndex]] = NIL;
@@ -1121,6 +1134,7 @@ bool BucketGraph::reduce(int* k)
         {
             return false;
         }
+        c++;
     }
     return false;
 }
@@ -1566,12 +1580,29 @@ bool BucketGraph::matchingDFS(int u)
             {
                 if (matchingDFS(pairV[*v]))
                 {
-                    /* flow[u][pairU[u]] = 0;
-                    flow[*v][pairV[*v]] = 0; */ // TODO: update flow, when updating matching
+                    if (pairV[*v] != NIL)
+                    {
+                        flow[s][pairV[*v]] = 0;
+                        flow[pairV[*v]][*v+nv] = 0;
+                        flow[*v+nv][pairV[*v]] = 0;
+                        pred[pairV[*v]] = -1;
+                    }
+
+                    if (pairU[u] != NIL)
+                    {
+                        flow[u][pairU[u]+nv] = 0;
+                        flow[pairU[u]+nv][u] = 0;
+                        flow[pairU[u]+nv][t] = 0;
+                        pred[pairU[u]+nv] = -1;
+                    }
+
                     pairV[*v] = u;
                     pairU[u] = *v;
-                    /* flow[u][pairU[u]] = 0;
-                    flow[pairV[*v]][*v] = 0; */
+                    
+                    flow[s][u] = 1;
+                    flow[u][*v+nv] = 1;
+                    flow[*v+nv][t] = 1;
+                    pred[*v+nv] = u;
                     return true;
                 }
             }
@@ -1643,17 +1674,14 @@ int BucketGraph::hopcroftKarpMatchingSize()
 
 int BucketGraph::edmondsKarpFlow()
 {
-    //std::cout << ".";
-    //std::cout << "Beginning flow" << std::endl;
-    // number of vertices helper variable (only for clarity)
-    //onst int nv = vertexReferences.size();
+    std::cout << "Beginning flow" << std::endl;
 
     int flow_amt = 0;
-    /* int s = nv*2;
-    int t = nv*2+1; */
     //std::vector<int> pred = std::vector<int>(nv*2+2);
     std::queue<int> Q = std::queue<int>();
     int current;
+
+    pred[s] = -1;
 
     // init flow
     /* flow = std::vector<std::vector<int>>(nv*2+2);
@@ -1676,17 +1704,17 @@ int BucketGraph::edmondsKarpFlow()
             flow[pairU[i]][t] = 1;
         }
     } */
-    //std::cout << "Initialized flow" << std::endl;
+    std::cout << "Initialized flow" << std::endl;
     pred[t] = 1;
     // Until no augmenting path was found last iteration
     while (pred[t] != -1)
     {
         // clear queue & predecessors
         while (!Q.empty()) { Q.pop(); }
-        for(int i=0; i<nv*2+2; i++) { pred[i] = -1; }
+        //for(int i=0; i<nv*2+2; i++) { pred[i] = -1; } // TODO: do we need to reset preds?
         // init queue with source vertex
         Q.push(s);
-        //std::cout << "Pushed source vertex" << std::endl;
+        std::cout << "Pushed source vertex" << std::endl;
         // BFS to find the shortest s-t path
         while (!Q.empty())
         {
@@ -1697,7 +1725,7 @@ int BucketGraph::edmondsKarpFlow()
             // if current is s (capacity == 1)
             if(current == s)
             {
-                //std::cout << "Evaluating source vertex" << std::endl;
+                std::cout << "Evaluating source vertex" << std::endl;
                 // s exclusively has edges to left vertices (indices 0 to vertexReferences.size()-1)
                 for (int i=0; i<nv; i++)
                 {
@@ -1709,12 +1737,12 @@ int BucketGraph::edmondsKarpFlow()
                         Q.push(i);
                     }
                 }
-                //std::cout << "Evaluated source vertex" << std::endl;
+                std::cout << "Evaluated source vertex" << std::endl;
             }
             // if current is a left vertex (capacity == INF for edges to right vertices)
             else if (current < nv)
             {
-                //std::cout << "Evaluating left side vertex" << std::endl;
+                std::cout << "Evaluating left side vertex " << current << std::endl;
                 // current has edges to right vertices (indices vertexReferences.size() to vertexReferences.size()*2-1)
                 for (auto v=vertexReferences[current]->adj->begin(); v != vertexReferences[current]->adj->end(); ++v)
                 {
@@ -1725,38 +1753,38 @@ int BucketGraph::edmondsKarpFlow()
                         Q.push(nv+*v);
                     }
                 }
-                //std::cout << "Evaluated left side vertex" << std::endl;
+                std::cout << "Evaluated left side vertex " << current << std::endl;
             }
             // if current is a right vertex (capacity == 1 for edge to t and capacity == INF for the reverse edges to left vertices)
             else if (nv <= current && current < nv*2)
             {
-                //std::cout << "Evaluating right side vertex: " << current << std::endl;
+                std::cout << "Evaluating right side vertex: " << current << std::endl;
                 // current has reverse edges to left vertices (indices vertexReferences.size() to vertexReferences.size()*2-1)
                 for (auto v=vertexReferences[current-nv]->adj->begin(); v != vertexReferences[current-nv]->adj->end(); ++v)
                 {
                     if(!vertexReferences[*v]->isActive) { continue; }
-                    //std::cout << "Evaluating right side vertices left side neighbour" << std::endl;
+                    std::cout << "Evaluating right side vertices left side neighbour" << std::endl;
                     if (pred[*v] == -1 && pairU[*v] == current)
                     {
                         pred[*v] = current;
                         Q.push(*v);
                     }
                 }
-                //std::cout << "Evaluated right side vertices reverse edges" << std::endl;
+                std::cout << "Evaluated right side vertices reverse edges" << std::endl;
                 if (pred[t] == -1 && 1 > flow[current][t])
                 {
                     pred[t] = current;
                     break;
-                    //std::cout << "Found s-t path" << std::endl;
+                    std::cout << "Found s-t path" << std::endl;
                 }
             }
         }
-        //std::cout << "Finished DFS" << std::endl;
+        std::cout << "Finished DFS" << std::endl;
 
         if (pred[t] != -1)
         {
-            /* std::cout << "Found flow-improving path" << std::endl;
-            printMatching(); */
+            std::cout << "Found flow-improving path" << std::endl;
+            printMatching();
             // always: df = 1;
             for (int p = t; p != -1 && p != s; p = pred[p])
             {
@@ -1771,7 +1799,7 @@ int BucketGraph::edmondsKarpFlow()
 
                     pairU[p] = NIL;
                     pairV[pred[p]-nv] = NIL;
-                    //std::cout << "-" << "(" << p << ", " << pred[p]-nv << ") ";
+                    std::cout << "-" << "(" << p << ", " << pred[p]-nv << ") ";
                 }
                 // using forward edge
                 else
@@ -1781,16 +1809,16 @@ int BucketGraph::edmondsKarpFlow()
 
                     pairU[pred[p]] = p-nv;
                     pairV[p-nv] = pred[p];
-                    //std::cout << "+" << "(" << pred[p] << ", " << p-nv << ") ";
+                    std::cout << "+" << "(" << pred[p] << ", " << p-nv << ") ";
                 }
             }
             /* std::cout << std::endl;
             printMatching(); */
             flow_amt++;
-            //std::cout << "Processed flow-improving path" << std::endl;
+            std::cout << "Processed flow-improving path" << std::endl;
         }
     }
-    //std::cout << "Ending flow" << std::endl;
+    std::cout << "Ending flow" << std::endl;
     return flow_amt;
 }
 

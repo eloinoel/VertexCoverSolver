@@ -220,7 +220,8 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeTwo(BucketGraph* G, int* k)
 
 RULE_APPLICATION_RESULT Reductions::rule_Domination_BE(BucketGraph* G, int* k)
 {
-    std::cout << "Domination start" << std::endl;
+    //std::cout << "Domination start" << std::endl;
+    //G->print();
     int maxDeg = G->getMaxDegree();
     if(maxDeg <= 2) { return INAPPLICABLE; }
 
@@ -229,6 +230,8 @@ RULE_APPLICATION_RESULT Reductions::rule_Domination_BE(BucketGraph* G, int* k)
     //loop through buckets in descending order
     for(int curDeg = maxDeg; curDeg > 2; curDeg--) //in each while loop, we look at --it, because we started with end()
     {
+        //std::cout << "Iterating through bucket " << curDeg << std::endl;
+        //G->printBucketQueue();
         list<BucketVertex>* bucket = G->getVerticesOfDegree(curDeg);
         if(bucket->empty())
         {
@@ -236,9 +239,10 @@ RULE_APPLICATION_RESULT Reductions::rule_Domination_BE(BucketGraph* G, int* k)
         }
 
         //loop through vertices of bucket
-        auto u_it = bucket->begin();
+        auto u_it = bucket->begin(); // ++bucket->begin(); // TODO: sometimes randomly u_it is an inactive vertex
         while(u_it != bucket->end())
         {
+            //std::cout << "Checking iterator for vertex u=" << u_it->index << std::endl;
             //if no budget left
             if(k == 0 && G->getMaxDegree() > 0)
             {
@@ -247,46 +251,55 @@ RULE_APPLICATION_RESULT Reductions::rule_Domination_BE(BucketGraph* G, int* k)
                 G->setActive(reduction->deletedVCVertices);
                 return INSUFFICIENT_BUDGET;
             }
-
             bool dominates = true;
             //loop through u's neighbours
             Vertex* u = G->getVertex(u_it->index);
+            if(!u->getActive()) { continue; }   // TODO: this guards against random inactive vertices
+            //std::cout << "Checking vertex u=" << u->getIndex() << std::endl;
             for(int i = 0; i < (int) u->getAdj()->size(); i++)
             {
                 Vertex* v = G->getVertex(u->getAdj()->at(i));
                 if(!v->getActive()) { continue; }
                 if(u->getDegree() < v->getDegree()) { continue; }
+                //std::cout << "Checking vertex v=" << v->getIndex() << std::endl;
 
-                
                 //loop through v's neighbours
                 for(int j = 0; j < (int) v->getAdj()->size(); j++)
                 {
                     Vertex* vn = G->getVertex(v->getAdj()->at(j));
-                    if(!vn->getActive()) { continue; }
+                    if(!vn->getActive() || vn->getIndex() == u->getIndex()) { continue; }
+                    //std::cout << "Checking vertex v's neighbour vn=" << vn->getIndex() << std::endl;
                     //if u does not have edge (u, vn) to neighbour of v
-                    if(G->vertexHasEdgeTo(u->getIndex(), vn->getIndex()))
+                    if(!G->vertexHasEdgeTo(u->getIndex(), vn->getIndex()))
                     {
+                        //std::cout << "Vertex u=" << u->getIndex() << " is missing edge: (" << u->getIndex() << ", " << vn->getIndex() << ")" << std::endl;
                         dominates = false;
                         break;
                     }
+                    //std::cout << "Vertex u=" << u->getIndex() << " can match edge: (" << v->getIndex() << ", " << vn->getIndex() << ")" << " with edge: (" << u->getIndex() << ", " << vn->getIndex() << ")" << std::endl;
                 }
 
                 //u dominates neighbour v
                 if(dominates)
                 {
+                    //std::cout << "Vertex u=" << u->getIndex() << " dominates vertex v=" << v->getIndex() << std::endl;
                     break;
                 }
             }
+
             //u dominates any neighbour
             if(dominates)
             {
                 ++u_it;
+                //std::cout << "Vertex u=" << u->getIndex() << " is active " << u->getActive() << " and has degree: " << u->getDegree() << std::endl;
+                //std::cout << "Setting vertex u=" << u->getIndex() << " inactive " << std::endl;
                 reduction->kDecrement++;
                 *k = *k - 1;
                 reduction->deletedVCVertices->push_back(u->getIndex());
                 G->setInactive(u->getIndex());
                 continue;
             }
+            ++u_it;
         }
     }
     if(reduction->deletedVCVertices->size() > 0)
@@ -657,7 +670,7 @@ RULE_APPLICATION_RESULT Reductions::rule_Domination(BucketGraph* G, int* k)
     }
 
     if(reduction->kDecrement == 0){
-        //reduction->deletedVCVertices = {};
+        //reduction->deletedVCVertices->clear();
         return INAPPLICABLE;
     }
 
