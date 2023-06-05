@@ -56,11 +56,11 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeZero(BucketGraph* G)
 RULE_APPLICATION_RESULT Reductions::rule_Buss(BucketGraph* G, int* k, int numVertices, int numEdges)
 {
 
-    if(enterDebug){
+    /* if(enterDebug){
         std::string enterPrint = "IN BUSS RULE";
         std::cout << ColorPrint::dye(enterPrint, 'p') << std::endl ;
         std::cout << std::endl;
-    }
+    } */
 
     int k_square = std::pow((*k), 2);
 
@@ -339,7 +339,7 @@ bool Reductions::isDominated(BucketGraph* G, int dom, bool printDebug)
     return true;
 }
 
-RULE_APPLICATION_RESULT Reductions::rule_Domination(BucketGraph* G, int* k)
+/* RULE_APPLICATION_RESULT Reductions::rule_Domination(BucketGraph* G, int* k)
 {
     int maxDeg = G->getMaxDegree();
     if(maxDeg < 3)
@@ -460,7 +460,149 @@ RULE_APPLICATION_RESULT Reductions::rule_Domination(BucketGraph* G, int* k)
 
     cntDom++;
     return APPLICABLE;
+} */
+
+RULE_APPLICATION_RESULT Reductions::rule_Domination(BucketGraph* G, int* k)
+{
+    int maxDeg = G->getMaxDegree();
+    if(maxDeg < 3)
+        return INAPPLICABLE;
+
+    // Heuristic
+    if(dominationHeuristic && cntDom > 2)
+        if(maxDeg > arbitraryDegreeLimiter)
+            maxDeg = arbitraryDegreeLimiter;
+
+    auto start = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> duration;
+
+    Reduction* reduction = new Reduction(RULE::DOMINATION, 0, nullptr, new std::vector<int>());
+
+    // While there are Nodes with at least Deg 3
+    while(maxDeg > 2) {
+        if(*k - reduction->kDecrement == 0) {
+            delete reduction;
+            return INSUFFICIENT_BUDGET; //cannot delete more vertices, no possible vertex cover exists
+        }
+        list<BucketVertex>* degDom = G->getVerticesOfDegree(maxDeg);
+
+        if( degDom->empty()) {
+            maxDeg--;
+            continue;
+        }
+
+        // Go through all vertices of degree Bucket
+        for(auto it = degDom->begin(); it != degDom->end(); it++)
+        {
+            int v = it->index;
+
+            // Get neighbours
+            std::vector<int>* neighbours = G->getNeighbours(v);
+
+            // Set flags to neighbours O(deg(v))
+            G->dominationHelper->at(v) = 1;
+            for (int i = 0; i < (int) neighbours->size(); ++i) {
+                G->dominationHelper->at(neighbours->at(i)) = 1;
+            }
+
+            // Check if v has one neighbour that is dominated by it
+            for (int i = 0; i < (int) neighbours->size(); ++i) {
+
+                // Inactive or cannot be dominated
+                if(!G->isActive(neighbours->at(i)) || G->getVertexDegree(neighbours->at(i)) > maxDeg) {
+                    continue;
+                }
+
+                if (isDominated(G, neighbours->at(i), false)){
+                    reduction->kDecrement++;
+                    reduction->deletedVCVertices->push_back(v);
+                    break;
+                }
+            }
+
+            // Reset flags from neighbours
+            G->dominationHelper->at(v) = 0;
+            for (int i = 0; i < (int) neighbours->size(); ++i) {
+                G->dominationHelper->at(neighbours->at(i)) = 0;
+            }
+
+            if(*k - reduction->kDecrement == 0){
+                delete reduction;
+                return INSUFFICIENT_BUDGET;
+            }
+        }
+
+        auto stop = std::chrono::high_resolution_clock::now();
+        duration = stop - start;
+
+        // Dauer länger als 20ms
+        if(duration.count() > 25.0)
+        {
+            start = std::chrono::high_resolution_clock::now();
+            if(maxDeg > 20)
+            {
+                maxDeg = 20;
+                continue;
+            }
+        }
+        maxDeg--;
+    }
+
+
+    rule_Dom += reduction->kDecrement;
+    if(reduction->kDecrement == 0){
+        delete reduction;
+        return INAPPLICABLE;
+    }
+
+    if(printDebug){
+        std::string cntapp = "DOMINATION RULE APPLIED " + std::to_string(reduction->kDecrement);
+        std::cout << ColorPrint::dye(cntapp, 'c') << std::endl ;
+//        std::cout << std::endl;
+    }
+    if(printDebug){
+        std::string kPrint = "k =" + std::to_string(*k);
+        std::cout << ColorPrint::dye(kPrint, 'r') << std::endl ;
+        std::cout << std::endl;
+    }
+
+    (*k) = (*k) - reduction->kDecrement;
+    G->setInactive(reduction->deletedVCVertices);
+
+    appliedRules->push_back(reduction);
+
+    if(printTimer)
+        if(cntDom < 100)
+            std::cout << "This " << cntDom << "-nth reducing of " << reduction->kDecrement << " Vertices took " << duration.count() << "ms." << std::endl;
+
+    cntDom++;
+    return APPLICABLE;
 }
+
+/* RULE_APPLICATION_RESULT Reductions::rule_DegreeOne(BucketGraph* G, int* k)
+{
+    list<BucketVertex>* degOneBucket = G->getVerticesOfDegree(1);
+
+    if(degOneBucket == nullptr || degOneBucket->empty()) return INAPPLICABLE;
+
+    Reduction* reduction = new Reduction(RULE::DEGREE_ONE, 0, nullptr, new std::vector<int>());
+    appliedRules->push_back(reduction);
+
+    //std::cout << "DEGONE Culling vertices: {";
+    while(!degOneBucket->empty())
+    {
+        if(*k == 0) return INSUFFICIENT_BUDGET; //cannot delete more vertices, no possible vertex cover exists
+        auto it = degOneBucket->begin();
+        int neighbourToDelete = G->getNthActiveNeighbour(it->index, 0);
+        reduction->deletedVCVertices->push_back(neighbourToDelete);
+        reduction->kDecrement++;
+        *k = *k - 1;
+        G->setInactive(neighbourToDelete);
+        //std::cout << neighbourToDelete << ", ";
+    }
+    //std::cout << "}" << std::endl;
+    return APPLICABLE;
+} */
 
 //RULE_APPLICATION_RESULT Reductions::rule_Domination_Upgraded(BucketGraph* G, int* k)
 //{

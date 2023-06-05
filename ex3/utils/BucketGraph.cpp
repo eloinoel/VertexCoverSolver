@@ -882,19 +882,6 @@ void BucketGraph::setActive(std::vector<int>* vertexIndices)
     }
 }
 
-/* FIXME: delete at the end if not needed
-void BucketGraph::setNeighboursOfVertexActive(int vertexIndex)
-{
-    for(int i = 0; i < (int) vertexReferences[vertexIndex]->adj->size(); i++)
-    {
-        Vertex* neighbour = vertexReferences[vertexReferences[vertexIndex]->adj->at(i)];
-        if(!neighbour->isActive)
-        {
-            setActive(neighbour->index);
-        }
-    }
-} */
-
 void BucketGraph::setInactive(std::vector<int>* vertexIndices)
 {
     for(int i = 0; i < (int) vertexIndices->size(); i++)
@@ -902,19 +889,6 @@ void BucketGraph::setInactive(std::vector<int>* vertexIndices)
         setInactive(vertexIndices->at(i));
     }
 }
-
-/* FIXME: delete at the end if not needed
-void BucketGraph::setNeighboursOfVertexInactive(int vertexIndex)
-{
-    for(int i = 0; i < (int) vertexReferences[vertexIndex]->adj->size(); i++)
-    {
-        Vertex* neighbour = vertexReferences[vertexReferences[vertexIndex]->adj->at(i)];
-        if(neighbour->isActive)
-        {
-            setInactive(neighbour->index);
-        }
-    }
-} */
 
 std::vector<int>* BucketGraph::getNeighbours(int vertexIndex)
 {
@@ -1114,7 +1088,7 @@ bool BucketGraph::reduce(int* k)
         RULE_APPLICATION_RESULT dominationResult = INAPPLICABLE;
         RULE_APPLICATION_RESULT LPFlowResult = INAPPLICABLE;
 
-        highDegreeResult = reductions->rule_HighDegree(this, k);
+        /* highDegreeResult = reductions->rule_HighDegree(this, k);
         if(highDegreeResult == INSUFFICIENT_BUDGET) return true; //cut
         degreeZeroResult = reductions->rule_DegreeZero(this);
         if(highDegreeResult == INAPPLICABLE && degreeZeroResult == INAPPLICABLE)
@@ -1123,12 +1097,11 @@ bool BucketGraph::reduce(int* k)
                 return true;
         }
         degreeOneResult = reductions->rule_DegreeOne(this, k);
-        if(degreeOneResult == INSUFFICIENT_BUDGET) return true; //cut
+        if(degreeOneResult == INSUFFICIENT_BUDGET) return true; //cut */
 
         //dominationResult = reductions->rule_Domination(this, k);
-        //RULE_APPLICATION_RESULT dominationResult = INAPPLICABLE;
-        //RULE_APPLICATION_RESULT dominationResult = reductions->rule_DominationMitInit(this, k);
-        //if(dominationResult == INSUFFICIENT_BUDGET) return true; //cut
+        dominationResult = reductions->rule_Domination(this, k);
+        if(dominationResult == INSUFFICIENT_BUDGET) return true; //cut
 
         //TODO: debug merge 
         /* degreeTwoResult = reductions->rule_DegreeTwo(this, k);
@@ -1138,8 +1111,11 @@ bool BucketGraph::reduce(int* k)
             return true; //cut
         } */
 
-        LPFlowResult = reductions->rule_LPFlow(this, k);
-        if(LPFlowResult == INSUFFICIENT_BUDGET) return true;
+        /* if(c > 0)
+        {
+            LPFlowResult = reductions->rule_LPFlow(this, k);
+            if(LPFlowResult == INSUFFICIENT_BUDGET) return true;
+        } */
 
         if(highDegreeResult == INAPPLICABLE && degreeZeroResult == INAPPLICABLE && degreeOneResult == INAPPLICABLE
          && degreeTwoResult == INAPPLICABLE && dominationResult == INAPPLICABLE && LPFlowResult == INAPPLICABLE) //TODO: add conditions for other rules
