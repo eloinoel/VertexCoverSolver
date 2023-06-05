@@ -828,7 +828,7 @@ void BucketGraph::setInactive(int vertexIndex)
 {
     Vertex* v = vertexReferences[vertexIndex];
     if(v == nullptr || v->adj == nullptr) throw std::invalid_argument("setInactive: vertex " + std::to_string(vertexIndex) + " is nullptr");
-    if(!v->isActive) throw std::invalid_argument("setInactive: vertex " + std::to_string(vertexIndex) + "is already not active");
+    if(!v->isActive) throw std::invalid_argument("setInactive: vertex " + std::to_string(vertexIndex) + " is already not active");
 
     v->isActive = false;
     numVertices--;
@@ -919,7 +919,6 @@ int BucketGraph::getMaxDegree()
         return -1;
     return bucketQueue.back().degree;
 }
-
 
 int BucketGraph::getMaxDegreeVertex()
 {
@@ -1088,7 +1087,7 @@ bool BucketGraph::reduce(int* k)
         RULE_APPLICATION_RESULT dominationResult = INAPPLICABLE;
         RULE_APPLICATION_RESULT LPFlowResult = INAPPLICABLE;
 
-        highDegreeResult = reductions->rule_HighDegree(this, k);
+        /* highDegreeResult = reductions->rule_HighDegree(this, k);
         if(highDegreeResult == INSUFFICIENT_BUDGET) return true; //cut
         degreeZeroResult = reductions->rule_DegreeZero(this);
         if(highDegreeResult == INAPPLICABLE && degreeZeroResult == INAPPLICABLE)
@@ -1097,11 +1096,11 @@ bool BucketGraph::reduce(int* k)
                 return true;
         }
         degreeOneResult = reductions->rule_DegreeOne(this, k);
-        if(degreeOneResult == INSUFFICIENT_BUDGET) return true; //cut
+        if(degreeOneResult == INSUFFICIENT_BUDGET) return true; //cut */
 
         //dominationResult = reductions->rule_Domination(this, k);
-        /* dominationResult = reductions->rule_Domination(this, k);
-        if(dominationResult == INSUFFICIENT_BUDGET) return true; */ //cut
+        dominationResult = reductions->rule_Domination_BE(this, k);
+        if(dominationResult == INSUFFICIENT_BUDGET) return true; //cut
 
         //TODO: debug merge 
         /* degreeTwoResult = reductions->rule_DegreeTwo(this, k);
@@ -1208,7 +1207,7 @@ void BucketGraph::unreduce(int* k, int previousK, std::unordered_map<int, bool>*
                 }
                 break;
             case DOMINATION:
-                //std::cout << cp::dye("Domination unreduce", 'g') << std::endl;
+                std::cout << cp::dye("Domination unreduce", 'g') << std::endl;
 //                if((int) rule->deletedVCVertices->size() == 0)
 //                    break;
                 //print();

@@ -218,6 +218,89 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeTwo(BucketGraph* G, int* k)
     return APPLICABLE;
 }
 
+RULE_APPLICATION_RESULT Reductions::rule_Domination_BE(BucketGraph* G, int* k)
+{
+    std::cout << "Domination start" << std::endl;
+    int maxDeg = G->getMaxDegree();
+    if(maxDeg <= 2) { return INAPPLICABLE; }
+
+    Reduction* reduction = new Reduction(RULE::DEGREE_ONE, 0, nullptr, new std::vector<int>());
+
+    //loop through buckets in descending order
+    for(int curDeg = maxDeg; curDeg > 2; curDeg--) //in each while loop, we look at --it, because we started with end()
+    {
+        list<BucketVertex>* bucket = G->getVerticesOfDegree(curDeg);
+        if(bucket->empty())
+        {
+            continue;
+        }
+
+        //loop through vertices of bucket
+        auto u_it = bucket->begin();
+        while(u_it != bucket->end())
+        {
+            //if no budget left
+            if(k == 0 && G->getMaxDegree() > 0)
+            {
+                //revert all changes made
+                *k = *k + reduction->kDecrement;
+                G->setActive(reduction->deletedVCVertices);
+                return INSUFFICIENT_BUDGET;
+            }
+
+            bool dominates = true;
+            //loop through u's neighbours
+            Vertex* u = G->getVertex(u_it->index);
+            for(int i = 0; i < (int) u->getAdj()->size(); i++)
+            {
+                Vertex* v = G->getVertex(u->getAdj()->at(i));
+                if(!v->getActive()) { continue; }
+                if(u->getDegree() < v->getDegree()) { continue; }
+
+                
+                //loop through v's neighbours
+                for(int j = 0; j < (int) v->getAdj()->size(); j++)
+                {
+                    Vertex* vn = G->getVertex(v->getAdj()->at(j));
+                    if(!vn->getActive()) { continue; }
+                    //if u does not have edge (u, vn) to neighbour of v
+                    if(G->vertexHasEdgeTo(u->getIndex(), vn->getIndex()))
+                    {
+                        dominates = false;
+                        break;
+                    }
+                }
+
+                //u dominates neighbour v
+                if(dominates)
+                {
+                    break;
+                }
+            }
+            //u dominates any neighbour
+            if(dominates)
+            {
+                ++u_it;
+                reduction->kDecrement++;
+                *k = *k - 1;
+                reduction->deletedVCVertices->push_back(u->getIndex());
+                G->setInactive(u->getIndex());
+                continue;
+            }
+        }
+    }
+    if(reduction->deletedVCVertices->size() > 0)
+    {
+        appliedRules->push_back(reduction);
+        return APPLICABLE;
+    }
+    else
+    {
+        return INAPPLICABLE;
+    }
+}
+
+
 void Reductions::initRuleCounter()
 {
     rule_0 = 0;
@@ -309,7 +392,7 @@ void Reductions::printDominationSets()
     }
 }
 
-bool Reductions::isDominated(BucketGraph* G, int dom, std::vector<bool>* pendingDeletions, bool printDebug)
+bool Reductions::isDominated(BucketGraph* G, int dom, /* std::vector<bool>* pendingDeletions, */ bool printDebug)
 {
     if (printDebug)
     {
@@ -325,7 +408,7 @@ bool Reductions::isDominated(BucketGraph* G, int dom, std::vector<bool>* pending
 
     for (int i = 0; i < (int) neighbour->size(); ++i) {
         int n = neighbour->at(i);
-        if(G->isActive(n) && G->dominationHelper->at(n) == 0 && !pendingDeletions->at(n))
+        if(G->isActive(n) && G->dominationHelper->at(n) == 0 /* && !pendingDeletions->at(n) */)
 //        if(G->isActive(n) && !G->dominationHelperBool->at(n))
         {
             if (printDebug)
@@ -339,7 +422,7 @@ bool Reductions::isDominated(BucketGraph* G, int dom, std::vector<bool>* pending
     return true;
 }
 
-/* RULE_APPLICATION_RESULT Reductions::rule_Domination(BucketGraph* G, int* k)
+RULE_APPLICATION_RESULT Reductions::rule_Domination(BucketGraph* G, int* k)
 {
     int maxDeg = G->getMaxDegree();
     if(maxDeg < 3)
@@ -460,8 +543,8 @@ bool Reductions::isDominated(BucketGraph* G, int dom, std::vector<bool>* pending
 
     cntDom++;
     return APPLICABLE;
-} */
-
+}
+/* 
 RULE_APPLICATION_RESULT Reductions::rule_Domination(BucketGraph* G, int* k)
 {
     //std::cout << "----------Domination Rule Start-----------" << std::endl;
@@ -601,7 +684,7 @@ RULE_APPLICATION_RESULT Reductions::rule_Domination(BucketGraph* G, int* k)
 
     cntDom++;
     return APPLICABLE;
-}
+} */
 
 /* RULE_APPLICATION_RESULT Reductions::rule_DegreeOne(BucketGraph* G, int* k)
 {
