@@ -48,67 +48,67 @@
     <span class="keyword">typedef</span> <span class="emphasis"><em><span class="identifier">unspecified</span></em></span> <a class="link" href="stack/node.html#boost.lockfree.stack.node.handle_t"><span class="identifier">handle_t</span></a><span class="special">;</span>
 
     <span class="comment">// <a class="link" href="stack/node.html#boost.lockfree.stack.nodeconstruct-copy-destruct">construct/copy/destruct</a></span>
-    <a class="link" href="stack/node.html#idp641362272-bb"><span class="identifier">node</span></a><span class="special">(</span><span class="identifier">T</span> <span class="keyword">const</span> <span class="special">&amp;</span><span class="special">)</span><span class="special">;</span>
+    <a class="link" href="stack/node.html#idp632232432-bb"><span class="identifier">node</span></a><span class="special">(</span><span class="identifier">T</span> <span class="keyword">const</span> <span class="special">&amp;</span><span class="special">)</span><span class="special">;</span>
 
     <span class="comment">// public data members</span>
     <span class="identifier">handle_t</span> <span class="identifier">next</span><span class="special">;</span>
     <span class="keyword">const</span> <span class="identifier">T</span> <span class="identifier">v</span><span class="special">;</span>
   <span class="special">}</span><span class="special">;</span>
   <span class="comment">// <a class="link" href="stack.html#boost.lockfree.stackconstruct-copy-destruct">construct/copy/destruct</a></span>
-  <a class="link" href="stack.html#idp641363248-bb"><span class="identifier">stack</span></a><span class="special">(</span><span class="keyword">void</span><span class="special">)</span><span class="special">;</span>
+  <a class="link" href="stack.html#idp632233408-bb"><span class="identifier">stack</span></a><span class="special">(</span><span class="keyword">void</span><span class="special">)</span><span class="special">;</span>
   <span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">typename</span> U<span class="special">&gt;</span> 
-    <span class="keyword">explicit</span> <a class="link" href="stack.html#idp641364512-bb"><span class="identifier">stack</span></a><span class="special">(</span><span class="keyword">typename</span> <span class="identifier">node_allocator</span><span class="special">::</span><span class="keyword">template</span> <span class="identifier">rebind</span><span class="special">&lt;</span> <span class="identifier">U</span> <span class="special">&gt;</span><span class="special">::</span><span class="identifier">other</span> <span class="keyword">const</span> <span class="special">&amp;</span><span class="special">)</span><span class="special">;</span>
-  <span class="keyword">explicit</span> <a class="link" href="stack.html#idp641366656-bb"><span class="identifier">stack</span></a><span class="special">(</span><span class="identifier">allocator</span> <span class="keyword">const</span> <span class="special">&amp;</span><span class="special">)</span><span class="special">;</span>
-  <span class="keyword">explicit</span> <a class="link" href="stack.html#idp641367904-bb"><span class="identifier">stack</span></a><span class="special">(</span><span class="identifier">size_type</span><span class="special">)</span><span class="special">;</span>
+    <span class="keyword">explicit</span> <a class="link" href="stack.html#idp632234672-bb"><span class="identifier">stack</span></a><span class="special">(</span><span class="keyword">typename</span> <span class="identifier">node_allocator</span><span class="special">::</span><span class="keyword">template</span> <span class="identifier">rebind</span><span class="special">&lt;</span> <span class="identifier">U</span> <span class="special">&gt;</span><span class="special">::</span><span class="identifier">other</span> <span class="keyword">const</span> <span class="special">&amp;</span><span class="special">)</span><span class="special">;</span>
+  <span class="keyword">explicit</span> <a class="link" href="stack.html#idp632236816-bb"><span class="identifier">stack</span></a><span class="special">(</span><span class="identifier">allocator</span> <span class="keyword">const</span> <span class="special">&amp;</span><span class="special">)</span><span class="special">;</span>
+  <span class="keyword">explicit</span> <a class="link" href="stack.html#idp632238064-bb"><span class="identifier">stack</span></a><span class="special">(</span><span class="identifier">size_type</span><span class="special">)</span><span class="special">;</span>
   <span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">typename</span> U<span class="special">&gt;</span> 
-    <a class="link" href="stack.html#idp641369472-bb"><span class="identifier">stack</span></a><span class="special">(</span><span class="identifier">size_type</span><span class="special">,</span> 
+    <a class="link" href="stack.html#idp632239632-bb"><span class="identifier">stack</span></a><span class="special">(</span><span class="identifier">size_type</span><span class="special">,</span> 
           <span class="keyword">typename</span> <span class="identifier">node_allocator</span><span class="special">::</span><span class="keyword">template</span> <span class="identifier">rebind</span><span class="special">&lt;</span> <span class="identifier">U</span> <span class="special">&gt;</span><span class="special">::</span><span class="identifier">other</span> <span class="keyword">const</span> <span class="special">&amp;</span><span class="special">)</span><span class="special">;</span>
-  <a class="link" href="stack.html#idp641406464-bb"><span class="special">~</span><span class="identifier">stack</span></a><span class="special">(</span><span class="keyword">void</span><span class="special">)</span><span class="special">;</span>
+  <a class="link" href="stack.html#idp632276624-bb"><span class="special">~</span><span class="identifier">stack</span></a><span class="special">(</span><span class="keyword">void</span><span class="special">)</span><span class="special">;</span>
 
-  <span class="comment">// <a class="link" href="stack.html#idp641372032-bb">private member functions</a></span>
-   <a class="link" href="stack.html#idp641372608-bb"><span class="identifier">BOOST_STATIC_ASSERT</span></a><span class="special">(</span><span class="identifier">boost</span><span class="special">::</span><span class="identifier">is_copy_constructible</span><span class="special">&lt;</span> <span class="identifier">T</span> <span class="special">&gt;</span><span class="special">::</span><span class="identifier">value</span><span class="special">)</span><span class="special">;</span>
-   <a class="link" href="stack.html#idp641374016-bb"><span class="identifier">BOOST_STATIC_ASSERT</span></a><span class="special">(</span><span class="special">(</span><span class="identifier">mpl</span><span class="special">::</span><span class="identifier">if_c</span><span class="special">&lt;</span> <span class="identifier">has_capacity</span><span class="special">,</span> <span class="identifier">mpl</span><span class="special">::</span><span class="identifier">bool_</span><span class="special">&lt;</span> <a class="link" href="capacity.html" title="Struct template capacity">capacity</a><span class="special">-</span><span class="number">1</span><span class="special">&lt;</span> <span class="identifier">boost</span><span class="special">::</span><span class="identifier">integer_traits</span><span class="special">&lt;</span> <span class="identifier">boost</span><span class="special">::</span><span class="identifier">uint16_t</span> <span class="special">&gt;</span><span class="special">::</span><span class="identifier">const_max</span> <span class="special">&gt;</span><span class="special">,</span> <span class="identifier">mpl</span><span class="special">::</span><span class="identifier">true_</span> <span class="special">&gt;</span><span class="special">::</span><span class="identifier">type</span><span class="special">::</span><span class="identifier">value</span><span class="special">)</span><span class="special">)</span><span class="special">;</span>
-   <a class="link" href="stack.html#idp641375920-bb"><span class="identifier">BOOST_DELETED_FUNCTION</span></a><span class="special">(</span><a class="link" href="stack.html" title="Class template stack">stack</a><span class="special">(</span><a class="link" href="stack.html" title="Class template stack">stack</a> <span class="keyword">const</span> <span class="special">&amp;</span><span class="special">)</span><span class="special">)</span><span class="special">;</span>
-  <span class="keyword">bool</span> <a class="link" href="stack.html#idp641378032-bb"><span class="identifier">is_lock_free</span></a><span class="special">(</span><span class="keyword">void</span><span class="special">)</span> <span class="keyword">const</span><span class="special">;</span>
-  <span class="keyword">void</span> <a class="link" href="stack.html#idp641381648-bb"><span class="identifier">reserve</span></a><span class="special">(</span><span class="identifier">size_type</span><span class="special">)</span><span class="special">;</span>
-  <span class="keyword">void</span> <a class="link" href="stack.html#idp641384960-bb"><span class="identifier">reserve_unsafe</span></a><span class="special">(</span><span class="identifier">size_type</span><span class="special">)</span><span class="special">;</span>
-  <span class="keyword">void</span> <a class="link" href="stack.html#idp641388272-bb"><span class="identifier">initialize</span></a><span class="special">(</span><span class="keyword">void</span><span class="special">)</span><span class="special">;</span>
-  <span class="keyword">void</span> <a class="link" href="stack.html#idp641389808-bb"><span class="identifier">link_nodes_atomic</span></a><span class="special">(</span><span class="identifier">node</span> <span class="special">*</span><span class="special">,</span> <span class="identifier">node</span> <span class="special">*</span><span class="special">)</span><span class="special">;</span>
-  <span class="keyword">void</span> <a class="link" href="stack.html#idp641392032-bb"><span class="identifier">link_nodes_unsafe</span></a><span class="special">(</span><span class="identifier">node</span> <span class="special">*</span><span class="special">,</span> <span class="identifier">node</span> <span class="special">*</span><span class="special">)</span><span class="special">;</span>
+  <span class="comment">// <a class="link" href="stack.html#idp632242192-bb">private member functions</a></span>
+   <a class="link" href="stack.html#idp632242768-bb"><span class="identifier">BOOST_STATIC_ASSERT</span></a><span class="special">(</span><span class="identifier">boost</span><span class="special">::</span><span class="identifier">is_copy_constructible</span><span class="special">&lt;</span> <span class="identifier">T</span> <span class="special">&gt;</span><span class="special">::</span><span class="identifier">value</span><span class="special">)</span><span class="special">;</span>
+   <a class="link" href="stack.html#idp632244176-bb"><span class="identifier">BOOST_STATIC_ASSERT</span></a><span class="special">(</span><span class="special">(</span><span class="identifier">mpl</span><span class="special">::</span><span class="identifier">if_c</span><span class="special">&lt;</span> <span class="identifier">has_capacity</span><span class="special">,</span> <span class="identifier">mpl</span><span class="special">::</span><span class="identifier">bool_</span><span class="special">&lt;</span> <a class="link" href="capacity.html" title="Struct template capacity">capacity</a><span class="special">-</span><span class="number">1</span><span class="special">&lt;</span> <span class="identifier">boost</span><span class="special">::</span><span class="identifier">integer_traits</span><span class="special">&lt;</span> <span class="identifier">boost</span><span class="special">::</span><span class="identifier">uint16_t</span> <span class="special">&gt;</span><span class="special">::</span><span class="identifier">const_max</span> <span class="special">&gt;</span><span class="special">,</span> <span class="identifier">mpl</span><span class="special">::</span><span class="identifier">true_</span> <span class="special">&gt;</span><span class="special">::</span><span class="identifier">type</span><span class="special">::</span><span class="identifier">value</span><span class="special">)</span><span class="special">)</span><span class="special">;</span>
+   <a class="link" href="stack.html#idp632246080-bb"><span class="identifier">BOOST_DELETED_FUNCTION</span></a><span class="special">(</span><a class="link" href="stack.html" title="Class template stack">stack</a><span class="special">(</span><a class="link" href="stack.html" title="Class template stack">stack</a> <span class="keyword">const</span> <span class="special">&amp;</span><span class="special">)</span><span class="special">)</span><span class="special">;</span>
+  <span class="keyword">bool</span> <a class="link" href="stack.html#idp632248192-bb"><span class="identifier">is_lock_free</span></a><span class="special">(</span><span class="keyword">void</span><span class="special">)</span> <span class="keyword">const</span><span class="special">;</span>
+  <span class="keyword">void</span> <a class="link" href="stack.html#idp632251808-bb"><span class="identifier">reserve</span></a><span class="special">(</span><span class="identifier">size_type</span><span class="special">)</span><span class="special">;</span>
+  <span class="keyword">void</span> <a class="link" href="stack.html#idp632255120-bb"><span class="identifier">reserve_unsafe</span></a><span class="special">(</span><span class="identifier">size_type</span><span class="special">)</span><span class="special">;</span>
+  <span class="keyword">void</span> <a class="link" href="stack.html#idp632258432-bb"><span class="identifier">initialize</span></a><span class="special">(</span><span class="keyword">void</span><span class="special">)</span><span class="special">;</span>
+  <span class="keyword">void</span> <a class="link" href="stack.html#idp632259968-bb"><span class="identifier">link_nodes_atomic</span></a><span class="special">(</span><span class="identifier">node</span> <span class="special">*</span><span class="special">,</span> <span class="identifier">node</span> <span class="special">*</span><span class="special">)</span><span class="special">;</span>
+  <span class="keyword">void</span> <a class="link" href="stack.html#idp632262192-bb"><span class="identifier">link_nodes_unsafe</span></a><span class="special">(</span><span class="identifier">node</span> <span class="special">*</span><span class="special">,</span> <span class="identifier">node</span> <span class="special">*</span><span class="special">)</span><span class="special">;</span>
   <span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">bool</span> Threadsafe<span class="special">,</span> <span class="keyword">bool</span> Bounded<span class="special">,</span> <span class="keyword">typename</span> ConstIterator<span class="special">&gt;</span> 
     <span class="identifier">tuple</span><span class="special">&lt;</span> <span class="identifier">node</span> <span class="special">*</span><span class="special">,</span> <span class="identifier">node</span> <span class="special">*</span> <span class="special">&gt;</span> 
-    <a class="link" href="stack.html#idp641394256-bb"><span class="identifier">prepare_node_list</span></a><span class="special">(</span><span class="identifier">ConstIterator</span><span class="special">,</span> <span class="identifier">ConstIterator</span><span class="special">,</span> <span class="identifier">ConstIterator</span> <span class="special">&amp;</span><span class="special">)</span><span class="special">;</span>
-  <span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">bool</span> Bounded<span class="special">&gt;</span> <span class="keyword">bool</span> <a class="link" href="stack.html#idp641399712-bb"><span class="identifier">do_push</span></a><span class="special">(</span><span class="identifier">T</span> <span class="keyword">const</span> <span class="special">&amp;</span><span class="special">)</span><span class="special">;</span>
+    <a class="link" href="stack.html#idp632264416-bb"><span class="identifier">prepare_node_list</span></a><span class="special">(</span><span class="identifier">ConstIterator</span><span class="special">,</span> <span class="identifier">ConstIterator</span><span class="special">,</span> <span class="identifier">ConstIterator</span> <span class="special">&amp;</span><span class="special">)</span><span class="special">;</span>
+  <span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">bool</span> Bounded<span class="special">&gt;</span> <span class="keyword">bool</span> <a class="link" href="stack.html#idp632269872-bb"><span class="identifier">do_push</span></a><span class="special">(</span><span class="identifier">T</span> <span class="keyword">const</span> <span class="special">&amp;</span><span class="special">)</span><span class="special">;</span>
   <span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">bool</span> Bounded<span class="special">,</span> <span class="keyword">typename</span> ConstIterator<span class="special">&gt;</span> 
-    <span class="identifier">ConstIterator</span> <a class="link" href="stack.html#idp641402384-bb"><span class="identifier">do_push</span></a><span class="special">(</span><span class="identifier">ConstIterator</span><span class="special">,</span> <span class="identifier">ConstIterator</span><span class="special">)</span><span class="special">;</span>
+    <span class="identifier">ConstIterator</span> <a class="link" href="stack.html#idp632272544-bb"><span class="identifier">do_push</span></a><span class="special">(</span><span class="identifier">ConstIterator</span><span class="special">,</span> <span class="identifier">ConstIterator</span><span class="special">)</span><span class="special">;</span>
 
-  <span class="comment">// <a class="link" href="stack.html#idp641408592-bb">public member functions</a></span>
-  <span class="keyword">bool</span> <a class="link" href="stack.html#idp641409152-bb"><span class="identifier">push</span></a><span class="special">(</span><span class="identifier">T</span> <span class="keyword">const</span> <span class="special">&amp;</span><span class="special">)</span><span class="special">;</span>
-  <span class="keyword">bool</span> <a class="link" href="stack.html#idp641413760-bb"><span class="identifier">bounded_push</span></a><span class="special">(</span><span class="identifier">T</span> <span class="keyword">const</span> <span class="special">&amp;</span><span class="special">)</span><span class="special">;</span>
+  <span class="comment">// <a class="link" href="stack.html#idp632278752-bb">public member functions</a></span>
+  <span class="keyword">bool</span> <a class="link" href="stack.html#idp632279312-bb"><span class="identifier">push</span></a><span class="special">(</span><span class="identifier">T</span> <span class="keyword">const</span> <span class="special">&amp;</span><span class="special">)</span><span class="special">;</span>
+  <span class="keyword">bool</span> <a class="link" href="stack.html#idp632283920-bb"><span class="identifier">bounded_push</span></a><span class="special">(</span><span class="identifier">T</span> <span class="keyword">const</span> <span class="special">&amp;</span><span class="special">)</span><span class="special">;</span>
   <span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">typename</span> ConstIterator<span class="special">&gt;</span> 
-    <span class="identifier">ConstIterator</span> <a class="link" href="stack.html#idp641417584-bb"><span class="identifier">push</span></a><span class="special">(</span><span class="identifier">ConstIterator</span><span class="special">,</span> <span class="identifier">ConstIterator</span><span class="special">)</span><span class="special">;</span>
+    <span class="identifier">ConstIterator</span> <a class="link" href="stack.html#idp632287744-bb"><span class="identifier">push</span></a><span class="special">(</span><span class="identifier">ConstIterator</span><span class="special">,</span> <span class="identifier">ConstIterator</span><span class="special">)</span><span class="special">;</span>
   <span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">typename</span> ConstIterator<span class="special">&gt;</span> 
-    <span class="identifier">ConstIterator</span> <a class="link" href="stack.html#idp641423632-bb"><span class="identifier">bounded_push</span></a><span class="special">(</span><span class="identifier">ConstIterator</span><span class="special">,</span> <span class="identifier">ConstIterator</span><span class="special">)</span><span class="special">;</span>
-  <span class="keyword">bool</span> <a class="link" href="stack.html#idp641429616-bb"><span class="identifier">unsynchronized_push</span></a><span class="special">(</span><span class="identifier">T</span> <span class="keyword">const</span> <span class="special">&amp;</span><span class="special">)</span><span class="special">;</span>
+    <span class="identifier">ConstIterator</span> <a class="link" href="stack.html#idp632293792-bb"><span class="identifier">bounded_push</span></a><span class="special">(</span><span class="identifier">ConstIterator</span><span class="special">,</span> <span class="identifier">ConstIterator</span><span class="special">)</span><span class="special">;</span>
+  <span class="keyword">bool</span> <a class="link" href="stack.html#idp632299776-bb"><span class="identifier">unsynchronized_push</span></a><span class="special">(</span><span class="identifier">T</span> <span class="keyword">const</span> <span class="special">&amp;</span><span class="special">)</span><span class="special">;</span>
   <span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">typename</span> ConstIterator<span class="special">&gt;</span> 
-    <span class="identifier">ConstIterator</span> <a class="link" href="stack.html#idp641434224-bb"><span class="identifier">unsynchronized_push</span></a><span class="special">(</span><span class="identifier">ConstIterator</span><span class="special">,</span> <span class="identifier">ConstIterator</span><span class="special">)</span><span class="special">;</span>
-  <span class="keyword">bool</span> <a class="link" href="stack.html#idp641439968-bb"><span class="identifier">pop</span></a><span class="special">(</span><span class="identifier">T</span> <span class="special">&amp;</span><span class="special">)</span><span class="special">;</span>
-  <span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">typename</span> U<span class="special">&gt;</span> <span class="keyword">bool</span> <a class="link" href="stack.html#idp641443728-bb"><span class="identifier">pop</span></a><span class="special">(</span><span class="identifier">U</span> <span class="special">&amp;</span><span class="special">)</span><span class="special">;</span>
-  <span class="keyword">bool</span> <a class="link" href="stack.html#idp641448768-bb"><span class="identifier">unsynchronized_pop</span></a><span class="special">(</span><span class="identifier">T</span> <span class="special">&amp;</span><span class="special">)</span><span class="special">;</span>
-  <span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">typename</span> U<span class="special">&gt;</span> <span class="keyword">bool</span> <a class="link" href="stack.html#idp641452528-bb"><span class="identifier">unsynchronized_pop</span></a><span class="special">(</span><span class="identifier">U</span> <span class="special">&amp;</span><span class="special">)</span><span class="special">;</span>
-  <span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">typename</span> Functor<span class="special">&gt;</span> <span class="keyword">bool</span> <a class="link" href="stack.html#idp641457568-bb"><span class="identifier">consume_one</span></a><span class="special">(</span><span class="identifier">Functor</span> <span class="special">&amp;</span><span class="special">)</span><span class="special">;</span>
-  <span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">typename</span> Functor<span class="special">&gt;</span> <span class="keyword">bool</span> <a class="link" href="stack.html#idp641462080-bb"><span class="identifier">consume_one</span></a><span class="special">(</span><span class="identifier">Functor</span> <span class="keyword">const</span> <span class="special">&amp;</span><span class="special">)</span><span class="special">;</span>
-  <span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">typename</span> Functor<span class="special">&gt;</span> <span class="identifier">size_t</span> <a class="link" href="stack.html#idp641466592-bb"><span class="identifier">consume_all</span></a><span class="special">(</span><span class="identifier">Functor</span> <span class="special">&amp;</span><span class="special">)</span><span class="special">;</span>
-  <span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">typename</span> Functor<span class="special">&gt;</span> <span class="identifier">size_t</span> <a class="link" href="stack.html#idp641471120-bb"><span class="identifier">consume_all</span></a><span class="special">(</span><span class="identifier">Functor</span> <span class="keyword">const</span> <span class="special">&amp;</span><span class="special">)</span><span class="special">;</span>
-  <span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">typename</span> Functor<span class="special">&gt;</span> <span class="identifier">size_t</span> <a class="link" href="stack.html#idp641475648-bb"><span class="identifier">consume_all_atomic</span></a><span class="special">(</span><span class="identifier">Functor</span> <span class="special">&amp;</span><span class="special">)</span><span class="special">;</span>
-  <span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">typename</span> Functor<span class="special">&gt;</span> <span class="identifier">size_t</span> <a class="link" href="stack.html#idp641480176-bb"><span class="identifier">consume_all_atomic</span></a><span class="special">(</span><span class="identifier">Functor</span> <span class="keyword">const</span> <span class="special">&amp;</span><span class="special">)</span><span class="special">;</span>
-  <span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">typename</span> Functor<span class="special">&gt;</span> <span class="identifier">size_t</span> <a class="link" href="stack.html#idp641484704-bb"><span class="identifier">consume_all_atomic_reversed</span></a><span class="special">(</span><span class="identifier">Functor</span> <span class="special">&amp;</span><span class="special">)</span><span class="special">;</span>
+    <span class="identifier">ConstIterator</span> <a class="link" href="stack.html#idp632304384-bb"><span class="identifier">unsynchronized_push</span></a><span class="special">(</span><span class="identifier">ConstIterator</span><span class="special">,</span> <span class="identifier">ConstIterator</span><span class="special">)</span><span class="special">;</span>
+  <span class="keyword">bool</span> <a class="link" href="stack.html#idp632310128-bb"><span class="identifier">pop</span></a><span class="special">(</span><span class="identifier">T</span> <span class="special">&amp;</span><span class="special">)</span><span class="special">;</span>
+  <span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">typename</span> U<span class="special">&gt;</span> <span class="keyword">bool</span> <a class="link" href="stack.html#idp632313888-bb"><span class="identifier">pop</span></a><span class="special">(</span><span class="identifier">U</span> <span class="special">&amp;</span><span class="special">)</span><span class="special">;</span>
+  <span class="keyword">bool</span> <a class="link" href="stack.html#idp632318928-bb"><span class="identifier">unsynchronized_pop</span></a><span class="special">(</span><span class="identifier">T</span> <span class="special">&amp;</span><span class="special">)</span><span class="special">;</span>
+  <span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">typename</span> U<span class="special">&gt;</span> <span class="keyword">bool</span> <a class="link" href="stack.html#idp632322688-bb"><span class="identifier">unsynchronized_pop</span></a><span class="special">(</span><span class="identifier">U</span> <span class="special">&amp;</span><span class="special">)</span><span class="special">;</span>
+  <span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">typename</span> Functor<span class="special">&gt;</span> <span class="keyword">bool</span> <a class="link" href="stack.html#idp632327728-bb"><span class="identifier">consume_one</span></a><span class="special">(</span><span class="identifier">Functor</span> <span class="special">&amp;</span><span class="special">)</span><span class="special">;</span>
+  <span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">typename</span> Functor<span class="special">&gt;</span> <span class="keyword">bool</span> <a class="link" href="stack.html#idp632332240-bb"><span class="identifier">consume_one</span></a><span class="special">(</span><span class="identifier">Functor</span> <span class="keyword">const</span> <span class="special">&amp;</span><span class="special">)</span><span class="special">;</span>
+  <span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">typename</span> Functor<span class="special">&gt;</span> <span class="identifier">size_t</span> <a class="link" href="stack.html#idp632336752-bb"><span class="identifier">consume_all</span></a><span class="special">(</span><span class="identifier">Functor</span> <span class="special">&amp;</span><span class="special">)</span><span class="special">;</span>
+  <span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">typename</span> Functor<span class="special">&gt;</span> <span class="identifier">size_t</span> <a class="link" href="stack.html#idp632341280-bb"><span class="identifier">consume_all</span></a><span class="special">(</span><span class="identifier">Functor</span> <span class="keyword">const</span> <span class="special">&amp;</span><span class="special">)</span><span class="special">;</span>
+  <span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">typename</span> Functor<span class="special">&gt;</span> <span class="identifier">size_t</span> <a class="link" href="stack.html#idp632345808-bb"><span class="identifier">consume_all_atomic</span></a><span class="special">(</span><span class="identifier">Functor</span> <span class="special">&amp;</span><span class="special">)</span><span class="special">;</span>
+  <span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">typename</span> Functor<span class="special">&gt;</span> <span class="identifier">size_t</span> <a class="link" href="stack.html#idp632350336-bb"><span class="identifier">consume_all_atomic</span></a><span class="special">(</span><span class="identifier">Functor</span> <span class="keyword">const</span> <span class="special">&amp;</span><span class="special">)</span><span class="special">;</span>
+  <span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">typename</span> Functor<span class="special">&gt;</span> <span class="identifier">size_t</span> <a class="link" href="stack.html#idp632354864-bb"><span class="identifier">consume_all_atomic_reversed</span></a><span class="special">(</span><span class="identifier">Functor</span> <span class="special">&amp;</span><span class="special">)</span><span class="special">;</span>
   <span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">typename</span> Functor<span class="special">&gt;</span> 
-    <span class="identifier">size_t</span> <a class="link" href="stack.html#idp641489264-bb"><span class="identifier">consume_all_atomic_reversed</span></a><span class="special">(</span><span class="identifier">Functor</span> <span class="keyword">const</span> <span class="special">&amp;</span><span class="special">)</span><span class="special">;</span>
-  <span class="keyword">bool</span> <a class="link" href="stack.html#idp641493824-bb"><span class="identifier">empty</span></a><span class="special">(</span><span class="keyword">void</span><span class="special">)</span> <span class="keyword">const</span><span class="special">;</span>
+    <span class="identifier">size_t</span> <a class="link" href="stack.html#idp632359424-bb"><span class="identifier">consume_all_atomic_reversed</span></a><span class="special">(</span><span class="identifier">Functor</span> <span class="keyword">const</span> <span class="special">&amp;</span><span class="special">)</span><span class="special">;</span>
+  <span class="keyword">bool</span> <a class="link" href="stack.html#idp632363984-bb"><span class="identifier">empty</span></a><span class="special">(</span><span class="keyword">void</span><span class="special">)</span> <span class="keyword">const</span><span class="special">;</span>
 <span class="special">}</span><span class="special">;</span></pre></div>
 <div class="refsect1">
-<a name="idp344078000"></a><h2>Description</h2>
+<a name="idp368895088"></a><h2>Description</h2>
 <p>The stack class provides a multi-writer/multi-reader stack, pushing and popping is lock-free, construction/destruction has to be synchronized. It uses a freelist for memory management, freed nodes are pushed to the freelist and not returned to the OS before the stack is destroyed.</p>
 <p><span class="bold"><strong>Policies:</strong></span> </p>
 <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
@@ -128,23 +128,23 @@
 <p>
 </p>
 <div class="refsect2">
-<a name="idp344089888"></a><h3>
+<a name="idp368906976"></a><h3>
 <a name="boost.lockfree.stackconstruct-copy-destruct"></a><code class="computeroutput">stack</code> 
         public
        construct/copy/destruct</h3>
 <div class="orderedlist"><ol class="orderedlist" type="1">
 <li class="listitem">
-<pre class="literallayout"><a name="idp641363248-bb"></a><span class="identifier">stack</span><span class="special">(</span><span class="keyword">void</span><span class="special">)</span><span class="special">;</span></pre>Construct stack. </li>
+<pre class="literallayout"><a name="idp632233408-bb"></a><span class="identifier">stack</span><span class="special">(</span><span class="keyword">void</span><span class="special">)</span><span class="special">;</span></pre>Construct stack. </li>
 <li class="listitem"><pre class="literallayout"><span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">typename</span> U<span class="special">&gt;</span> 
-  <span class="keyword">explicit</span> <a name="idp641364512-bb"></a><span class="identifier">stack</span><span class="special">(</span><span class="keyword">typename</span> <span class="identifier">node_allocator</span><span class="special">::</span><span class="keyword">template</span> <span class="identifier">rebind</span><span class="special">&lt;</span> <span class="identifier">U</span> <span class="special">&gt;</span><span class="special">::</span><span class="identifier">other</span> <span class="keyword">const</span> <span class="special">&amp;</span> alloc<span class="special">)</span><span class="special">;</span></pre></li>
-<li class="listitem"><pre class="literallayout"><span class="keyword">explicit</span> <a name="idp641366656-bb"></a><span class="identifier">stack</span><span class="special">(</span><span class="identifier">allocator</span> <span class="keyword">const</span> <span class="special">&amp;</span> alloc<span class="special">)</span><span class="special">;</span></pre></li>
+  <span class="keyword">explicit</span> <a name="idp632234672-bb"></a><span class="identifier">stack</span><span class="special">(</span><span class="keyword">typename</span> <span class="identifier">node_allocator</span><span class="special">::</span><span class="keyword">template</span> <span class="identifier">rebind</span><span class="special">&lt;</span> <span class="identifier">U</span> <span class="special">&gt;</span><span class="special">::</span><span class="identifier">other</span> <span class="keyword">const</span> <span class="special">&amp;</span> alloc<span class="special">)</span><span class="special">;</span></pre></li>
+<li class="listitem"><pre class="literallayout"><span class="keyword">explicit</span> <a name="idp632236816-bb"></a><span class="identifier">stack</span><span class="special">(</span><span class="identifier">allocator</span> <span class="keyword">const</span> <span class="special">&amp;</span> alloc<span class="special">)</span><span class="special">;</span></pre></li>
 <li class="listitem">
-<pre class="literallayout"><span class="keyword">explicit</span> <a name="idp641367904-bb"></a><span class="identifier">stack</span><span class="special">(</span><span class="identifier">size_type</span> n<span class="special">)</span><span class="special">;</span></pre>Construct stack, allocate n nodes for the freelist. </li>
+<pre class="literallayout"><span class="keyword">explicit</span> <a name="idp632238064-bb"></a><span class="identifier">stack</span><span class="special">(</span><span class="identifier">size_type</span> n<span class="special">)</span><span class="special">;</span></pre>Construct stack, allocate n nodes for the freelist. </li>
 <li class="listitem"><pre class="literallayout"><span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">typename</span> U<span class="special">&gt;</span> 
-  <a name="idp641369472-bb"></a><span class="identifier">stack</span><span class="special">(</span><span class="identifier">size_type</span> n<span class="special">,</span> 
+  <a name="idp632239632-bb"></a><span class="identifier">stack</span><span class="special">(</span><span class="identifier">size_type</span> n<span class="special">,</span> 
         <span class="keyword">typename</span> <span class="identifier">node_allocator</span><span class="special">::</span><span class="keyword">template</span> <span class="identifier">rebind</span><span class="special">&lt;</span> <span class="identifier">U</span> <span class="special">&gt;</span><span class="special">::</span><span class="identifier">other</span> <span class="keyword">const</span> <span class="special">&amp;</span> alloc<span class="special">)</span><span class="special">;</span></pre></li>
 <li class="listitem">
-<pre class="literallayout"><a name="idp641406464-bb"></a><span class="special">~</span><span class="identifier">stack</span><span class="special">(</span><span class="keyword">void</span><span class="special">)</span><span class="special">;</span></pre>
+<pre class="literallayout"><a name="idp632276624-bb"></a><span class="special">~</span><span class="identifier">stack</span><span class="special">(</span><span class="keyword">void</span><span class="special">)</span><span class="special">;</span></pre>
 <p>Destroys stack, free all nodes from freelist.</p>
 <div class="note"><table border="0" summary="Note">
 <tr>
@@ -159,14 +159,14 @@
 </ol></div>
 </div>
 <div class="refsect2">
-<a name="idp344143008"></a><h3>
-<a name="idp641372032-bb"></a><code class="computeroutput">stack</code> private member functions</h3>
+<a name="idp368960032"></a><h3>
+<a name="idp632242192-bb"></a><code class="computeroutput">stack</code> private member functions</h3>
 <div class="orderedlist"><ol class="orderedlist" type="1">
-<li class="listitem"><pre class="literallayout"> <a name="idp641372608-bb"></a><span class="identifier">BOOST_STATIC_ASSERT</span><span class="special">(</span><span class="identifier">boost</span><span class="special">::</span><span class="identifier">is_copy_constructible</span><span class="special">&lt;</span> <span class="identifier">T</span> <span class="special">&gt;</span><span class="special">::</span><span class="identifier">value</span><span class="special">)</span><span class="special">;</span></pre></li>
-<li class="listitem"><pre class="literallayout"> <a name="idp641374016-bb"></a><span class="identifier">BOOST_STATIC_ASSERT</span><span class="special">(</span><span class="special">(</span><span class="identifier">mpl</span><span class="special">::</span><span class="identifier">if_c</span><span class="special">&lt;</span> <span class="identifier">has_capacity</span><span class="special">,</span> <span class="identifier">mpl</span><span class="special">::</span><span class="identifier">bool_</span><span class="special">&lt;</span> <a class="link" href="capacity.html" title="Struct template capacity">capacity</a><span class="special">-</span><span class="number">1</span><span class="special">&lt;</span> <span class="identifier">boost</span><span class="special">::</span><span class="identifier">integer_traits</span><span class="special">&lt;</span> <span class="identifier">boost</span><span class="special">::</span><span class="identifier">uint16_t</span> <span class="special">&gt;</span><span class="special">::</span><span class="identifier">const_max</span> <span class="special">&gt;</span><span class="special">,</span> <span class="identifier">mpl</span><span class="special">::</span><span class="identifier">true_</span> <span class="special">&gt;</span><span class="special">::</span><span class="identifier">type</span><span class="special">::</span><span class="identifier">value</span><span class="special">)</span><span class="special">)</span><span class="special">;</span></pre></li>
-<li class="listitem"><pre class="literallayout"> <a name="idp641375920-bb"></a><span class="identifier">BOOST_DELETED_FUNCTION</span><span class="special">(</span><a class="link" href="stack.html" title="Class template stack">stack</a><span class="special">(</span><a class="link" href="stack.html" title="Class template stack">stack</a> <span class="keyword">const</span> <span class="special">&amp;</span><span class="special">)</span><span class="special">)</span><span class="special">;</span></pre></li>
+<li class="listitem"><pre class="literallayout"> <a name="idp632242768-bb"></a><span class="identifier">BOOST_STATIC_ASSERT</span><span class="special">(</span><span class="identifier">boost</span><span class="special">::</span><span class="identifier">is_copy_constructible</span><span class="special">&lt;</span> <span class="identifier">T</span> <span class="special">&gt;</span><span class="special">::</span><span class="identifier">value</span><span class="special">)</span><span class="special">;</span></pre></li>
+<li class="listitem"><pre class="literallayout"> <a name="idp632244176-bb"></a><span class="identifier">BOOST_STATIC_ASSERT</span><span class="special">(</span><span class="special">(</span><span class="identifier">mpl</span><span class="special">::</span><span class="identifier">if_c</span><span class="special">&lt;</span> <span class="identifier">has_capacity</span><span class="special">,</span> <span class="identifier">mpl</span><span class="special">::</span><span class="identifier">bool_</span><span class="special">&lt;</span> <a class="link" href="capacity.html" title="Struct template capacity">capacity</a><span class="special">-</span><span class="number">1</span><span class="special">&lt;</span> <span class="identifier">boost</span><span class="special">::</span><span class="identifier">integer_traits</span><span class="special">&lt;</span> <span class="identifier">boost</span><span class="special">::</span><span class="identifier">uint16_t</span> <span class="special">&gt;</span><span class="special">::</span><span class="identifier">const_max</span> <span class="special">&gt;</span><span class="special">,</span> <span class="identifier">mpl</span><span class="special">::</span><span class="identifier">true_</span> <span class="special">&gt;</span><span class="special">::</span><span class="identifier">type</span><span class="special">::</span><span class="identifier">value</span><span class="special">)</span><span class="special">)</span><span class="special">;</span></pre></li>
+<li class="listitem"><pre class="literallayout"> <a name="idp632246080-bb"></a><span class="identifier">BOOST_DELETED_FUNCTION</span><span class="special">(</span><a class="link" href="stack.html" title="Class template stack">stack</a><span class="special">(</span><a class="link" href="stack.html" title="Class template stack">stack</a> <span class="keyword">const</span> <span class="special">&amp;</span><span class="special">)</span><span class="special">)</span><span class="special">;</span></pre></li>
 <li class="listitem">
-<pre class="literallayout"><span class="keyword">bool</span> <a name="idp641378032-bb"></a><span class="identifier">is_lock_free</span><span class="special">(</span><span class="keyword">void</span><span class="special">)</span> <span class="keyword">const</span><span class="special">;</span></pre>
+<pre class="literallayout"><span class="keyword">bool</span> <a name="idp632248192-bb"></a><span class="identifier">is_lock_free</span><span class="special">(</span><span class="keyword">void</span><span class="special">)</span> <span class="keyword">const</span><span class="special">;</span></pre>
 <p>
 </p>
 <div class="warning"><table border="0" summary="Warning">
@@ -190,7 +190,7 @@
 </table></div>
 </li>
 <li class="listitem">
-<pre class="literallayout"><span class="keyword">void</span> <a name="idp641381648-bb"></a><span class="identifier">reserve</span><span class="special">(</span><span class="identifier">size_type</span> n<span class="special">)</span><span class="special">;</span></pre>
+<pre class="literallayout"><span class="keyword">void</span> <a name="idp632251808-bb"></a><span class="identifier">reserve</span><span class="special">(</span><span class="identifier">size_type</span> n<span class="special">)</span><span class="special">;</span></pre>
 <p>Allocate n nodes for freelist</p>
 <p>
 </p>
@@ -215,7 +215,7 @@
 </table></div>
 </li>
 <li class="listitem">
-<pre class="literallayout"><span class="keyword">void</span> <a name="idp641384960-bb"></a><span class="identifier">reserve_unsafe</span><span class="special">(</span><span class="identifier">size_type</span> n<span class="special">)</span><span class="special">;</span></pre>
+<pre class="literallayout"><span class="keyword">void</span> <a name="idp632255120-bb"></a><span class="identifier">reserve_unsafe</span><span class="special">(</span><span class="identifier">size_type</span> n<span class="special">)</span><span class="special">;</span></pre>
 <p>Allocate n nodes for freelist</p>
 <p>
 </p>
@@ -239,24 +239,24 @@
 </tr></tbody>
 </table></div>
 </li>
-<li class="listitem"><pre class="literallayout"><span class="keyword">void</span> <a name="idp641388272-bb"></a><span class="identifier">initialize</span><span class="special">(</span><span class="keyword">void</span><span class="special">)</span><span class="special">;</span></pre></li>
-<li class="listitem"><pre class="literallayout"><span class="keyword">void</span> <a name="idp641389808-bb"></a><span class="identifier">link_nodes_atomic</span><span class="special">(</span><span class="identifier">node</span> <span class="special">*</span> new_top_node<span class="special">,</span> <span class="identifier">node</span> <span class="special">*</span> end_node<span class="special">)</span><span class="special">;</span></pre></li>
-<li class="listitem"><pre class="literallayout"><span class="keyword">void</span> <a name="idp641392032-bb"></a><span class="identifier">link_nodes_unsafe</span><span class="special">(</span><span class="identifier">node</span> <span class="special">*</span> new_top_node<span class="special">,</span> <span class="identifier">node</span> <span class="special">*</span> end_node<span class="special">)</span><span class="special">;</span></pre></li>
+<li class="listitem"><pre class="literallayout"><span class="keyword">void</span> <a name="idp632258432-bb"></a><span class="identifier">initialize</span><span class="special">(</span><span class="keyword">void</span><span class="special">)</span><span class="special">;</span></pre></li>
+<li class="listitem"><pre class="literallayout"><span class="keyword">void</span> <a name="idp632259968-bb"></a><span class="identifier">link_nodes_atomic</span><span class="special">(</span><span class="identifier">node</span> <span class="special">*</span> new_top_node<span class="special">,</span> <span class="identifier">node</span> <span class="special">*</span> end_node<span class="special">)</span><span class="special">;</span></pre></li>
+<li class="listitem"><pre class="literallayout"><span class="keyword">void</span> <a name="idp632262192-bb"></a><span class="identifier">link_nodes_unsafe</span><span class="special">(</span><span class="identifier">node</span> <span class="special">*</span> new_top_node<span class="special">,</span> <span class="identifier">node</span> <span class="special">*</span> end_node<span class="special">)</span><span class="special">;</span></pre></li>
 <li class="listitem"><pre class="literallayout"><span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">bool</span> Threadsafe<span class="special">,</span> <span class="keyword">bool</span> Bounded<span class="special">,</span> <span class="keyword">typename</span> ConstIterator<span class="special">&gt;</span> 
   <span class="identifier">tuple</span><span class="special">&lt;</span> <span class="identifier">node</span> <span class="special">*</span><span class="special">,</span> <span class="identifier">node</span> <span class="special">*</span> <span class="special">&gt;</span> 
-  <a name="idp641394256-bb"></a><span class="identifier">prepare_node_list</span><span class="special">(</span><span class="identifier">ConstIterator</span> begin<span class="special">,</span> <span class="identifier">ConstIterator</span> end<span class="special">,</span> 
+  <a name="idp632264416-bb"></a><span class="identifier">prepare_node_list</span><span class="special">(</span><span class="identifier">ConstIterator</span> begin<span class="special">,</span> <span class="identifier">ConstIterator</span> end<span class="special">,</span> 
                     <span class="identifier">ConstIterator</span> <span class="special">&amp;</span> ret<span class="special">)</span><span class="special">;</span></pre></li>
-<li class="listitem"><pre class="literallayout"><span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">bool</span> Bounded<span class="special">&gt;</span> <span class="keyword">bool</span> <a name="idp641399712-bb"></a><span class="identifier">do_push</span><span class="special">(</span><span class="identifier">T</span> <span class="keyword">const</span> <span class="special">&amp;</span> v<span class="special">)</span><span class="special">;</span></pre></li>
+<li class="listitem"><pre class="literallayout"><span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">bool</span> Bounded<span class="special">&gt;</span> <span class="keyword">bool</span> <a name="idp632269872-bb"></a><span class="identifier">do_push</span><span class="special">(</span><span class="identifier">T</span> <span class="keyword">const</span> <span class="special">&amp;</span> v<span class="special">)</span><span class="special">;</span></pre></li>
 <li class="listitem"><pre class="literallayout"><span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">bool</span> Bounded<span class="special">,</span> <span class="keyword">typename</span> ConstIterator<span class="special">&gt;</span> 
-  <span class="identifier">ConstIterator</span> <a name="idp641402384-bb"></a><span class="identifier">do_push</span><span class="special">(</span><span class="identifier">ConstIterator</span> begin<span class="special">,</span> <span class="identifier">ConstIterator</span> end<span class="special">)</span><span class="special">;</span></pre></li>
+  <span class="identifier">ConstIterator</span> <a name="idp632272544-bb"></a><span class="identifier">do_push</span><span class="special">(</span><span class="identifier">ConstIterator</span> begin<span class="special">,</span> <span class="identifier">ConstIterator</span> end<span class="special">)</span><span class="special">;</span></pre></li>
 </ol></div>
 </div>
 <div class="refsect2">
-<a name="idp344266720"></a><h3>
-<a name="idp641408592-bb"></a><code class="computeroutput">stack</code> public member functions</h3>
+<a name="idp369083552"></a><h3>
+<a name="idp632278752-bb"></a><code class="computeroutput">stack</code> public member functions</h3>
 <div class="orderedlist"><ol class="orderedlist" type="1">
 <li class="listitem">
-<pre class="literallayout"><span class="keyword">bool</span> <a name="idp641409152-bb"></a><span class="identifier">push</span><span class="special">(</span><span class="identifier">T</span> <span class="keyword">const</span> <span class="special">&amp;</span> v<span class="special">)</span><span class="special">;</span></pre>
+<pre class="literallayout"><span class="keyword">bool</span> <a name="idp632279312-bb"></a><span class="identifier">push</span><span class="special">(</span><span class="identifier">T</span> <span class="keyword">const</span> <span class="special">&amp;</span> v<span class="special">)</span><span class="special">;</span></pre>
 <p>Pushes object t to the stack.</p>
 <p>
 
@@ -293,7 +293,7 @@
 </table></div>
 </li>
 <li class="listitem">
-<pre class="literallayout"><span class="keyword">bool</span> <a name="idp641413760-bb"></a><span class="identifier">bounded_push</span><span class="special">(</span><span class="identifier">T</span> <span class="keyword">const</span> <span class="special">&amp;</span> v<span class="special">)</span><span class="special">;</span></pre>
+<pre class="literallayout"><span class="keyword">bool</span> <a name="idp632283920-bb"></a><span class="identifier">bounded_push</span><span class="special">(</span><span class="identifier">T</span> <span class="keyword">const</span> <span class="special">&amp;</span> v<span class="special">)</span><span class="special">;</span></pre>
 <p>Pushes object t to the stack.</p>
 <p>
 
@@ -326,7 +326,7 @@
 </li>
 <li class="listitem">
 <pre class="literallayout"><span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">typename</span> ConstIterator<span class="special">&gt;</span> 
-  <span class="identifier">ConstIterator</span> <a name="idp641417584-bb"></a><span class="identifier">push</span><span class="special">(</span><span class="identifier">ConstIterator</span> begin<span class="special">,</span> <span class="identifier">ConstIterator</span> end<span class="special">)</span><span class="special">;</span></pre>
+  <span class="identifier">ConstIterator</span> <a name="idp632287744-bb"></a><span class="identifier">push</span><span class="special">(</span><span class="identifier">ConstIterator</span> begin<span class="special">,</span> <span class="identifier">ConstIterator</span> end<span class="special">)</span><span class="special">;</span></pre>
 <p>Pushes as many objects from the range [begin, end) as freelist node can be allocated.</p>
 <p>
 </p>
@@ -362,7 +362,7 @@
 </li>
 <li class="listitem">
 <pre class="literallayout"><span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">typename</span> ConstIterator<span class="special">&gt;</span> 
-  <span class="identifier">ConstIterator</span> <a name="idp641423632-bb"></a><span class="identifier">bounded_push</span><span class="special">(</span><span class="identifier">ConstIterator</span> begin<span class="special">,</span> <span class="identifier">ConstIterator</span> end<span class="special">)</span><span class="special">;</span></pre>
+  <span class="identifier">ConstIterator</span> <a name="idp632293792-bb"></a><span class="identifier">bounded_push</span><span class="special">(</span><span class="identifier">ConstIterator</span> begin<span class="special">,</span> <span class="identifier">ConstIterator</span> end<span class="special">)</span><span class="special">;</span></pre>
 <p>Pushes as many objects from the range [begin, end) as freelist node can be allocated.</p>
 <p>
 </p>
@@ -397,7 +397,7 @@
 </table></div>
 </li>
 <li class="listitem">
-<pre class="literallayout"><span class="keyword">bool</span> <a name="idp641429616-bb"></a><span class="identifier">unsynchronized_push</span><span class="special">(</span><span class="identifier">T</span> <span class="keyword">const</span> <span class="special">&amp;</span> v<span class="special">)</span><span class="special">;</span></pre>
+<pre class="literallayout"><span class="keyword">bool</span> <a name="idp632299776-bb"></a><span class="identifier">unsynchronized_push</span><span class="special">(</span><span class="identifier">T</span> <span class="keyword">const</span> <span class="special">&amp;</span> v<span class="special">)</span><span class="special">;</span></pre>
 <p>Pushes object t to the stack.</p>
 <p>
 
@@ -435,7 +435,7 @@
 </li>
 <li class="listitem">
 <pre class="literallayout"><span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">typename</span> ConstIterator<span class="special">&gt;</span> 
-  <span class="identifier">ConstIterator</span> <a name="idp641434224-bb"></a><span class="identifier">unsynchronized_push</span><span class="special">(</span><span class="identifier">ConstIterator</span> begin<span class="special">,</span> <span class="identifier">ConstIterator</span> end<span class="special">)</span><span class="special">;</span></pre>
+  <span class="identifier">ConstIterator</span> <a name="idp632304384-bb"></a><span class="identifier">unsynchronized_push</span><span class="special">(</span><span class="identifier">ConstIterator</span> begin<span class="special">,</span> <span class="identifier">ConstIterator</span> end<span class="special">)</span><span class="special">;</span></pre>
 <p>Pushes as many objects from the range [begin, end) as freelist node can be allocated.</p>
 <p>
 </p>
@@ -467,7 +467,7 @@
 </table></div>
 </li>
 <li class="listitem">
-<pre class="literallayout"><span class="keyword">bool</span> <a name="idp641439968-bb"></a><span class="identifier">pop</span><span class="special">(</span><span class="identifier">T</span> <span class="special">&amp;</span> ret<span class="special">)</span><span class="special">;</span></pre>
+<pre class="literallayout"><span class="keyword">bool</span> <a name="idp632310128-bb"></a><span class="identifier">pop</span><span class="special">(</span><span class="identifier">T</span> <span class="special">&amp;</span> ret<span class="special">)</span><span class="special">;</span></pre>
 <p>Pops object from stack.</p>
 <p>
 
@@ -499,7 +499,7 @@
 </table></div>
 </li>
 <li class="listitem">
-<pre class="literallayout"><span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">typename</span> U<span class="special">&gt;</span> <span class="keyword">bool</span> <a name="idp641443728-bb"></a><span class="identifier">pop</span><span class="special">(</span><span class="identifier">U</span> <span class="special">&amp;</span> ret<span class="special">)</span><span class="special">;</span></pre>
+<pre class="literallayout"><span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">typename</span> U<span class="special">&gt;</span> <span class="keyword">bool</span> <a name="idp632313888-bb"></a><span class="identifier">pop</span><span class="special">(</span><span class="identifier">U</span> <span class="special">&amp;</span> ret<span class="special">)</span><span class="special">;</span></pre>
 <p>Pops object from stack.</p>
 <p>
 
@@ -536,7 +536,7 @@
 </table></div>
 </li>
 <li class="listitem">
-<pre class="literallayout"><span class="keyword">bool</span> <a name="idp641448768-bb"></a><span class="identifier">unsynchronized_pop</span><span class="special">(</span><span class="identifier">T</span> <span class="special">&amp;</span> ret<span class="special">)</span><span class="special">;</span></pre>
+<pre class="literallayout"><span class="keyword">bool</span> <a name="idp632318928-bb"></a><span class="identifier">unsynchronized_pop</span><span class="special">(</span><span class="identifier">T</span> <span class="special">&amp;</span> ret<span class="special">)</span><span class="special">;</span></pre>
 <p>Pops object from stack.</p>
 <p>
 
@@ -568,7 +568,7 @@
 </table></div>
 </li>
 <li class="listitem">
-<pre class="literallayout"><span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">typename</span> U<span class="special">&gt;</span> <span class="keyword">bool</span> <a name="idp641452528-bb"></a><span class="identifier">unsynchronized_pop</span><span class="special">(</span><span class="identifier">U</span> <span class="special">&amp;</span> ret<span class="special">)</span><span class="special">;</span></pre>
+<pre class="literallayout"><span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">typename</span> U<span class="special">&gt;</span> <span class="keyword">bool</span> <a name="idp632322688-bb"></a><span class="identifier">unsynchronized_pop</span><span class="special">(</span><span class="identifier">U</span> <span class="special">&amp;</span> ret<span class="special">)</span><span class="special">;</span></pre>
 <p>Pops object from stack.</p>
 <p>
 
@@ -605,7 +605,7 @@
 </table></div>
 </li>
 <li class="listitem">
-<pre class="literallayout"><span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">typename</span> Functor<span class="special">&gt;</span> <span class="keyword">bool</span> <a name="idp641457568-bb"></a><span class="identifier">consume_one</span><span class="special">(</span><span class="identifier">Functor</span> <span class="special">&amp;</span> f<span class="special">)</span><span class="special">;</span></pre>
+<pre class="literallayout"><span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">typename</span> Functor<span class="special">&gt;</span> <span class="keyword">bool</span> <a name="idp632327728-bb"></a><span class="identifier">consume_one</span><span class="special">(</span><span class="identifier">Functor</span> <span class="special">&amp;</span> f<span class="special">)</span><span class="special">;</span></pre>
 <p>consumes one element via a functor</p>
 <p>pops one element from the stack and applies the functor on this object</p>
 <p>
@@ -631,7 +631,7 @@
 </table></div>
 </li>
 <li class="listitem">
-<pre class="literallayout"><span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">typename</span> Functor<span class="special">&gt;</span> <span class="keyword">bool</span> <a name="idp641462080-bb"></a><span class="identifier">consume_one</span><span class="special">(</span><span class="identifier">Functor</span> <span class="keyword">const</span> <span class="special">&amp;</span> f<span class="special">)</span><span class="special">;</span></pre>
+<pre class="literallayout"><span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">typename</span> Functor<span class="special">&gt;</span> <span class="keyword">bool</span> <a name="idp632332240-bb"></a><span class="identifier">consume_one</span><span class="special">(</span><span class="identifier">Functor</span> <span class="keyword">const</span> <span class="special">&amp;</span> f<span class="special">)</span><span class="special">;</span></pre>
 <p>consumes one element via a functor</p>
 <p>pops one element from the stack and applies the functor on this object</p>
 <p>
@@ -657,7 +657,7 @@
 </table></div>
 </li>
 <li class="listitem">
-<pre class="literallayout"><span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">typename</span> Functor<span class="special">&gt;</span> <span class="identifier">size_t</span> <a name="idp641466592-bb"></a><span class="identifier">consume_all</span><span class="special">(</span><span class="identifier">Functor</span> <span class="special">&amp;</span> f<span class="special">)</span><span class="special">;</span></pre>
+<pre class="literallayout"><span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">typename</span> Functor<span class="special">&gt;</span> <span class="identifier">size_t</span> <a name="idp632336752-bb"></a><span class="identifier">consume_all</span><span class="special">(</span><span class="identifier">Functor</span> <span class="special">&amp;</span> f<span class="special">)</span><span class="special">;</span></pre>
 <p>consumes all elements via a functor</p>
 <p>sequentially pops all elements from the stack and applies the functor on each object</p>
 <p>
@@ -683,7 +683,7 @@
 </table></div>
 </li>
 <li class="listitem">
-<pre class="literallayout"><span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">typename</span> Functor<span class="special">&gt;</span> <span class="identifier">size_t</span> <a name="idp641471120-bb"></a><span class="identifier">consume_all</span><span class="special">(</span><span class="identifier">Functor</span> <span class="keyword">const</span> <span class="special">&amp;</span> f<span class="special">)</span><span class="special">;</span></pre>
+<pre class="literallayout"><span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">typename</span> Functor<span class="special">&gt;</span> <span class="identifier">size_t</span> <a name="idp632341280-bb"></a><span class="identifier">consume_all</span><span class="special">(</span><span class="identifier">Functor</span> <span class="keyword">const</span> <span class="special">&amp;</span> f<span class="special">)</span><span class="special">;</span></pre>
 <p>consumes all elements via a functor</p>
 <p>sequentially pops all elements from the stack and applies the functor on each object</p>
 <p>
@@ -709,7 +709,7 @@
 </table></div>
 </li>
 <li class="listitem">
-<pre class="literallayout"><span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">typename</span> Functor<span class="special">&gt;</span> <span class="identifier">size_t</span> <a name="idp641475648-bb"></a><span class="identifier">consume_all_atomic</span><span class="special">(</span><span class="identifier">Functor</span> <span class="special">&amp;</span> f<span class="special">)</span><span class="special">;</span></pre>
+<pre class="literallayout"><span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">typename</span> Functor<span class="special">&gt;</span> <span class="identifier">size_t</span> <a name="idp632345808-bb"></a><span class="identifier">consume_all_atomic</span><span class="special">(</span><span class="identifier">Functor</span> <span class="special">&amp;</span> f<span class="special">)</span><span class="special">;</span></pre>
 <p>consumes all elements via a functor</p>
 <p>atomically pops all elements from the stack and applies the functor on each object</p>
 <p>
@@ -735,7 +735,7 @@
 </table></div>
 </li>
 <li class="listitem">
-<pre class="literallayout"><span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">typename</span> Functor<span class="special">&gt;</span> <span class="identifier">size_t</span> <a name="idp641480176-bb"></a><span class="identifier">consume_all_atomic</span><span class="special">(</span><span class="identifier">Functor</span> <span class="keyword">const</span> <span class="special">&amp;</span> f<span class="special">)</span><span class="special">;</span></pre>
+<pre class="literallayout"><span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">typename</span> Functor<span class="special">&gt;</span> <span class="identifier">size_t</span> <a name="idp632350336-bb"></a><span class="identifier">consume_all_atomic</span><span class="special">(</span><span class="identifier">Functor</span> <span class="keyword">const</span> <span class="special">&amp;</span> f<span class="special">)</span><span class="special">;</span></pre>
 <p>consumes all elements via a functor</p>
 <p>atomically pops all elements from the stack and applies the functor on each object</p>
 <p>
@@ -761,7 +761,7 @@
 </table></div>
 </li>
 <li class="listitem">
-<pre class="literallayout"><span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">typename</span> Functor<span class="special">&gt;</span> <span class="identifier">size_t</span> <a name="idp641484704-bb"></a><span class="identifier">consume_all_atomic_reversed</span><span class="special">(</span><span class="identifier">Functor</span> <span class="special">&amp;</span> f<span class="special">)</span><span class="special">;</span></pre>
+<pre class="literallayout"><span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">typename</span> Functor<span class="special">&gt;</span> <span class="identifier">size_t</span> <a name="idp632354864-bb"></a><span class="identifier">consume_all_atomic_reversed</span><span class="special">(</span><span class="identifier">Functor</span> <span class="special">&amp;</span> f<span class="special">)</span><span class="special">;</span></pre>
 <p>consumes all elements via a functor</p>
 <p>atomically pops all elements from the stack and applies the functor on each object in reversed order</p>
 <p>
@@ -788,7 +788,7 @@
 </li>
 <li class="listitem">
 <pre class="literallayout"><span class="keyword">template</span><span class="special">&lt;</span><span class="keyword">typename</span> Functor<span class="special">&gt;</span> 
-  <span class="identifier">size_t</span> <a name="idp641489264-bb"></a><span class="identifier">consume_all_atomic_reversed</span><span class="special">(</span><span class="identifier">Functor</span> <span class="keyword">const</span> <span class="special">&amp;</span> f<span class="special">)</span><span class="special">;</span></pre>
+  <span class="identifier">size_t</span> <a name="idp632359424-bb"></a><span class="identifier">consume_all_atomic_reversed</span><span class="special">(</span><span class="identifier">Functor</span> <span class="keyword">const</span> <span class="special">&amp;</span> f<span class="special">)</span><span class="special">;</span></pre>
 <p>consumes all elements via a functor</p>
 <p>atomically pops all elements from the stack and applies the functor on each object in reversed order</p>
 <p>
@@ -814,7 +814,7 @@
 </table></div>
 </li>
 <li class="listitem">
-<pre class="literallayout"><span class="keyword">bool</span> <a name="idp641493824-bb"></a><span class="identifier">empty</span><span class="special">(</span><span class="keyword">void</span><span class="special">)</span> <span class="keyword">const</span><span class="special">;</span></pre>
+<pre class="literallayout"><span class="keyword">bool</span> <a name="idp632363984-bb"></a><span class="identifier">empty</span><span class="special">(</span><span class="keyword">void</span><span class="special">)</span> <span class="keyword">const</span><span class="special">;</span></pre>
 <p>
 </p>
 <div class="note"><table border="0" summary="Note">

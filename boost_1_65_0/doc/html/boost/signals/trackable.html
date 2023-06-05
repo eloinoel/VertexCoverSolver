@@ -36,13 +36,13 @@
 <span class="keyword">class</span> <a class="link" href="trackable.html" title="Class trackable">trackable</a> <span class="special">{</span>
 <span class="keyword">public</span><span class="special">:</span>
   <span class="comment">// <a class="link" href="trackable.html#boost.signals.trackableconstruct-copy-destruct">construct/copy/destruct</a></span>
-  <a class="link" href="trackable.html#idp745500544-bb"><span class="identifier">trackable</span></a><span class="special">(</span><span class="special">)</span><span class="special">;</span>
-  <a class="link" href="trackable.html#idp745502176-bb"><span class="identifier">trackable</span></a><span class="special">(</span><span class="keyword">const</span> <a class="link" href="trackable.html" title="Class trackable">trackable</a><span class="special">&amp;</span><span class="special">)</span><span class="special">;</span>
-  trackable&amp; <a class="link" href="trackable.html#idp745507760-bb"><span class="keyword">operator</span><span class="special">=</span></a><span class="special">(</span><span class="keyword">const</span> <a class="link" href="trackable.html" title="Class trackable">trackable</a><span class="special">&amp;</span><span class="special">)</span><span class="special">;</span>
-  <a class="link" href="trackable.html#idp745506144-bb"><span class="special">~</span><span class="identifier">trackable</span></a><span class="special">(</span><span class="special">)</span><span class="special">;</span>
+  <a class="link" href="trackable.html#idp736370704-bb"><span class="identifier">trackable</span></a><span class="special">(</span><span class="special">)</span><span class="special">;</span>
+  <a class="link" href="trackable.html#idp736372336-bb"><span class="identifier">trackable</span></a><span class="special">(</span><span class="keyword">const</span> <a class="link" href="trackable.html" title="Class trackable">trackable</a><span class="special">&amp;</span><span class="special">)</span><span class="special">;</span>
+  trackable&amp; <a class="link" href="trackable.html#idp736377920-bb"><span class="keyword">operator</span><span class="special">=</span></a><span class="special">(</span><span class="keyword">const</span> <a class="link" href="trackable.html" title="Class trackable">trackable</a><span class="special">&amp;</span><span class="special">)</span><span class="special">;</span>
+  <a class="link" href="trackable.html#idp736376304-bb"><span class="special">~</span><span class="identifier">trackable</span></a><span class="special">(</span><span class="special">)</span><span class="special">;</span>
 <span class="special">}</span><span class="special">;</span></pre></div>
 <div class="refsect1">
-<a name="idp504594320"></a><h2>Description</h2>
+<a name="idp529413840"></a><h2>Description</h2>
 <p>The <code class="computeroutput">trackable</code> class provides automatic
           disconnection of signals and slots when objects bound in
           slots (via pointer or reference) are destroyed. The
@@ -58,13 +58,13 @@
           type that may contain pointers or references to trackable
           objects.</p>
 <div class="refsect2">
-<a name="idp504600016"></a><h3>
+<a name="idp529419536"></a><h3>
 <a name="boost.signals.trackableconstruct-copy-destruct"></a><code class="computeroutput">trackable</code> 
         public
        construct/copy/destruct</h3>
 <div class="orderedlist"><ol class="orderedlist" type="1">
 <li class="listitem">
-<pre class="literallayout"><a name="idp745500544-bb"></a><span class="identifier">trackable</span><span class="special">(</span><span class="special">)</span><span class="special">;</span></pre>
+<pre class="literallayout"><a name="idp736370704-bb"></a><span class="identifier">trackable</span><span class="special">(</span><span class="special">)</span><span class="special">;</span></pre>
 <div class="variablelist"><table border="0" class="variablelist compact">
 <colgroup>
 <col align="left" valign="top">
@@ -83,7 +83,7 @@
 </table></div>
 </li>
 <li class="listitem">
-<pre class="literallayout"><a name="idp745502176-bb"></a><span class="identifier">trackable</span><span class="special">(</span><span class="keyword">const</span> <a class="link" href="trackable.html" title="Class trackable">trackable</a><span class="special">&amp;</span> other<span class="special">)</span><span class="special">;</span></pre>
+<pre class="literallayout"><a name="idp736372336-bb"></a><span class="identifier">trackable</span><span class="special">(</span><span class="keyword">const</span> <a class="link" href="trackable.html" title="Class trackable">trackable</a><span class="special">&amp;</span> other<span class="special">)</span><span class="special">;</span></pre>
 <div class="variablelist"><table border="0" class="variablelist compact">
 <colgroup>
 <col align="left" valign="top">
@@ -106,7 +106,7 @@
 </table></div>
 </li>
 <li class="listitem">
-<pre class="literallayout">trackable&amp; <a name="idp745507760-bb"></a><span class="keyword">operator</span><span class="special">=</span><span class="special">(</span><span class="keyword">const</span> <a class="link" href="trackable.html" title="Class trackable">trackable</a><span class="special">&amp;</span> other<span class="special">)</span><span class="special">;</span></pre>
+<pre class="literallayout">trackable&amp; <a name="idp736377920-bb"></a><span class="keyword">operator</span><span class="special">=</span><span class="special">(</span><span class="keyword">const</span> <a class="link" href="trackable.html" title="Class trackable">trackable</a><span class="special">&amp;</span> other<span class="special">)</span><span class="special">;</span></pre>
 <div class="variablelist"><table border="0" class="variablelist compact">
 <colgroup>
 <col align="left" valign="top">
@@ -133,7 +133,7 @@
 </table></div>
 </li>
 <li class="listitem">
-<pre class="literallayout"><a name="idp745506144-bb"></a><span class="special">~</span><span class="identifier">trackable</span><span class="special">(</span><span class="special">)</span><span class="special">;</span></pre>
+<pre class="literallayout"><a name="idp736376304-bb"></a><span class="special">~</span><span class="identifier">trackable</span><span class="special">(</span><span class="special">)</span><span class="special">;</span></pre>
 <div class="variablelist"><table border="0" class="variablelist compact">
 <colgroup>
 <col align="left" valign="top">

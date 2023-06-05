@@ -44,39 +44,39 @@
   <span class="keyword">typedef</span> <span class="emphasis"><em><span class="identifier">unspecified</span></em></span>      <a name="boost.process.basic_pipe.native_handle"></a><span class="identifier">native_handle</span><span class="special">;</span>
 
   <span class="comment">// <a class="link" href="basic_pipe.html#boost.process.basic_pipeconstruct-copy-destruct">construct/copy/destruct</a></span>
-  <a class="link" href="basic_pipe.html#idp40356896-bb"><span class="identifier">basic_pipe</span></a><span class="special">(</span><span class="special">)</span><span class="special">;</span>
-  <span class="keyword">explicit</span> <a class="link" href="basic_pipe.html#idp40357504-bb"><span class="identifier">basic_pipe</span></a><span class="special">(</span><span class="keyword">const</span> <span class="identifier">std</span><span class="special">::</span><span class="identifier">string</span> <span class="special">&amp;</span><span class="special">)</span><span class="special">;</span>
-  <a class="link" href="basic_pipe.html#idp40359056-bb"><span class="identifier">basic_pipe</span></a><span class="special">(</span><span class="keyword">const</span> <a class="link" href="basic_pipe.html" title="Class template basic_pipe">basic_pipe</a> <span class="special">&amp;</span><span class="special">)</span><span class="special">;</span>
-  <a class="link" href="basic_pipe.html#idp40361504-bb"><span class="identifier">basic_pipe</span></a><span class="special">(</span><a class="link" href="basic_pipe.html" title="Class template basic_pipe">basic_pipe</a> <span class="special">&amp;&amp;</span><span class="special">)</span><span class="special">;</span>
-  <a class="link" href="basic_pipe.html" title="Class template basic_pipe">basic_pipe</a> <span class="special">&amp;</span> <a class="link" href="basic_pipe.html#idp40363200-bb"><span class="keyword">operator</span><span class="special">=</span></a><span class="special">(</span><span class="keyword">const</span> <a class="link" href="basic_pipe.html" title="Class template basic_pipe">basic_pipe</a> <span class="special">&amp;</span><span class="special">)</span><span class="special">;</span>
-  <a class="link" href="basic_pipe.html" title="Class template basic_pipe">basic_pipe</a> <span class="special">&amp;</span> <a class="link" href="basic_pipe.html#idp40366208-bb"><span class="keyword">operator</span><span class="special">=</span></a><span class="special">(</span><a class="link" href="basic_pipe.html" title="Class template basic_pipe">basic_pipe</a> <span class="special">&amp;&amp;</span><span class="special">)</span><span class="special">;</span>
-  <a class="link" href="basic_pipe.html#idp40368464-bb"><span class="special">~</span><span class="identifier">basic_pipe</span></a><span class="special">(</span><span class="special">)</span><span class="special">;</span>
+  <a class="link" href="basic_pipe.html#idp49956256-bb"><span class="identifier">basic_pipe</span></a><span class="special">(</span><span class="special">)</span><span class="special">;</span>
+  <span class="keyword">explicit</span> <a class="link" href="basic_pipe.html#idp49956864-bb"><span class="identifier">basic_pipe</span></a><span class="special">(</span><span class="keyword">const</span> <span class="identifier">std</span><span class="special">::</span><span class="identifier">string</span> <span class="special">&amp;</span><span class="special">)</span><span class="special">;</span>
+  <a class="link" href="basic_pipe.html#idp49958416-bb"><span class="identifier">basic_pipe</span></a><span class="special">(</span><span class="keyword">const</span> <a class="link" href="basic_pipe.html" title="Class template basic_pipe">basic_pipe</a> <span class="special">&amp;</span><span class="special">)</span><span class="special">;</span>
+  <a class="link" href="basic_pipe.html#idp49960864-bb"><span class="identifier">basic_pipe</span></a><span class="special">(</span><a class="link" href="basic_pipe.html" title="Class template basic_pipe">basic_pipe</a> <span class="special">&amp;&amp;</span><span class="special">)</span><span class="special">;</span>
+  <a class="link" href="basic_pipe.html" title="Class template basic_pipe">basic_pipe</a> <span class="special">&amp;</span> <a class="link" href="basic_pipe.html#idp49962560-bb"><span class="keyword">operator</span><span class="special">=</span></a><span class="special">(</span><span class="keyword">const</span> <a class="link" href="basic_pipe.html" title="Class template basic_pipe">basic_pipe</a> <span class="special">&amp;</span><span class="special">)</span><span class="special">;</span>
+  <a class="link" href="basic_pipe.html" title="Class template basic_pipe">basic_pipe</a> <span class="special">&amp;</span> <a class="link" href="basic_pipe.html#idp49965568-bb"><span class="keyword">operator</span><span class="special">=</span></a><span class="special">(</span><a class="link" href="basic_pipe.html" title="Class template basic_pipe">basic_pipe</a> <span class="special">&amp;&amp;</span><span class="special">)</span><span class="special">;</span>
+  <a class="link" href="basic_pipe.html#idp49967824-bb"><span class="special">~</span><span class="identifier">basic_pipe</span></a><span class="special">(</span><span class="special">)</span><span class="special">;</span>
 
-  <span class="comment">// <a class="link" href="basic_pipe.html#idp40341792-bb">public member functions</a></span>
-  <span class="identifier">native_handle</span> <a class="link" href="basic_pipe.html#idp40342352-bb"><span class="identifier">native_source</span></a><span class="special">(</span><span class="special">)</span> <span class="keyword">const</span><span class="special">;</span>
-  <span class="identifier">native_handle</span> <a class="link" href="basic_pipe.html#idp40343904-bb"><span class="identifier">native_sink</span></a><span class="special">(</span><span class="special">)</span> <span class="keyword">const</span><span class="special">;</span>
-  <span class="keyword">void</span> <a class="link" href="basic_pipe.html#idp40345456-bb"><span class="identifier">assign_source</span></a><span class="special">(</span><span class="identifier">native_handle</span><span class="special">)</span><span class="special">;</span>
-  <span class="keyword">void</span> <a class="link" href="basic_pipe.html#idp40347424-bb"><span class="identifier">assign_sink</span></a><span class="special">(</span><span class="identifier">native_handle</span><span class="special">)</span><span class="special">;</span>
-  <span class="identifier">int_type</span> <a class="link" href="basic_pipe.html#idp40349392-bb"><span class="identifier">write</span></a><span class="special">(</span><span class="keyword">const</span> <span class="identifier">char_type</span> <span class="special">*</span><span class="special">,</span> <span class="identifier">int_type</span><span class="special">)</span><span class="special">;</span>
-  <span class="identifier">int_type</span> <a class="link" href="basic_pipe.html#idp40351920-bb"><span class="identifier">read</span></a><span class="special">(</span><span class="identifier">char_type</span> <span class="special">*</span><span class="special">,</span> <span class="identifier">int_type</span><span class="special">)</span><span class="special">;</span>
-  <span class="keyword">bool</span> <a class="link" href="basic_pipe.html#idp40354448-bb"><span class="identifier">is_open</span></a><span class="special">(</span><span class="special">)</span><span class="special">;</span>
-  <span class="keyword">void</span> <a class="link" href="basic_pipe.html#idp40355600-bb"><span class="identifier">close</span></a><span class="special">(</span><span class="special">)</span><span class="special">;</span>
+  <span class="comment">// <a class="link" href="basic_pipe.html#idp49941152-bb">public member functions</a></span>
+  <span class="identifier">native_handle</span> <a class="link" href="basic_pipe.html#idp49941712-bb"><span class="identifier">native_source</span></a><span class="special">(</span><span class="special">)</span> <span class="keyword">const</span><span class="special">;</span>
+  <span class="identifier">native_handle</span> <a class="link" href="basic_pipe.html#idp49943264-bb"><span class="identifier">native_sink</span></a><span class="special">(</span><span class="special">)</span> <span class="keyword">const</span><span class="special">;</span>
+  <span class="keyword">void</span> <a class="link" href="basic_pipe.html#idp49944816-bb"><span class="identifier">assign_source</span></a><span class="special">(</span><span class="identifier">native_handle</span><span class="special">)</span><span class="special">;</span>
+  <span class="keyword">void</span> <a class="link" href="basic_pipe.html#idp49946784-bb"><span class="identifier">assign_sink</span></a><span class="special">(</span><span class="identifier">native_handle</span><span class="special">)</span><span class="special">;</span>
+  <span class="identifier">int_type</span> <a class="link" href="basic_pipe.html#idp49948752-bb"><span class="identifier">write</span></a><span class="special">(</span><span class="keyword">const</span> <span class="identifier">char_type</span> <span class="special">*</span><span class="special">,</span> <span class="identifier">int_type</span><span class="special">)</span><span class="special">;</span>
+  <span class="identifier">int_type</span> <a class="link" href="basic_pipe.html#idp49951280-bb"><span class="identifier">read</span></a><span class="special">(</span><span class="identifier">char_type</span> <span class="special">*</span><span class="special">,</span> <span class="identifier">int_type</span><span class="special">)</span><span class="special">;</span>
+  <span class="keyword">bool</span> <a class="link" href="basic_pipe.html#idp49953808-bb"><span class="identifier">is_open</span></a><span class="special">(</span><span class="special">)</span><span class="special">;</span>
+  <span class="keyword">void</span> <a class="link" href="basic_pipe.html#idp49954960-bb"><span class="identifier">close</span></a><span class="special">(</span><span class="special">)</span><span class="special">;</span>
 <span class="special">}</span><span class="special">;</span></pre></div>
 <div class="refsect1">
-<a name="idp418118416"></a><h2>Description</h2>
+<a name="idp442936368"></a><h2>Description</h2>
 <p>Class implementation of a pipe. </p>
 <div class="refsect2">
-<a name="idp418119136"></a><h3>
+<a name="idp442937088"></a><h3>
 <a name="boost.process.basic_pipeconstruct-copy-destruct"></a><code class="computeroutput">basic_pipe</code> 
         public
        construct/copy/destruct</h3>
 <div class="orderedlist"><ol class="orderedlist" type="1">
 <li class="listitem">
-<pre class="literallayout"><a name="idp40356896-bb"></a><span class="identifier">basic_pipe</span><span class="special">(</span><span class="special">)</span><span class="special">;</span></pre>Default construct the pipe. Will be opened. </li>
+<pre class="literallayout"><a name="idp49956256-bb"></a><span class="identifier">basic_pipe</span><span class="special">(</span><span class="special">)</span><span class="special">;</span></pre>Default construct the pipe. Will be opened. </li>
 <li class="listitem">
-<pre class="literallayout"><span class="keyword">explicit</span> <a name="idp40357504-bb"></a><span class="identifier">basic_pipe</span><span class="special">(</span><span class="keyword">const</span> <span class="identifier">std</span><span class="special">::</span><span class="identifier">string</span> <span class="special">&amp;</span> name<span class="special">)</span><span class="special">;</span></pre>Construct a named pipe. </li>
+<pre class="literallayout"><span class="keyword">explicit</span> <a name="idp49956864-bb"></a><span class="identifier">basic_pipe</span><span class="special">(</span><span class="keyword">const</span> <span class="identifier">std</span><span class="special">::</span><span class="identifier">string</span> <span class="special">&amp;</span> name<span class="special">)</span><span class="special">;</span></pre>Construct a named pipe. </li>
 <li class="listitem">
-<pre class="literallayout"><a name="idp40359056-bb"></a><span class="identifier">basic_pipe</span><span class="special">(</span><span class="keyword">const</span> <a class="link" href="basic_pipe.html" title="Class template basic_pipe">basic_pipe</a> <span class="special">&amp;</span> p<span class="special">)</span><span class="special">;</span></pre>
+<pre class="literallayout"><a name="idp49958416-bb"></a><span class="identifier">basic_pipe</span><span class="special">(</span><span class="keyword">const</span> <a class="link" href="basic_pipe.html" title="Class template basic_pipe">basic_pipe</a> <span class="special">&amp;</span> p<span class="special">)</span><span class="special">;</span></pre>
 <p>Copy construct the pipe. </p>
 <div class="note"><table border="0" summary="Note">
 <tr>
@@ -89,11 +89,11 @@
 </p>
 </li>
 <li class="listitem">
-<pre class="literallayout"><a name="idp40361504-bb"></a><span class="identifier">basic_pipe</span><span class="special">(</span><a class="link" href="basic_pipe.html" title="Class template basic_pipe">basic_pipe</a> <span class="special">&amp;&amp;</span> lhs<span class="special">)</span><span class="special">;</span></pre>
+<pre class="literallayout"><a name="idp49960864-bb"></a><span class="identifier">basic_pipe</span><span class="special">(</span><a class="link" href="basic_pipe.html" title="Class template basic_pipe">basic_pipe</a> <span class="special">&amp;&amp;</span> lhs<span class="special">)</span><span class="special">;</span></pre>
 <p>Move construct the pipe. </p>
 </li>
 <li class="listitem">
-<pre class="literallayout"><a class="link" href="basic_pipe.html" title="Class template basic_pipe">basic_pipe</a> <span class="special">&amp;</span> <a name="idp40363200-bb"></a><span class="keyword">operator</span><span class="special">=</span><span class="special">(</span><span class="keyword">const</span> <a class="link" href="basic_pipe.html" title="Class template basic_pipe">basic_pipe</a> <span class="special">&amp;</span> p<span class="special">)</span><span class="special">;</span></pre>
+<pre class="literallayout"><a class="link" href="basic_pipe.html" title="Class template basic_pipe">basic_pipe</a> <span class="special">&amp;</span> <a name="idp49962560-bb"></a><span class="keyword">operator</span><span class="special">=</span><span class="special">(</span><span class="keyword">const</span> <a class="link" href="basic_pipe.html" title="Class template basic_pipe">basic_pipe</a> <span class="special">&amp;</span> p<span class="special">)</span><span class="special">;</span></pre>
 <p>Copy assign the pipe. </p>
 <div class="note"><table border="0" summary="Note">
 <tr>
@@ -106,43 +106,43 @@
 </p>
 </li>
 <li class="listitem">
-<pre class="literallayout"><a class="link" href="basic_pipe.html" title="Class template basic_pipe">basic_pipe</a> <span class="special">&amp;</span> <a name="idp40366208-bb"></a><span class="keyword">operator</span><span class="special">=</span><span class="special">(</span><a class="link" href="basic_pipe.html" title="Class template basic_pipe">basic_pipe</a> <span class="special">&amp;&amp;</span> lhs<span class="special">)</span><span class="special">;</span></pre>
+<pre class="literallayout"><a class="link" href="basic_pipe.html" title="Class template basic_pipe">basic_pipe</a> <span class="special">&amp;</span> <a name="idp49965568-bb"></a><span class="keyword">operator</span><span class="special">=</span><span class="special">(</span><a class="link" href="basic_pipe.html" title="Class template basic_pipe">basic_pipe</a> <span class="special">&amp;&amp;</span> lhs<span class="special">)</span><span class="special">;</span></pre>
 <p>Move assign the pipe. </p>
 </li>
 <li class="listitem">
-<pre class="literallayout"><a name="idp40368464-bb"></a><span class="special">~</span><span class="identifier">basic_pipe</span><span class="special">(</span><span class="special">)</span><span class="special">;</span></pre>
+<pre class="literallayout"><a name="idp49967824-bb"></a><span class="special">~</span><span class="identifier">basic_pipe</span><span class="special">(</span><span class="special">)</span><span class="special">;</span></pre>
 <p>Destructor closes the handles. </p>
 </li>
 </ol></div>
 </div>
 <div class="refsect2">
-<a name="idp418165568"></a><h3>
-<a name="idp40341792-bb"></a><code class="computeroutput">basic_pipe</code> public member functions</h3>
+<a name="idp442983584"></a><h3>
+<a name="idp49941152-bb"></a><code class="computeroutput">basic_pipe</code> public member functions</h3>
 <div class="orderedlist"><ol class="orderedlist" type="1">
 <li class="listitem">
-<pre class="literallayout"><span class="identifier">native_handle</span> <a name="idp40342352-bb"></a><span class="identifier">native_source</span><span class="special">(</span><span class="special">)</span> <span class="keyword">const</span><span class="special">;</span></pre>
+<pre class="literallayout"><span class="identifier">native_handle</span> <a name="idp49941712-bb"></a><span class="identifier">native_source</span><span class="special">(</span><span class="special">)</span> <span class="keyword">const</span><span class="special">;</span></pre>
 <p>Get the native handle of the source. </p>
 </li>
 <li class="listitem">
-<pre class="literallayout"><span class="identifier">native_handle</span> <a name="idp40343904-bb"></a><span class="identifier">native_sink</span><span class="special">(</span><span class="special">)</span> <span class="keyword">const</span><span class="special">;</span></pre>
+<pre class="literallayout"><span class="identifier">native_handle</span> <a name="idp49943264-bb"></a><span class="identifier">native_sink</span><span class="special">(</span><span class="special">)</span> <span class="keyword">const</span><span class="special">;</span></pre>
 <p>Get the native handle of the sink. </p>
 </li>
 <li class="listitem">
-<pre class="literallayout"><span class="keyword">void</span> <a name="idp40345456-bb"></a><span class="identifier">assign_source</span><span class="special">(</span><span class="identifier">native_handle</span> h<span class="special">)</span><span class="special">;</span></pre>
+<pre class="literallayout"><span class="keyword">void</span> <a name="idp49944816-bb"></a><span class="identifier">assign_source</span><span class="special">(</span><span class="identifier">native_handle</span> h<span class="special">)</span><span class="special">;</span></pre>
 <p>Assign a new value to the source </p>
 </li>
 <li class="listitem">
-<pre class="literallayout"><span class="keyword">void</span> <a name="idp40347424-bb"></a><span class="identifier">assign_sink</span><span class="special">(</span><span class="identifier">native_handle</span> h<span class="special">)</span><span class="special">;</span></pre>
+<pre class="literallayout"><span class="keyword">void</span> <a name="idp49946784-bb"></a><span class="identifier">assign_sink</span><span class="special">(</span><span class="identifier">native_handle</span> h<span class="special">)</span><span class="special">;</span></pre>
 <p>Assign a new value to the sink </p>
 </li>
 <li class="listitem">
-<pre class="literallayout"><span class="identifier">int_type</span> <a name="idp40349392-bb"></a><span class="identifier">write</span><span class="special">(</span><span class="keyword">const</span> <span class="identifier">char_type</span> <span class="special">*</span> data<span class="special">,</span> <span class="identifier">int_type</span> count<span class="special">)</span><span class="special">;</span></pre>Write data to the pipe. </li>
+<pre class="literallayout"><span class="identifier">int_type</span> <a name="idp49948752-bb"></a><span class="identifier">write</span><span class="special">(</span><span class="keyword">const</span> <span class="identifier">char_type</span> <span class="special">*</span> data<span class="special">,</span> <span class="identifier">int_type</span> count<span class="special">)</span><span class="special">;</span></pre>Write data to the pipe. </li>
 <li class="listitem">
-<pre class="literallayout"><span class="identifier">int_type</span> <a name="idp40351920-bb"></a><span class="identifier">read</span><span class="special">(</span><span class="identifier">char_type</span> <span class="special">*</span> data<span class="special">,</span> <span class="identifier">int_type</span> count<span class="special">)</span><span class="special">;</span></pre>Read data from the pipe. </li>
+<pre class="literallayout"><span class="identifier">int_type</span> <a name="idp49951280-bb"></a><span class="identifier">read</span><span class="special">(</span><span class="identifier">char_type</span> <span class="special">*</span> data<span class="special">,</span> <span class="identifier">int_type</span> count<span class="special">)</span><span class="special">;</span></pre>Read data from the pipe. </li>
 <li class="listitem">
-<pre class="literallayout"><span class="keyword">bool</span> <a name="idp40354448-bb"></a><span class="identifier">is_open</span><span class="special">(</span><span class="special">)</span><span class="special">;</span></pre>Check if the pipe is open. </li>
+<pre class="literallayout"><span class="keyword">bool</span> <a name="idp49953808-bb"></a><span class="identifier">is_open</span><span class="special">(</span><span class="special">)</span><span class="special">;</span></pre>Check if the pipe is open. </li>
 <li class="listitem">
-<pre class="literallayout"><span class="keyword">void</span> <a name="idp40355600-bb"></a><span class="identifier">close</span><span class="special">(</span><span class="special">)</span><span class="special">;</span></pre>Close the pipe. </li>
+<pre class="literallayout"><span class="keyword">void</span> <a name="idp49954960-bb"></a><span class="identifier">close</span><span class="special">(</span><span class="special">)</span><span class="special">;</span></pre>Close the pipe. </li>
 </ol></div>
 </div>
 </div>
