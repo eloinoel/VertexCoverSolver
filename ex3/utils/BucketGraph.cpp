@@ -1100,7 +1100,7 @@ bool BucketGraph::reduce(int* k)
         RULE_APPLICATION_RESULT dominationResult = INAPPLICABLE;
         RULE_APPLICATION_RESULT LPFlowResult = INAPPLICABLE;
 
-        highDegreeResult = reductions->rule_HighDegree(this, k);
+        /* highDegreeResult = reductions->rule_HighDegree(this, k);
         if(highDegreeResult == INSUFFICIENT_BUDGET) return true; //cut
         degreeZeroResult = reductions->rule_DegreeZero(this);
         if(highDegreeResult == INAPPLICABLE && degreeZeroResult == INAPPLICABLE)
@@ -1109,11 +1109,11 @@ bool BucketGraph::reduce(int* k)
                 return true;
         }
         degreeOneResult = reductions->rule_DegreeOne(this, k);
-        if(degreeOneResult == INSUFFICIENT_BUDGET) return true; //cut
+        if(degreeOneResult == INSUFFICIENT_BUDGET) return true; */ //cut
 
         //dominationResult = reductions->rule_Domination(this, k);
-        dominationResult = reductions->rule_Domination(this, k);
-        if(dominationResult == INSUFFICIENT_BUDGET) return true; //cut
+        /* dominationResult = reductions->rule_Domination_BE(this, k);
+        if(dominationResult == INSUFFICIENT_BUDGET) return true; */ //cut
 
         //TODO: debug merge 
         /* degreeTwoResult = reductions->rule_DegreeTwo(this, k);
@@ -1122,8 +1122,7 @@ bool BucketGraph::reduce(int* k)
             std::cout << cp::dye("deg2 cut", 'y') << std::endl;
             return true; //cut
         } */
-
-        if(c < 1)
+        if(true/* c < 1 */)
         {
             LPFlowResult = reductions->rule_LPFlow(this, k);
             if(LPFlowResult == INSUFFICIENT_BUDGET) return true;
@@ -1286,6 +1285,9 @@ void BucketGraph::unreduce(int* k, int previousK, std::unordered_map<int, bool>*
                 throw std::invalid_argument("unreduce error: unknown rule");
                 break;
         }
+        delete reductions->appliedRules->back()->deletedVCVertices;
+        delete reductions->appliedRules->back()->deletedVertices;
+        delete reductions->appliedRules->back();
         reductions->appliedRules->pop_back();
         //TODO: delete debug at the end
         if(*k > previousK)
@@ -1674,8 +1676,8 @@ int BucketGraph::hopcroftKarpMatchingSize()
 
 int BucketGraph::edmondsKarpFlow()
 {
-    std::cout << "Beginning flow" << std::endl;
-
+    /* std::cout << "Beginning flow" << std::endl;
+    printMatching(); */
     int flow_amt = 0;
     //std::vector<int> pred = std::vector<int>(nv*2+2);
     std::queue<int> Q = std::queue<int>();
@@ -1704,17 +1706,17 @@ int BucketGraph::edmondsKarpFlow()
             flow[pairU[i]][t] = 1;
         }
     } */
-    std::cout << "Initialized flow" << std::endl;
+    //std::cout << "Initialized flow" << std::endl;
     pred[t] = 1;
     // Until no augmenting path was found last iteration
     while (pred[t] != -1)
     {
         // clear queue & predecessors
         while (!Q.empty()) { Q.pop(); }
-        //for(int i=0; i<nv*2+2; i++) { pred[i] = -1; } // TODO: do we need to reset preds?
+        for(int i=0; i<nv*2+2; i++) { pred[i] = -1; } // TODO: do we need to reset preds?
         // init queue with source vertex
         Q.push(s);
-        std::cout << "Pushed source vertex" << std::endl;
+        //std::cout << "Pushed source vertex" << std::endl;
         // BFS to find the shortest s-t path
         while (!Q.empty())
         {
@@ -1725,7 +1727,7 @@ int BucketGraph::edmondsKarpFlow()
             // if current is s (capacity == 1)
             if(current == s)
             {
-                std::cout << "Evaluating source vertex" << std::endl;
+                //std::cout << "Evaluating source vertex" << std::endl;
                 // s exclusively has edges to left vertices (indices 0 to vertexReferences.size()-1)
                 for (int i=0; i<nv; i++)
                 {
@@ -1733,58 +1735,61 @@ int BucketGraph::edmondsKarpFlow()
                     // if left vertex i wasn't expanded & edge to it isn't already in flow
                     if (pred[i] == -1 && 1 > flow[current][i])
                     {
+                        //std::cout << "Pushing source vertex neighbour " << i << std::endl;
                         pred[i] = current;
                         Q.push(i);
                     }
                 }
-                std::cout << "Evaluated source vertex" << std::endl;
+                //std::cout << "Evaluated source vertex" << std::endl;
             }
             // if current is a left vertex (capacity == INF for edges to right vertices)
             else if (current < nv)
             {
-                std::cout << "Evaluating left side vertex " << current << std::endl;
+                //std::cout << "Evaluating left side vertex " << current << std::endl;
                 // current has edges to right vertices (indices vertexReferences.size() to vertexReferences.size()*2-1)
                 for (auto v=vertexReferences[current]->adj->begin(); v != vertexReferences[current]->adj->end(); ++v)
                 {
                     if(!vertexReferences[*v]->isActive) { continue; }
                     if (pred[nv+*v] == -1)
                     {
+                        //std::cout << "Pushing left side vertex " << current << " neighbour " << nv+*v << std::endl;
                         pred[nv+*v] = current;
                         Q.push(nv+*v);
                     }
                 }
-                std::cout << "Evaluated left side vertex " << current << std::endl;
+                //std::cout << "Evaluated left side vertex " << current << std::endl;
             }
             // if current is a right vertex (capacity == 1 for edge to t and capacity == INF for the reverse edges to left vertices)
             else if (nv <= current && current < nv*2)
             {
-                std::cout << "Evaluating right side vertex: " << current << std::endl;
+                //std::cout << "Evaluating right side vertex: " << current << std::endl;
                 // current has reverse edges to left vertices (indices vertexReferences.size() to vertexReferences.size()*2-1)
                 for (auto v=vertexReferences[current-nv]->adj->begin(); v != vertexReferences[current-nv]->adj->end(); ++v)
                 {
                     if(!vertexReferences[*v]->isActive) { continue; }
-                    std::cout << "Evaluating right side vertices left side neighbour" << std::endl;
+                    //std::cout << "Evaluating right side vertices left side neighbour " << *v << std::endl;
                     if (pred[*v] == -1 && pairU[*v] == current)
                     {
+                        //std::cout << "Pushing right side vertex " << current << " neighbour " << *v << std::endl;
                         pred[*v] = current;
                         Q.push(*v);
                     }
                 }
-                std::cout << "Evaluated right side vertices reverse edges" << std::endl;
+                //std::cout << "Evaluated right side vertices reverse edges" << std::endl;
                 if (pred[t] == -1 && 1 > flow[current][t])
                 {
+                    //std::cout << "Found s-t path" << std::endl;
                     pred[t] = current;
                     break;
-                    std::cout << "Found s-t path" << std::endl;
                 }
             }
         }
-        std::cout << "Finished DFS" << std::endl;
+        //std::cout << "Finished DFS" << std::endl;
 
         if (pred[t] != -1)
         {
-            std::cout << "Found flow-improving path" << std::endl;
-            printMatching();
+            /* std::cout << "Found flow-improving path" << std::endl;
+            printMatching(); */
             // always: df = 1;
             for (int p = t; p != -1 && p != s; p = pred[p])
             {
@@ -1799,7 +1804,7 @@ int BucketGraph::edmondsKarpFlow()
 
                     pairU[p] = NIL;
                     pairV[pred[p]-nv] = NIL;
-                    std::cout << "-" << "(" << p << ", " << pred[p]-nv << ") ";
+                    //std::cout << "-" << "(" << p << ", " << pred[p]-nv << ") ";
                 }
                 // using forward edge
                 else
@@ -1809,16 +1814,16 @@ int BucketGraph::edmondsKarpFlow()
 
                     pairU[pred[p]] = p-nv;
                     pairV[p-nv] = pred[p];
-                    std::cout << "+" << "(" << pred[p] << ", " << p-nv << ") ";
+                    //std::cout << "+" << "(" << pred[p] << ", " << p-nv << ") ";
                 }
             }
             /* std::cout << std::endl;
             printMatching(); */
             flow_amt++;
-            std::cout << "Processed flow-improving path" << std::endl;
+            //std::cout << "Processed flow-improving path" << std::endl;
         }
     }
-    std::cout << "Ending flow" << std::endl;
+    //std::cout << "Ending flow" << std::endl;
     return flow_amt;
 }
 

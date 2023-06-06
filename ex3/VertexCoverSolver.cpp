@@ -30,8 +30,8 @@ unordered_map<int, bool>* vcVertexBranchingRecursive(BucketGraph* G, int k, int 
 
     int previousK = k;
     bool cut = false;
-    //if(depth % 10 == 0) { cut = G->reduce(&k); }
-    cut = G->reduce(&k);
+    if(depth /* % 10 */ == 0) { cut = G->reduce(&k); }
+    //cut = G->reduce(&k);
     if(cut)
     {
         //std::cout << "> cutting through data reductions " << std::endl;
@@ -43,7 +43,7 @@ unordered_map<int, bool>* vcVertexBranchingRecursive(BucketGraph* G, int k, int 
     if (k < G->getLPBound()) {
         G->unreduce(&k, previousK);
         return nullptr;
-    } //TODO: put this back in for final submission
+    }
 
     //cout << "before getMaxDegreeVertex" << endl;
 	int vertex = G->getMaxDegreeVertex();
@@ -130,6 +130,8 @@ unordered_map<int, bool>* vcVertexBranchingRecursive(BucketGraph* G, int k, int 
         cout << neighbours->at(i) << ", ";
     }
     cout << endl; */
+    // free neighbours
+    delete neighbours;
 
     G->unreduce(&k, previousK);
     return nullptr;

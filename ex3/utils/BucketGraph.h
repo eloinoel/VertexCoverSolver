@@ -36,7 +36,7 @@ class Bucket : public list_base_hook<>
 public:
     int degree;
     list<BucketVertex> vertices;
-    boost::intrusive::list<BucketVertex>::iterator stable_iterator;
+    boost::intrusive::list<BucketVertex>::const_iterator stable_iterator;
 
 public:
     Bucket(int _degree, std::vector<BucketVertex*>& _vertices)
@@ -47,7 +47,7 @@ public:
         {
             vertices.push_back(*vertex);
         }
-        stable_iterator = vertices.begin();
+        stable_iterator = vertices.iterator_to(*vertices.begin());
     }
 
     inline void insert(BucketVertex* vertex)
@@ -83,9 +83,9 @@ public:
     *   Whenever the element, the iterator points to is deleted, the iterator is incremented
     *   When a new element is inserted into the bucket during iteration, the iterator will iterate over it later
     */
-    inline boost::intrusive::list<BucketVertex>::iterator* getStableIterator()
+    inline boost::intrusive::list<BucketVertex>::const_iterator* getStableIterator()
     {
-        stable_iterator = vertices.begin();
+        stable_iterator = vertices.iterator_to(*vertices.begin());//vertices.begin();
         return &stable_iterator;
     }
 };

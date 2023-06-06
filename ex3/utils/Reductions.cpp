@@ -98,15 +98,15 @@ RULE_APPLICATION_RESULT Reductions::rule_LPFlow(BucketGraph* G, int* k)
 {
     std::vector<int>* delVertices = new std::vector<int>();
     std::vector<int>* delVCVertices = new std::vector<int>();
-    //auto startHop = std::chrono::high_resolution_clock::now();
+    auto startHop = std::chrono::high_resolution_clock::now();
     G->hopcroftKarpMatchingSize();
-    //auto stopHop = std::chrono::high_resolution_clock::now();
+    auto stopHop = std::chrono::high_resolution_clock::now();
     //std::cout << "LPFlow" << std::endl;
-    //auto startEd = std::chrono::high_resolution_clock::now();
+    auto startEd = std::chrono::high_resolution_clock::now();
     G->edmondsKarpFlow();
-    //auto stopEd = std::chrono::high_resolution_clock::now();
+    auto stopEd = std::chrono::high_resolution_clock::now();
     //std::cout << "executed edmondsKarp" << std::endl;
-    //auto startCom = std::chrono::high_resolution_clock::now();
+    auto startCom = std::chrono::high_resolution_clock::now();
     G->setBipartMatchingFlowComponentsInactive(delVertices, delVCVertices, *k, 0.5);
     /* G->getBipartMatchingFlowComponents(delVertices, delVCVertices);
     for (int i=0; i < (int) delVertices->size(); i++)
@@ -115,10 +115,10 @@ RULE_APPLICATION_RESULT Reductions::rule_LPFlow(BucketGraph* G, int* k)
         G->setInactive(delVCVertices->at(i));
     } */
     auto stopCom = std::chrono::high_resolution_clock::now();
-    /* double Hop = (std::chrono::duration_cast<std::chrono::microseconds>(stopHop - startHop).count() /  1000) / (double) 1000;
+    double Hop = (std::chrono::duration_cast<std::chrono::microseconds>(stopHop - startHop).count() /  1000) / (double) 1000;
     double Ed = (std::chrono::duration_cast<std::chrono::microseconds>(stopEd - startEd).count() /  1000) / (double) 1000;
     double Com = (std::chrono::duration_cast<std::chrono::microseconds>(stopCom - startCom).count() /  1000) / (double) 1000;
-    std::cout << "Computed flow reduction with vc_verts=" << delVCVertices->size() << ", verts=" << delVertices->size() << ", k=" << *k << " in " << Hop + Ed + Com << " seconds (HopcroftKarp: " << Hop << " + EdmondsKarp: " << Ed << " + Connected Components: " << Com << ")" << std::endl; */
+    std::cout << "Computed flow reduction with vc_verts=" << delVCVertices->size() << ", verts=" << delVertices->size() << ", k=" << *k << " in " << Hop + Ed + Com << " seconds (HopcroftKarp: " << Hop << " + EdmondsKarp: " << Ed << " + Connected Components: " << Com << ")" << std::endl;
     Reduction* reduction = new Reduction(RULE::LPFLOW, delVCVertices->size(), delVertices, delVCVertices);
     appliedRules->push_back(reduction);
     *k = *k - delVCVertices->size();
@@ -241,7 +241,7 @@ RULE_APPLICATION_RESULT Reductions::rule_Domination_BE(BucketGraph* G, int* k)
 
         //loop through vertices of bucket
         auto u_it = bucket->getStableIterator(); // ++bucket->begin(); // TODO: sometimes randomly u_it is an inactive vertex
-        while(*u_it != bucket->vertices.end())
+        while((*u_it)->index != bucket->vertices.end()->index)
         {
             //std::cout << "Checking iterator for vertex u=" << u_it->index << std::endl;
             //if no budget left
@@ -255,7 +255,6 @@ RULE_APPLICATION_RESULT Reductions::rule_Domination_BE(BucketGraph* G, int* k)
             bool dominates = true;
             //loop through u's neighbours
             Vertex* u = G->getVertex((*u_it)->index);
-            if(!u->getActive()) { continue; }   // TODO: this guards against random inactive vertices
             //std::cout << "Checking vertex u=" << u->getIndex() << std::endl;
             for(int i = 0; i < (int) u->getAdj()->size(); i++)
             {
@@ -291,7 +290,7 @@ RULE_APPLICATION_RESULT Reductions::rule_Domination_BE(BucketGraph* G, int* k)
             //u dominates any neighbour
             if(dominates)
             {
-                ++u_it;
+                (*u_it) = ++(*u_it);
                 //std::cout << "Vertex u=" << u->getIndex() << " is active " << u->getActive() << " and has degree: " << u->getDegree() << std::endl;
                 //std::cout << "Setting vertex u=" << u->getIndex() << " inactive " << std::endl;
                 reduction->kDecrement++;
@@ -300,7 +299,7 @@ RULE_APPLICATION_RESULT Reductions::rule_Domination_BE(BucketGraph* G, int* k)
                 G->setInactive(u->getIndex());
                 continue;
             }
-            ++u_it;
+            (*u_it) = ++(*u_it);
         }
     }
     if(reduction->deletedVCVertices->size() > 0)
@@ -422,7 +421,7 @@ bool Reductions::isDominated(BucketGraph* G, int dom, std::vector<bool>* pending
 
     for (int i = 0; i < (int) neighbour->size(); ++i) {
         int n = neighbour->at(i);
-        if(G->isActive(n) && G->dominationHelper->at(n) == 0 /* && !pendingDeletions->at(n) */)
+        if(G->isActive(n) && G->dominationHelper->at(n) == 0 && !pendingDeletions->at(n))
 //        if(G->isActive(n) && !G->dominationHelperBool->at(n))
         {
             if (printDebug)
@@ -585,6 +584,8 @@ RULE_APPLICATION_RESULT Reductions::rule_Domination(BucketGraph* G, int* k)
         if(*k - reduction->kDecrement == 0) {
             (*k) = (*k) + reduction->kDecrement;
             reduction->deletedVCVertices->clear();
+            delete reduction->deletedVCVertices;
+            delete reduction;
             return INSUFFICIENT_BUDGET; //cannot delete more vertices, no possible vertex cover exists
         }
         list<BucketVertex>* degDom = G->getVerticesOfDegree(maxDeg);
@@ -645,9 +646,12 @@ RULE_APPLICATION_RESULT Reductions::rule_Domination(BucketGraph* G, int* k)
             for (int i = 0; i < (int) neighbours->size(); ++i) {
                 G->dominationHelper->at(neighbours->at(i)) = 0;
             }
+            // free neighbours
+            delete neighbours;
             //std::cout << ColorPrint::dye("reset domination helper", 'y') << std::endl;
 
             if(*k - reduction->kDecrement == 0){
+                delete reduction->deletedVCVertices;
                 delete reduction;
                 return INSUFFICIENT_BUDGET;
             }
@@ -672,6 +676,8 @@ RULE_APPLICATION_RESULT Reductions::rule_Domination(BucketGraph* G, int* k)
 
     if(reduction->kDecrement == 0){
         //reduction->deletedVCVertices->clear();
+        delete reduction->deletedVCVertices;
+        delete reduction;
         return INAPPLICABLE;
     }
 
