@@ -13,7 +13,7 @@ with open(sys.argv[1], 'r') as in_file:
     header = next(reader)
     data = sorted(reader, key=lambda row: float(row[1]))
 
-with open('sorted.csv', 'w', newline='') as out_file:
+with open('s_' + sys.argv[1], 'w', newline='') as out_file:
     out_writer = csv.writer(out_file, delimiter=";")
     out_writer.writerow(header)
     out_writer.writerows(data)

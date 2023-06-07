@@ -1112,7 +1112,7 @@ bool BucketGraph::reduce(int* k)
         if(degreeOneResult == INSUFFICIENT_BUDGET) return true; */ //cut
 
         //dominationResult = reductions->rule_Domination(this, k);
-        /* dominationResult = reductions->rule_Domination_BE(this, k);
+        /* dominationResult = reductions->rule_Domination(this, k);
         if(dominationResult == INSUFFICIENT_BUDGET) return true; */ //cut
 
         //TODO: debug merge 
@@ -1122,11 +1122,11 @@ bool BucketGraph::reduce(int* k)
             std::cout << cp::dye("deg2 cut", 'y') << std::endl;
             return true; //cut
         } */
-        if(true/* c < 1 */)
+        /* if(c < 1)
         {
             LPFlowResult = reductions->rule_LPFlow(this, k);
             if(LPFlowResult == INSUFFICIENT_BUDGET) return true;
-        }
+        } */
 
         if(highDegreeResult == INAPPLICABLE && degreeZeroResult == INAPPLICABLE && degreeOneResult == INAPPLICABLE
          && degreeTwoResult == INAPPLICABLE && dominationResult == INAPPLICABLE && LPFlowResult == INAPPLICABLE) //TODO: add conditions for other rules
