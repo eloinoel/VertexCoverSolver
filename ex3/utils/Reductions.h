@@ -28,10 +28,10 @@ class Reduction
 public:
     RULE rule;
     int kDecrement;
-    std::vector<int>* deletedVertices; // First idx is always to add in VC if(rule!=0)
-    std::vector<int>* deletedVCVertices;
+    std::vector<int>* deletedVertices = nullptr; // First idx is always to add in VC if(rule!=0)
+    std::vector<int>* deletedVCVertices = nullptr;
     /* mergeVertex, original adj, original adj_map, added vertices */
-    std::tuple<int, std::vector<int>*, std::unordered_map<int, bool>*, std::vector<int>*>* mergeVertexInfo;
+    std::tuple<int, std::vector<int>*, std::unordered_map<int, bool>*, std::vector<int>*>* mergeVertexInfo = nullptr;
 
     Reduction() {};
     Reduction(RULE rule) { this->rule = rule; };

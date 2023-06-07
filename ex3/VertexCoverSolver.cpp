@@ -28,8 +28,8 @@ unordered_map<int, bool>* vcVertexBranchingRecursive(BucketGraph* G, int k, int 
 
     int previousK = k;
     bool cut = false;
+    //if(depth /* % 10 */ == 0) { cut = G->reduce(&k); }
     cut = G->reduce(&k);
-    //cut = G->reduce(&k);
     if(cut)
     {
         //std::cout << "> cutting through data reductions " << std::endl;
