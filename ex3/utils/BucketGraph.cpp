@@ -1100,7 +1100,7 @@ bool BucketGraph::reduce(int* k)
         RULE_APPLICATION_RESULT dominationResult = INAPPLICABLE;
         RULE_APPLICATION_RESULT LPFlowResult = INAPPLICABLE;
 
-        /* highDegreeResult = reductions->rule_HighDegree(this, k);
+        highDegreeResult = reductions->rule_HighDegree(this, k);
         if(highDegreeResult == INSUFFICIENT_BUDGET) return true; //cut
         degreeZeroResult = reductions->rule_DegreeZero(this);
         if(highDegreeResult == INAPPLICABLE && degreeZeroResult == INAPPLICABLE)
@@ -1109,11 +1109,11 @@ bool BucketGraph::reduce(int* k)
                 return true;
         }
         degreeOneResult = reductions->rule_DegreeOne(this, k);
-        if(degreeOneResult == INSUFFICIENT_BUDGET) return true; */ //cut
+        if(degreeOneResult == INSUFFICIENT_BUDGET) return true; //cut
 
-        //dominationResult = reductions->rule_Domination(this, k);
-        /* dominationResult = reductions->rule_Domination_BE(this, k);
-        if(dominationResult == INSUFFICIENT_BUDGET) return true; */ //cut
+        //dominationResult = reductions->rule_Domination_BE(this, k);
+        dominationResult = reductions->rule_Domination(this, k);
+        if(dominationResult == INSUFFICIENT_BUDGET) return true; //cut
 
         //TODO: debug merge 
         /* degreeTwoResult = reductions->rule_DegreeTwo(this, k);
@@ -1124,8 +1124,8 @@ bool BucketGraph::reduce(int* k)
         } */
         if(true/* c < 1 */)
         {
-            LPFlowResult = reductions->rule_LPFlow(this, k);
-            if(LPFlowResult == INSUFFICIENT_BUDGET) return true;
+            /* LPFlowResult = reductions->rule_LPFlow(this, k);
+            if(LPFlowResult == INSUFFICIENT_BUDGET) return true; */
         }
 
         if(highDegreeResult == INAPPLICABLE && degreeZeroResult == INAPPLICABLE && degreeOneResult == INAPPLICABLE
@@ -1285,10 +1285,10 @@ void BucketGraph::unreduce(int* k, int previousK, std::unordered_map<int, bool>*
                 throw std::invalid_argument("unreduce error: unknown rule");
                 break;
         }
-        delete reductions->appliedRules->back()->deletedVCVertices;
-        delete reductions->appliedRules->back()->deletedVertices;
-        delete reductions->appliedRules->back();
+        if (rule->deletedVCVertices != nullptr) delete rule->deletedVCVertices;
+        if (rule->deletedVertices != nullptr) delete rule->deletedVertices;
         reductions->appliedRules->pop_back();
+        delete rule;
         //TODO: delete debug at the end
         if(*k > previousK)
         {

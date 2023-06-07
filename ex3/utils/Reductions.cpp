@@ -98,15 +98,15 @@ RULE_APPLICATION_RESULT Reductions::rule_LPFlow(BucketGraph* G, int* k)
 {
     std::vector<int>* delVertices = new std::vector<int>();
     std::vector<int>* delVCVertices = new std::vector<int>();
-    auto startHop = std::chrono::high_resolution_clock::now();
+    //auto startHop = std::chrono::high_resolution_clock::now();
     G->hopcroftKarpMatchingSize();
-    auto stopHop = std::chrono::high_resolution_clock::now();
+    //auto stopHop = std::chrono::high_resolution_clock::now();
     //std::cout << "LPFlow" << std::endl;
-    auto startEd = std::chrono::high_resolution_clock::now();
+    //auto startEd = std::chrono::high_resolution_clock::now();
     G->edmondsKarpFlow();
-    auto stopEd = std::chrono::high_resolution_clock::now();
+    //auto stopEd = std::chrono::high_resolution_clock::now();
     //std::cout << "executed edmondsKarp" << std::endl;
-    auto startCom = std::chrono::high_resolution_clock::now();
+    //auto startCom = std::chrono::high_resolution_clock::now();
     G->setBipartMatchingFlowComponentsInactive(delVertices, delVCVertices, *k, 0.5);
     /* G->getBipartMatchingFlowComponents(delVertices, delVCVertices);
     for (int i=0; i < (int) delVertices->size(); i++)
@@ -114,11 +114,11 @@ RULE_APPLICATION_RESULT Reductions::rule_LPFlow(BucketGraph* G, int* k)
         G->setInactive(delVertices->at(i));
         G->setInactive(delVCVertices->at(i));
     } */
-    auto stopCom = std::chrono::high_resolution_clock::now();
+    /* auto stopCom = std::chrono::high_resolution_clock::now();
     double Hop = (std::chrono::duration_cast<std::chrono::microseconds>(stopHop - startHop).count() /  1000) / (double) 1000;
     double Ed = (std::chrono::duration_cast<std::chrono::microseconds>(stopEd - startEd).count() /  1000) / (double) 1000;
-    double Com = (std::chrono::duration_cast<std::chrono::microseconds>(stopCom - startCom).count() /  1000) / (double) 1000;
-    std::cout << "Computed flow reduction with vc_verts=" << delVCVertices->size() << ", verts=" << delVertices->size() << ", k=" << *k << " in " << Hop + Ed + Com << " seconds (HopcroftKarp: " << Hop << " + EdmondsKarp: " << Ed << " + Connected Components: " << Com << ")" << std::endl;
+    double Com = (std::chrono::duration_cast<std::chrono::microseconds>(stopCom - startCom).count() /  1000) / (double) 1000; */
+    //std::cout << "Computed flow reduction with vc_verts=" << delVCVertices->size() << ", verts=" << delVertices->size() << ", k=" << *k << " in " << Hop + Ed + Com << " seconds (HopcroftKarp: " << Hop << " + EdmondsKarp: " << Ed << " + Connected Components: " << Com << ")" << std::endl;
     Reduction* reduction = new Reduction(RULE::LPFLOW, delVCVertices->size(), delVertices, delVCVertices);
     appliedRules->push_back(reduction);
     *k = *k - delVCVertices->size();
