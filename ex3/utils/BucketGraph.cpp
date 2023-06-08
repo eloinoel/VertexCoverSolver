@@ -1029,15 +1029,10 @@ std::pair<int, int>* BucketGraph::getFirstTwoActiveNeighbours(int vertex)
 
 int BucketGraph::getNumConnectedVertices()
 {
-    /* std::cout << bucketReferences[0] << std::endl;
-    std::cout << "before getNumConnectedVertex" << std::endl; */
-
-    if(bucketReferences[0] != nullptr)
+    if(getNumVertices()>0)
     {
-        //std::cout << bucketReferences[0]->degree << std::endl;
-        return numVertices-bucketReferences[0]->vertices.size();
+        return numVertices-getVerticesOfDegree(0)->size();
     }
-    //std::cout << "post ref" << std::endl;
     return numVertices;
 }
 
@@ -1090,7 +1085,7 @@ bool BucketGraph::reduce(int* k)
         if(highDegreeResult == APPLICABLE) continue;
         if(highDegreeResult == INSUFFICIENT_BUDGET) return true;
 
-        //if(reductions->rule_Buss(this, k, getNumConnectedVertices(), getNumEdges()) == APPLICABLE) return true;
+        if(reductions->rule_Buss(this, k, getNumConnectedVertices(), getNumEdges()) == APPLICABLE) return true;
 
         degreeOneResult = reductions->rule_DegreeOne(this, k, true);
         if(degreeOneResult == APPLICABLE) continue;

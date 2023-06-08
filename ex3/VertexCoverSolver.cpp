@@ -424,20 +424,21 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
             throw invalid_argument("Error constructing graph from input file.");
 
         int numRecursiveSteps = 0;
-        unordered_map<int, bool>* vc = vcSolverRecursive(bucketGraph, &numRecursiveSteps);
+        //unordered_map<int, bool>* vc = vcSolverRecursive(bucketGraph, &numRecursiveSteps);
+        unordered_map<int, bool>* vc;
 
-        int tmpK = vc->size();
-        bucketGraph->reduce(&tmpK);
-        
+        //int tmpK = vc->size();
+        int tmpK = bucketGraph->getCliqueBound();
+        bucketGraph->preprocess(&tmpK);
         std::vector<std::string>* str = bucketGraph->getEdgesToConsoleString();
 
         //bucketGraph->resetLPBoundDataStructures();
         //unordered_map<int, bool>* reducedVc = vcSolverRecursive(bucketGraph, &numRecursiveSteps);
-        for(int i = 0; i < (int) str->size(); i++)
+        /* for(int i = 0; i < (int) str->size(); i++)
         {
             cout << str->at(i);
-        }
-        cout << "#difference: " << to_string((bucketGraph->getOriginalEdgeCount() - str->size())) << endl;
+        } */
+        cout << "#recursive steps: " << to_string((bucketGraph->getOriginalEdgeCount() - str->size())) << endl;
     }
     else
     {
