@@ -342,35 +342,8 @@ void BucketGraph::initMatching()
         dist[i] = INT32_MAX;
     }
     dist[NIL] = INT32_MAX;
-
-    // init flow
     // number of vertices helper variable (only for clarity)
     nv = vertexReferences.size();
-    // source & sink vertex definition
-    s = nv*2;
-    t = nv*2+1;
-    pred = std::vector<int>(nv*2+2);
-    flow = std::vector<std::vector<int>>(nv*2+2);
-    for(int i=0; i<nv*2+2; i++)
-    {
-        flow[i] = std::vector<int>(nv*2+2);
-        pred[i] = -1;
-        for(int j=0; j<nv*2+2; j++)
-        {
-            flow[i][j] = 0;
-        }
-    }
-    for (int i=0; i<(int) pairU.size(); i++)
-    {
-        if(pairU[i] != NIL)
-        {
-            flow[s][i] = 1;
-            flow[i][pairU[i]] = 1;
-            flow[pairU[i]][t] = 1;
-        }
-    }
-
-
     // run matching algorithm to calculate initial matching and setup flow
     hopcroftKarpMatchingSize();
 }
@@ -871,15 +844,6 @@ void BucketGraph::setInactive(int vertexIndex)
         currentLPBound--;
     }
     //std::cout << std::endl;
-    flow[s][vertexIndex] = 0;
-    pred[vertexIndex] = -1;
-    if(pairU[vertexIndex] != NIL)
-    {
-        flow[vertexIndex][pairU[vertexIndex]+nv] = 0;
-        flow[pairU[vertexIndex]+nv][vertexIndex] = 0;
-        flow[pairU[vertexIndex]+nv][t] = 0;
-        pred[pairU[vertexIndex]+nv] = -1;
-    }
     dist[vertexIndex] = INT32_MAX;
     pairV[pairU[vertexIndex]] = NIL;
     pairU[pairV[vertexIndex]] = NIL;
@@ -1063,6 +1027,20 @@ std::pair<int, int>* BucketGraph::getFirstTwoActiveNeighbours(int vertex)
     return neighbours;
 }
 
+int BucketGraph::getNumConnectedVertices()
+{
+    /* std::cout << bucketReferences[0] << std::endl;
+    std::cout << "before getNumConnectedVertex" << std::endl; */
+
+    if(bucketReferences[0] != nullptr)
+    {
+        //std::cout << bucketReferences[0]->degree << std::endl;
+        return numVertices-bucketReferences[0]->vertices.size();
+    }
+    //std::cout << "post ref" << std::endl;
+    return numVertices;
+}
+
 int BucketGraph::getNumVertices()
 {
     return numVertices;
@@ -1086,54 +1064,46 @@ int BucketGraph::bruteForceCalculateNumEdges()
 /*----------------------------------------------------------*/
 /*-------------------   Data Reduction   -------------------*/
 /*----------------------------------------------------------*/
+void BucketGraph::preprocess(int* k)
+{
+    while(true)
+    {
+        if(reductions->rule_DegreeOne(this, k, false) == APPLICABLE) continue;
+        if(reductions->rule_Domination(this, k, false) == APPLICABLE) continue;
+        if(reductions->rule_LPFlow(this, k, false) == APPLICABLE) continue;
+        return;
+    }
+}
 
 bool BucketGraph::reduce(int* k)
 {
-    int c = 0;
+    //initialisise
+    RULE_APPLICATION_RESULT degreeTwoResult = INAPPLICABLE;
+    RULE_APPLICATION_RESULT highDegreeResult = INAPPLICABLE;
+    RULE_APPLICATION_RESULT degreeZeroResult = INAPPLICABLE;
+    RULE_APPLICATION_RESULT degreeOneResult = INAPPLICABLE;
+    RULE_APPLICATION_RESULT dominationResult = INAPPLICABLE;
+    RULE_APPLICATION_RESULT LPFlowResult = INAPPLICABLE;
     while(true)
     {
-        //initialisise
-        RULE_APPLICATION_RESULT degreeTwoResult = INAPPLICABLE;
-        RULE_APPLICATION_RESULT highDegreeResult = INAPPLICABLE;
-        RULE_APPLICATION_RESULT degreeZeroResult = INAPPLICABLE;
-        RULE_APPLICATION_RESULT degreeOneResult = INAPPLICABLE;
-        RULE_APPLICATION_RESULT dominationResult = INAPPLICABLE;
-        RULE_APPLICATION_RESULT LPFlowResult = INAPPLICABLE;
-
         highDegreeResult = reductions->rule_HighDegree(this, k);
-        if(highDegreeResult == INSUFFICIENT_BUDGET) return true; //cut
-        degreeZeroResult = reductions->rule_DegreeZero(this);
-        if(highDegreeResult == INAPPLICABLE && degreeZeroResult == INAPPLICABLE)
-        {
-            if(reductions->rule_Buss(this, k, getNumVertices(), getNumEdges()) == APPLICABLE)
-                return true;
-        }
-        degreeOneResult = reductions->rule_DegreeOne(this, k);
-        if(degreeOneResult == INSUFFICIENT_BUDGET) return true; //cut
+        if(highDegreeResult == APPLICABLE) continue;
+        if(highDegreeResult == INSUFFICIENT_BUDGET) return true;
 
-        //dominationResult = reductions->rule_Domination_BE(this, k);
-        dominationResult = reductions->rule_Domination(this, k);
-        if(dominationResult == INSUFFICIENT_BUDGET) return true; //cut
+        //if(reductions->rule_Buss(this, k, getNumConnectedVertices(), getNumEdges()) == APPLICABLE) return true;
 
-        //TODO: debug merge 
-        /* degreeTwoResult = reductions->rule_DegreeTwo(this, k);
-        if(degreeTwoResult == INSUFFICIENT_BUDGET)
-        {
-            std::cout << cp::dye("deg2 cut", 'y') << std::endl;
-            return true; //cut
-        } */
-        if(true/* c < 1 */)
-        {
-            /* LPFlowResult = reductions->rule_LPFlow(this, k);
-            if(LPFlowResult == INSUFFICIENT_BUDGET) return true; */
-        }
+        degreeOneResult = reductions->rule_DegreeOne(this, k, true);
+        if(degreeOneResult == APPLICABLE) continue;
+        if(degreeOneResult == INSUFFICIENT_BUDGET) return true;
 
-        if(highDegreeResult == INAPPLICABLE && degreeZeroResult == INAPPLICABLE && degreeOneResult == INAPPLICABLE
-         && degreeTwoResult == INAPPLICABLE && dominationResult == INAPPLICABLE && LPFlowResult == INAPPLICABLE) //TODO: add conditions for other rules
-        {
-            return false;
-        }
-        c++;
+        dominationResult = reductions->rule_Domination(this, k, true);
+        if(dominationResult == APPLICABLE) continue;
+        if(dominationResult == INSUFFICIENT_BUDGET) return true;
+
+        LPFlowResult = reductions->rule_LPFlow(this, k, true);
+        if(LPFlowResult == APPLICABLE) continue;
+        if(LPFlowResult == INSUFFICIENT_BUDGET) return true;
+        return false;
     }
     return false;
 }
@@ -1582,29 +1552,8 @@ bool BucketGraph::matchingDFS(int u)
             {
                 if (matchingDFS(pairV[*v]))
                 {
-                    if (pairV[*v] != NIL)
-                    {
-                        flow[s][pairV[*v]] = 0;
-                        flow[pairV[*v]][*v+nv] = 0;
-                        flow[*v+nv][pairV[*v]] = 0;
-                        pred[pairV[*v]] = -1;
-                    }
-
-                    if (pairU[u] != NIL)
-                    {
-                        flow[u][pairU[u]+nv] = 0;
-                        flow[pairU[u]+nv][u] = 0;
-                        flow[pairU[u]+nv][t] = 0;
-                        pred[pairU[u]+nv] = -1;
-                    }
-
                     pairV[*v] = u;
                     pairU[u] = *v;
-                    
-                    flow[s][u] = 1;
-                    flow[u][*v+nv] = 1;
-                    flow[*v+nv][t] = 1;
-                    pred[*v+nv] = u;
                     return true;
                 }
             }
@@ -1672,159 +1621,6 @@ int BucketGraph::hopcroftKarpMatchingSize()
     }
     //std::cout << "post hopcroft karp" << std::endl;
     return currentLPBound;
-}
-
-int BucketGraph::edmondsKarpFlow()
-{
-    /* std::cout << "Beginning flow" << std::endl;
-    printMatching(); */
-    int flow_amt = 0;
-    //std::vector<int> pred = std::vector<int>(nv*2+2);
-    std::queue<int> Q = std::queue<int>();
-    int current;
-
-    pred[s] = -1;
-
-    // init flow
-    /* flow = std::vector<std::vector<int>>(nv*2+2);
-    for(int i=0; i<nv*2+2; i++)
-    {
-        flow[i] = std::vector<int>(nv*2+2);
-        pred[i] = -1;
-        for(int j=0; j<nv*2+2; j++)
-        {
-            flow[i][j] = 0;
-        }
-    }
-    // set left to right flow according to matching
-    for (int i=0; i<(int) pairU.size(); i++)
-    {
-        if(pairU[i] != NIL)
-        {
-            flow[s][i] = 1;
-            flow[i][pairU[i]] = 1;
-            flow[pairU[i]][t] = 1;
-        }
-    } */
-    //std::cout << "Initialized flow" << std::endl;
-    pred[t] = 1;
-    // Until no augmenting path was found last iteration
-    while (pred[t] != -1)
-    {
-        // clear queue & predecessors
-        while (!Q.empty()) { Q.pop(); }
-        for(int i=0; i<nv*2+2; i++) { pred[i] = -1; } // TODO: do we need to reset preds?
-        // init queue with source vertex
-        Q.push(s);
-        //std::cout << "Pushed source vertex" << std::endl;
-        // BFS to find the shortest s-t path
-        while (!Q.empty())
-        {
-            // retrieve next queued vertex
-            current = Q.front();
-            Q.pop();
-
-            // if current is s (capacity == 1)
-            if(current == s)
-            {
-                //std::cout << "Evaluating source vertex" << std::endl;
-                // s exclusively has edges to left vertices (indices 0 to vertexReferences.size()-1)
-                for (int i=0; i<nv; i++)
-                {
-                    if(!vertexReferences[i]->isActive) { continue; }
-                    // if left vertex i wasn't expanded & edge to it isn't already in flow
-                    if (pred[i] == -1 && 1 > flow[current][i])
-                    {
-                        //std::cout << "Pushing source vertex neighbour " << i << std::endl;
-                        pred[i] = current;
-                        Q.push(i);
-                    }
-                }
-                //std::cout << "Evaluated source vertex" << std::endl;
-            }
-            // if current is a left vertex (capacity == INF for edges to right vertices)
-            else if (current < nv)
-            {
-                //std::cout << "Evaluating left side vertex " << current << std::endl;
-                // current has edges to right vertices (indices vertexReferences.size() to vertexReferences.size()*2-1)
-                for (auto v=vertexReferences[current]->adj->begin(); v != vertexReferences[current]->adj->end(); ++v)
-                {
-                    if(!vertexReferences[*v]->isActive) { continue; }
-                    if (pred[nv+*v] == -1)
-                    {
-                        //std::cout << "Pushing left side vertex " << current << " neighbour " << nv+*v << std::endl;
-                        pred[nv+*v] = current;
-                        Q.push(nv+*v);
-                    }
-                }
-                //std::cout << "Evaluated left side vertex " << current << std::endl;
-            }
-            // if current is a right vertex (capacity == 1 for edge to t and capacity == INF for the reverse edges to left vertices)
-            else if (nv <= current && current < nv*2)
-            {
-                //std::cout << "Evaluating right side vertex: " << current << std::endl;
-                // current has reverse edges to left vertices (indices vertexReferences.size() to vertexReferences.size()*2-1)
-                for (auto v=vertexReferences[current-nv]->adj->begin(); v != vertexReferences[current-nv]->adj->end(); ++v)
-                {
-                    if(!vertexReferences[*v]->isActive) { continue; }
-                    //std::cout << "Evaluating right side vertices left side neighbour " << *v << std::endl;
-                    if (pred[*v] == -1 && pairU[*v] == current)
-                    {
-                        //std::cout << "Pushing right side vertex " << current << " neighbour " << *v << std::endl;
-                        pred[*v] = current;
-                        Q.push(*v);
-                    }
-                }
-                //std::cout << "Evaluated right side vertices reverse edges" << std::endl;
-                if (pred[t] == -1 && 1 > flow[current][t])
-                {
-                    //std::cout << "Found s-t path" << std::endl;
-                    pred[t] = current;
-                    break;
-                }
-            }
-        }
-        //std::cout << "Finished DFS" << std::endl;
-
-        if (pred[t] != -1)
-        {
-            /* std::cout << "Found flow-improving path" << std::endl;
-            printMatching(); */
-            // always: df = 1;
-            for (int p = t; p != -1 && p != s; p = pred[p])
-            {
-                flow[pred[p]][p]++;
-                flow[p][pred[p]]--;
-                if(pred[p] == s || p == t) { continue; }
-                // using reverse edge
-                if (p < nv)
-                {
-                    pairV[pairU[p]] = NIL;
-                    pairU[pairV[pred[p]-nv]] = NIL;
-
-                    pairU[p] = NIL;
-                    pairV[pred[p]-nv] = NIL;
-                    //std::cout << "-" << "(" << p << ", " << pred[p]-nv << ") ";
-                }
-                // using forward edge
-                else
-                {
-                    pairV[pairU[pred[p]]] = NIL;
-                    pairU[pairV[p-nv]] = NIL;
-
-                    pairU[pred[p]] = p-nv;
-                    pairV[p-nv] = pred[p];
-                    //std::cout << "+" << "(" << pred[p] << ", " << p-nv << ") ";
-                }
-            }
-            /* std::cout << std::endl;
-            printMatching(); */
-            flow_amt++;
-            //std::cout << "Processed flow-improving path" << std::endl;
-        }
-    }
-    //std::cout << "Ending flow" << std::endl;
-    return flow_amt;
 }
 
 void BucketGraph::getBipartMatchingFlowComponents(std::vector<int>* L, std::vector<int>* R)
@@ -1937,6 +1733,16 @@ void BucketGraph::strongconnect(std::stack<int>* S, int vertex, int index, std::
         }
     }
 }
+
+/* for (int i=0; i<(int) pairU.size(); i++)
+{
+    if(pairU[i] != NIL)
+    {
+        flow[s][i] = 1;
+        flow[i][pairU[i]] = 1;
+        flow[pairU[i]][t] = 1;
+    }
+} */
 
 void BucketGraph::setBipartMatchingFlowComponentsInactive(std::vector<int>* L, std::vector<int>* R, int k, double maxExecTime)
 {
@@ -2071,11 +1877,6 @@ int BucketGraph::getLPBound()
 {
     hopcroftKarpMatchingSize();
     return currentLPBound/2;
-}
-
-int BucketGraph::getFlow()
-{
-    return edmondsKarpFlow();
 }
 
 // TODO: fix estimation

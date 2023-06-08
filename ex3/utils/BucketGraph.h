@@ -85,7 +85,7 @@ public:
     */
     inline boost::intrusive::list<BucketVertex>::const_iterator* getStableIterator()
     {
-        stable_iterator = vertices.iterator_to(*vertices.begin());//vertices.begin();
+        stable_iterator = vertices.iterator_to(*vertices.begin());
         return &stable_iterator;
     }
 };
@@ -165,13 +165,7 @@ private:
     int NIL;
     int currentLPBound;
     bool didInitialMatchingCalculation = false;
-
-    // predecessor & flow fields
     int nv;
-    int s;
-    int t;
-    std::vector<int> pred;
-    std::vector<std::vector<int>> flow;
 
 //functions
 public:
@@ -185,6 +179,7 @@ public:
     BucketGraph* resetGraph();
 
     bool vertexHasEdgeTo(int vertex, int secondVertex); //O(1)
+    int getNumConnectedVertices();
     int getNumVertices();
     int getNumEdges();
 
@@ -222,10 +217,11 @@ public:
     int getLowerBoundVC();
     int getCliqueBound(int k = INT_MAX);
     int getLPBound();
-    int getFlow();
 
     void resetLPBoundDataStructures();
 
+    /* apply initial data reduction rules to graph */
+    void preprocess(int* k);
     /* apply data reduction rules to graph, returns true if no vertex cover can be found for this k */
     bool reduce(int* k);
     /* vc is not nullptr, if deleted vertices should be appended to vc*/
@@ -239,8 +235,19 @@ public:
     void getBipartMatchingFlowComponents(std::vector<int>* L, std::vector<int>* R);
     void setBipartMatchingFlowComponentsInactive(std::vector<int>* L, std::vector<int>* R, int k, double maxExecTime);
     int hopcroftKarpMatchingSize();
-    int edmondsKarpFlow();
     inline void resetMatching() { void initMatching(); };
+    inline void throwMatchingInconsistency() {
+        for(int i=0; i<(int)pairU.size(); i++)
+        {
+            if(pairU[i] == NIL) continue;
+            if(vertexReferences[i]->degree == 0) {
+                throw std::invalid_argument("Vertex of degree 0 is matched");
+            }
+            if(i != pairV[pairU[i]]) {
+                throw std::invalid_argument("Vertex of matching is not symmetric");
+            }
+        }
+    }
 
     //----------------------- Domination Rule ------------------------------------
     bool isActive(int vertexIndex){ return vertexReferences[vertexIndex]->isActive;};
@@ -258,7 +265,7 @@ private:
     void initMatching();
     bool isAdjMapConsistent();
 
-    void initDominationHelper(){dominationHelper = new std::vector<int> (getNumVertices(), 0);};
+    void initDominationHelper(){ dominationHelper = new std::vector<int> (getNumVertices(), 0); };
     void clearDominationHelper(){ delete dominationHelper; }
     //-------------------------- Graph Utility --------------------------
 

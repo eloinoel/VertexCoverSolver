@@ -20,8 +20,6 @@ typedef ColorPrint cp;
 
 unordered_map<int, bool>* vcVertexBranchingRecursive(BucketGraph* G, int k, int depth, int* numRec)
 {
-    //TODO: call data reductions
-
     (*numRec)++;
 	if (k < 0)
     {
@@ -139,7 +137,12 @@ unordered_map<int, bool>* vcVertexBranchingRecursive(BucketGraph* G, int k, int 
 
 unordered_map<int, bool>* vcSolverRecursive(BucketGraph* G, int* numRec)
 {
-	int k = G->getLowerBoundVC();
+    int previousK = 0;
+	int k = 0;
+    G->preprocess(&previousK);
+    previousK = -previousK;
+    k = G->getLowerBoundVC();
+    //std::cout << -previousK << ", " << k << std::endl;
 
 //    G->printBucketQueue();
 //    G->print();
@@ -160,7 +163,7 @@ unordered_map<int, bool>* vcSolverRecursive(BucketGraph* G, int* numRec)
             // Add Reduced Vertices to Vertex Cover
             /* G->addReducedVertices(vc, reductionVertices);
             delete reductionVertices; */
-
+            G->unreduce(&k, vc->size()+previousK, vc);
 			return vc;
 		}
         /* G->addBackReducedVertices(&k, reductionVertices);
