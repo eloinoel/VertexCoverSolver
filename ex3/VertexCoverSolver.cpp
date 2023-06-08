@@ -68,7 +68,7 @@ unordered_map<int, bool>* vcVertexBranchingRecursive(BucketGraph* G, int k, int 
 	//delete first vertex from graph and explore solution
     G->setInactive(vertex);
     //cout << "before branching" << endl;
-	unordered_map<int, bool>* S = vcVertexBranchingRecursive(G, k - 1, depth-1, numRec);
+	unordered_map<int, bool>* S = vcVertexBranchingRecursive(G, k - 1, depth+1, numRec);
 	if (S != nullptr)
 	{
         //revert changes for multiple executions of the algorithm
@@ -90,7 +90,7 @@ unordered_map<int, bool>* vcVertexBranchingRecursive(BucketGraph* G, int k, int 
 	//cannot fully explore neighbours
     if (vertexDeg > k)
     {
-        G->unreduce(&k, previousK);
+        //G->unreduce(&k, previousK);
         return nullptr;
     }
 
@@ -103,7 +103,7 @@ unordered_map<int, bool>* vcVertexBranchingRecursive(BucketGraph* G, int k, int 
     }
     cout << endl; */
     G->setInactive(neighbours);
-	S = vcVertexBranchingRecursive(G, k - neighbours->size(), depth-1, numRec);
+	S = vcVertexBranchingRecursive(G, k - neighbours->size(), depth+1, numRec);
 	if (S != nullptr)
 	{
         //revert changes for multiple executions of the algorithm
