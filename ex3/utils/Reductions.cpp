@@ -9,45 +9,24 @@ using namespace boost::intrusive;
 
 RULE_APPLICATION_RESULT Reductions::rule_HighDegree(BucketGraph* G, int* k)
 {
-    if(!(G->getMaxDegree() > *k)) return INAPPLICABLE; //cannot apply rule
+    if(*k < 0) return INSUFFICIENT_BUDGET; //cannot delete more vertices, no possible vertex cover exists
+    //std::cout << "HIGHDEG with maxdeg: " << G->getMaxDegree() << " and " << *k << std::endl;
+    if(!(G->getMaxDegree() > *k) ||*k == 0) return INAPPLICABLE; //cannot apply rule
     
     Reduction* reduction = new Reduction(RULE::HIGH_DEGREE, 0, nullptr, new std::vector<int>());
     appliedRules->push_back(reduction);
 
-    //std::cout << "HIGHDEG Culling vertices: {";
+    //std::cout << "HIGHDEG Culling vertices: {" << std::endl;
     //delete vertices that have to be in the vertex cover
     while(G->getMaxDegree() > *k)
     {
-        if(*k == 0) return INSUFFICIENT_BUDGET; //cannot delete more vertices, no possible vertex cover exists
+        if(*k <= 0) return INSUFFICIENT_BUDGET; //cannot delete more vertices, no possible vertex cover exists
         int maxDegVertex = G->getMaxDegreeVertex();
         reduction->kDecrement++;
         reduction->deletedVCVertices->push_back(maxDegVertex);
         *k = *k - 1;
         G->setInactive(maxDegVertex);
-        //std::cout << maxDegVertex << ", ";
-    }
-    //std::cout << "}" << std::endl;
-    return APPLICABLE;
-}
-
-RULE_APPLICATION_RESULT Reductions::rule_DegreeZero(BucketGraph* G)
-{
-    list<BucketVertex>* degZeroBucket = G->getVerticesOfDegree(0);
-
-    if(degZeroBucket == nullptr || degZeroBucket->empty()) return INAPPLICABLE;
-
-    //G->print();
-
-    Reduction* reduction = new Reduction(RULE::DEGREE_ZERO, 0, new std::vector<int>());
-    appliedRules->push_back(reduction);
-
-    //std::cout << "DEGZERO Culling vertices: {";
-    while(!degZeroBucket->empty())
-    {
-        auto first = degZeroBucket->begin();
-        reduction->deletedVertices->push_back(first->index);
-        G->setInactive(first->index);
-        //std::cout << first->index << ", ";
+        //std::cout << maxDegVertex << ", " << std::endl;
     }
     //std::cout << "}" << std::endl;
     return APPLICABLE;
@@ -91,47 +70,6 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeOne(BucketGraph* G, int* k, bool 
         //std::cout << neighbourToDelete << ", ";
     }
     //std::cout << "}" << std::endl;
-    return APPLICABLE;
-}
-
-RULE_APPLICATION_RESULT Reductions::rule_LPFlow(BucketGraph* G, int* k, bool checkBudget)
-{
-    std::vector<int>* delVertices = new std::vector<int>();
-    std::vector<int>* delVCVertices = new std::vector<int>();
-    //auto startHop = std::chrono::high_resolution_clock::now();
-    G->hopcroftKarpMatchingSize();
-    //auto stopHop = std::chrono::high_resolution_clock::now();
-    //auto startCom = std::chrono::high_resolution_clock::now();
-    G->setBipartMatchingFlowComponentsInactive(delVertices, delVCVertices, *k, 0.5);
-    /* auto stopCom = std::chrono::high_resolution_clock::now();
-    double Hop = (std::chrono::duration_cast<std::chrono::microseconds>(stopHop - startHop).count() /  1000) / (double) 1000;
-    double Com = (std::chrono::duration_cast<std::chrono::microseconds>(stopCom - startCom).count() /  1000) / (double) 1000; */
-    //std::cout << "Computed flow reduction with vc_verts=" << delVCVertices->size() << ", verts=" << delVertices->size() << ", k=" << *k << " in " << Hop + Ed + Com << " seconds (HopcroftKarp: " << Hop << " + EdmondsKarp: " << Ed << " + Connected Components: " << Com << ")" << std::endl;
-    Reduction* reduction = new Reduction(RULE::LPFLOW, delVCVertices->size(), delVertices, delVCVertices);
-    appliedRules->push_back(reduction);
-    *k = *k - delVCVertices->size();
-    if((int) delVCVertices->size() == 0 && (int) delVertices->size() == 0)
-    {
-        //std::cout << "LPFlow: INAPPLICABLE" << std::endl;
-        return INAPPLICABLE;
-    }
-    /* std::cout << "Deleted component: {";
-    for (int j=0; j<(int) delVertices->size(); j++)
-    {
-        std::cout << delVertices->at(j) << ", ";
-    }
-    std::cout << "} / ";
-    std::cout << "{";
-    for (int j=0; j<(int) delVCVertices->size(); j++)
-    {
-        std::cout << delVCVertices->at(j) << ", ";
-    }
-    std::cout << "}" << std::endl; */
-    if(*k < 0 && checkBudget)
-    {
-        //std::cout << "LPFlow: INSUFFICIENT_BUDGET" << std::endl;
-        return INSUFFICIENT_BUDGET;
-    }
     return APPLICABLE;
 }
 
@@ -203,6 +141,47 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeTwo(BucketGraph* G, int* k, bool 
         //std::cout << "---------" << std::endl;
     }
     //std::cout << "----end----" << std::endl;
+    return APPLICABLE;
+}
+
+RULE_APPLICATION_RESULT Reductions::rule_LPFlow(BucketGraph* G, int* k, bool checkBudget)
+{
+    std::vector<int>* delVertices = new std::vector<int>();
+    std::vector<int>* delVCVertices = new std::vector<int>();
+    //auto startHop = std::chrono::high_resolution_clock::now();
+    G->hopcroftKarpMatchingSize();
+    //auto stopHop = std::chrono::high_resolution_clock::now();
+    //auto startCom = std::chrono::high_resolution_clock::now();
+    G->setBipartMatchingFlowComponentsInactive(delVertices, delVCVertices, *k, 0.5);
+    /* auto stopCom = std::chrono::high_resolution_clock::now();
+    double Hop = (std::chrono::duration_cast<std::chrono::microseconds>(stopHop - startHop).count() /  1000) / (double) 1000;
+    double Com = (std::chrono::duration_cast<std::chrono::microseconds>(stopCom - startCom).count() /  1000) / (double) 1000; */
+    //std::cout << "Computed flow reduction with vc_verts=" << delVCVertices->size() << ", verts=" << delVertices->size() << ", k=" << *k << " in " << Hop + Ed + Com << " seconds (HopcroftKarp: " << Hop << " + EdmondsKarp: " << Ed << " + Connected Components: " << Com << ")" << std::endl;
+    Reduction* reduction = new Reduction(RULE::LPFLOW, delVCVertices->size(), delVertices, delVCVertices);
+    appliedRules->push_back(reduction);
+    *k = *k - delVCVertices->size();
+    if((int) delVCVertices->size() == 0 && (int) delVertices->size() == 0)
+    {
+        //std::cout << "LPFlow: INAPPLICABLE" << std::endl;
+        return INAPPLICABLE;
+    }
+    /* std::cout << "Deleted component: {";
+    for (int j=0; j<(int) delVertices->size(); j++)
+    {
+        std::cout << delVertices->at(j) << ", ";
+    }
+    std::cout << "} / ";
+    std::cout << "{";
+    for (int j=0; j<(int) delVCVertices->size(); j++)
+    {
+        std::cout << delVCVertices->at(j) << ", ";
+    }
+    std::cout << "}" << std::endl; */
+    if(*k < 0 && checkBudget)
+    {
+        //std::cout << "LPFlow: INSUFFICIENT_BUDGET" << std::endl;
+        return INSUFFICIENT_BUDGET;
+    }
     return APPLICABLE;
 }
 

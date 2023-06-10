@@ -29,6 +29,7 @@ unordered_map<int, bool>* vcVertexBranchingRecursive(BucketGraph* G, int k, int 
     int previousK = k;
     bool cut = false;
     //if(depth /* % 10 */ == 0) { cut = G->reduce(&k); }
+    //std::cout << "> cutting through data reductions " << std::endl;
     cut = G->reduce(&k);
     if(cut)
     {
@@ -102,8 +103,11 @@ unordered_map<int, bool>* vcVertexBranchingRecursive(BucketGraph* G, int k, int 
         cout <<  ColorPrint::dye(std::to_string(neighbours->at(i)) + ", ", 'b');
     }
     cout << endl; */
+    //if(vertex == 24) { G->print(); }
     G->setInactive(neighbours);
+    //cout << "pinc " << std::endl;
 	S = vcVertexBranchingRecursive(G, k - neighbours->size(), depth+1, numRec);
+    //cout << "prec " << std::endl;
 	if (S != nullptr)
 	{
         //revert changes for multiple executions of the algorithm
@@ -139,10 +143,10 @@ unordered_map<int, bool>* vcSolverRecursive(BucketGraph* G, int* numRec)
 {
     int previousK = 0;
 	int k = 0;
+    // Apply Reduction Rules for the first time
     G->preprocess(&previousK);
     previousK = -previousK;
     k = G->getLowerBoundVC();
-    //std::cout << -previousK << ", " << k << std::endl;
 
 //    G->printBucketQueue();
 //    G->print();
@@ -151,23 +155,15 @@ unordered_map<int, bool>* vcSolverRecursive(BucketGraph* G, int* numRec)
 
 	while (true)
 	{
-        // Reduction Rules
-        //vector<ReductionVertices>* reductionVertices = new vector<ReductionVertices>;
 
-        // Apply Reduction Rules for the first time
-       /*  if(G->applyReductionRules(&k, reductionVertices))
-            return nullptr; */
+        // Begin Branching
 		vc = vcVertexBranchingRecursive(G, k, 0, numRec);
 		if (vc != nullptr)
 		{
             // Add Reduced Vertices to Vertex Cover
-            /* G->addReducedVertices(vc, reductionVertices);
-            delete reductionVertices; */
             G->unreduce(&k, vc->size()+previousK, vc);
 			return vc;
 		}
-        /* G->addBackReducedVertices(&k, reductionVertices);
-        delete reductionVertices; */
         k++;
 	}
 }
