@@ -538,6 +538,31 @@ void BucketGraph::printBucketQueue()
     }
 }
 
+void BucketGraph::printBucketSizes()
+{
+    std::cout << "BucketQueue of size " << cp::dye(std::to_string(bucketQueue.size()), 'y') << " with maxDegree: " << getMaxDegree() << std::endl;
+    for(auto bucket = bucketQueue.begin(); bucket != bucketQueue.end(); ++bucket)
+    {
+        std::cout << cp::dye("Bucket " + std::to_string(bucket->degree) + " size: " + std::to_string(bucket->vertices.size()), 'w') << std::endl;
+    }
+    // TODO:
+    int deg3Reduc = 0;
+    for(auto vertex = getBucket(3)->vertices.begin(); vertex != getBucket(3)->vertices.end(); ++vertex)
+    {
+        int v = vertex->index;
+        auto ns = getNeighbours(v);
+        int v1 = ns->at(0);
+        int v2 = ns->at(1);
+        int v3 = ns->at(2);
+        if((vertexHasEdgeTo(v1, v2) && !vertexHasEdgeTo(v1, v3) && !vertexHasEdgeTo(v2, v3))
+        || (vertexHasEdgeTo(v1, v3) && !vertexHasEdgeTo(v1, v2) && !vertexHasEdgeTo(v2, v3))
+        || (vertexHasEdgeTo(v2, v3) && !vertexHasEdgeTo(v1, v2) && !vertexHasEdgeTo(v1, v3))) {
+            deg3Reduc++;
+        }
+    }
+    std::cout << "Applicable: " << deg3Reduc << std::endl;
+}
+
 void BucketGraph::printMatching()
 {
     std::cout << "Current Matchings in the Graph: " << currentLPBound << std::endl;
@@ -1063,10 +1088,10 @@ void BucketGraph::preprocess(int* k)
 {
     while(true)
     {
-        /* if(reductions->rule_DegreeOne(this, k, false) == APPLICABLE) continue;
+        if(reductions->rule_DegreeOne(this, k, false) == APPLICABLE) continue;
         if(reductions->rule_DegreeTwo(this, k, false) == APPLICABLE) continue;
-        if(reductions->rule_Domination(this, k, false) == APPLICABLE) continue; */
-        //if(reductions->rule_LPFlow(this, k, false) == APPLICABLE) continue;
+        if(reductions->rule_Domination(this, k, false) == APPLICABLE) continue;
+        if(reductions->rule_LPFlow(this, k, false) == APPLICABLE) continue;
         return;
     }
 }
@@ -1083,7 +1108,7 @@ bool BucketGraph::reduce(int* k)
     while(true)
     {
         //std::cout << "highdeg " << std::endl;
-        /* highDegreeResult = reductions->rule_HighDegree(this, k);
+        highDegreeResult = reductions->rule_HighDegree(this, k);
         if(highDegreeResult == APPLICABLE) continue;
         if(highDegreeResult == INSUFFICIENT_BUDGET) return true;
 
@@ -1100,7 +1125,7 @@ bool BucketGraph::reduce(int* k)
 
         dominationResult = reductions->rule_Domination(this, k, true);
         if(dominationResult == APPLICABLE) continue;
-        if(dominationResult == INSUFFICIENT_BUDGET) return true; */
+        if(dominationResult == INSUFFICIENT_BUDGET) return true;
 
         LPFlowResult = reductions->rule_LPFlow(this, k, true);
         if(LPFlowResult == APPLICABLE) continue;

@@ -209,6 +209,7 @@ public:
     void print();
     void printActiveList();
     void printBucketQueue();
+    void printBucketSizes();
     std::vector<std::string>* getEdgesToConsoleString();
     std::vector<std::string>* getOriginalEdgesToConsoleString();
     int getOriginalEdgeCount();

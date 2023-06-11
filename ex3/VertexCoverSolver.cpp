@@ -147,6 +147,7 @@ unordered_map<int, bool>* vcSolverRecursive(BucketGraph* G, int* numRec)
     G->preprocess(&previousK);
     previousK = -previousK;
     k = G->getLowerBoundVC();
+    //G->printBucketSizes();
 
 //    G->printBucketQueue();
 //    G->print();

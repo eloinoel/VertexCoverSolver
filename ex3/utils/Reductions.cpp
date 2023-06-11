@@ -280,6 +280,63 @@ RULE_APPLICATION_RESULT Reductions::rule_Domination_BE(BucketGraph* G, int* k, b
     }
 }
 
+RULE_APPLICATION_RESULT Reductions::rule_Unconfined(BucketGraph* G, int* k, bool checkBudget)
+{
+    list<int> S;
+    list<int> neighbours;
+    // TODO: concurrent modification issue, when setting verts inactive?
+    // TODO: maybe iterate over vertexreferences
+    for (auto vertex = G->getActiveList()->begin(); vertex != G->getActiveList()->end(); ++vertex)
+    {
+        // How to get neighbourhood of S fast? ---> keep track of it
+        // how to check neighbourhood intersection fast? ---> for loop with counter & vertexHasEdgeTo check
+
+        // S and neighbours of S list, that are kept up to date
+        S = list<int>();
+        neighbours = list<int>();
+        S.push_back(vertex->getIndex());
+        for (auto neighbour = vertex->adj->begin(); neighbour != vertex->adj->end(); ++neighbour)
+        {
+            neighbours.push_back(*neighbour);
+        }
+        // search continuation loop
+        while(true)
+        {
+            int best = -1;
+            int bestNeighbourhoodSize = -1;
+            // find best neighbour
+            for (auto u = neighbours.begin(); u != neighbours.end(); ++u)
+            {
+                if(!u->getActive()) { continue; }
+                bool valid = true;
+                int ns = 0;
+                for (auto it=u->adj->begin(); it != u->adj->end(); ++it)
+                {
+                    if(!u->getActive()) { continue; }
+                    if (true) {   // TODO: how to check if S contains it
+                        ns++;
+                        if(ns > 1) { valid = false; break; }
+                    }
+                }
+                if(!valid) { continue; }
+                // TODO: update best/bestNeighbourhoodSize if u is better than the current best
+            }
+            // if no expansion vertex found, vertex "vertex" is not unconfined (continue with next vertex)
+            if(best == -1) { break; }
+            if(bestNeighbourhoodSize == 0)
+            {
+                // TODO: delete vertex and take it into the vc
+                break;
+            }
+            if(bestNeighbourhoodSize > 0)
+            {
+                // TODO: push vertex neighbours into S and add non-intersecting neighbourhood to neighbourhood
+            }
+        }
+    }
+    // TODO: if there were any applications return APPLICABLE
+    return INAPPLICABLE;
+}
 
 void Reductions::initRuleCounter()
 {
