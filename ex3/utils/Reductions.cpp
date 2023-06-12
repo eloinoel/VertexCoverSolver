@@ -282,7 +282,7 @@ RULE_APPLICATION_RESULT Reductions::rule_Domination_BE(BucketGraph* G, int* k, b
 
 RULE_APPLICATION_RESULT Reductions::rule_Unconfined(BucketGraph* G, int* k, bool checkBudget)
 {
-    list<int> S;
+    /* list<int> S;
     list<int> neighbours;
     list<int> uniqueNeighbours;
     // TODO: concurrent modification issue, when setting verts inactive?
@@ -344,7 +344,7 @@ RULE_APPLICATION_RESULT Reductions::rule_Unconfined(BucketGraph* G, int* k, bool
                 // TODO: push vertex neighbours into S and add non-intersecting neighbourhood to neighbourhood
             }
         }
-    }
+    } */
     // TODO: if there were any applications return APPLICABLE
     return INAPPLICABLE;
 }
