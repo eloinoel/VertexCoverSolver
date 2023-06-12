@@ -7,7 +7,6 @@ using namespace std::chrono;
 
 #include "BucketGraph.h"
 #include "ColorPrint.h"
-#include "BipartiteArrayGraph.h"
 #include "Reductions.h"
 
 typedef ColorPrint cp;

@@ -63,40 +63,13 @@ else()
   message( FATAL_ERROR "Unrecognized compiler [${CMAKE_CXX_COMPILER_ID}]" )
 endif()
 
-#include(FetchContent)
-
-#FetchContent_Declare(
-#  portable-file-dialogs
-#  GIT_REPOSITORY https://github.com/samhocevar/portable-file-dialogs.git
-#  GIT_TAG 0.1.0
-#  GIT_SHALLOW TRUE
-#  GIT_PROGRESS TRUE)
-#FetchContent_MakeAvailable(portable-file-dialogs)
-
-#FetchContent_Declare(
-#  polyscope
-#  GIT_REPOSITORY https://github.com/nmwsharp/polyscope.git
-#  GIT_TAG master
-#  GIT_SHALLOW TRUE
-#  GIT_PROGRESS TRUE)
-#FetchContent_MakeAvailable(polyscope)
-
-#FetchContent_Declare(matplotplusplus
-#        GIT_REPOSITORY https://github.com/alandefreitas/matplotplusplus
-#        GIT_TAG origin/master)
-
-#FetchContent_GetProperties(matplotplusplus)
-#if(NOT matplotplusplus_POPULATED)
-#    FetchContent_Populate(matplotplusplus)
-#    add_subdirectory(${matplotplusplus_SOURCE_DIR} ${matplotplusplus_BINARY_DIR} EXCLUDE_FROM_ALL)
-#endif()
 
 #set(BOOST_ROOT "../boost_1_82_0")
 set(BOOST_ROOT "../../boost_1_65_0")
 include_directories(${INCLUDE_DIRECTORIES} ${BOOST_ROOT} include)
 
 # Create an executable
-add_executable(VertexCoverSolver VertexCoverSolver.cpp utils/ArrayGraph.cpp utils/BipartiteArrayGraph.cpp utils/BucketGraph.cpp utils/Reductions.cpp)
+add_executable(VertexCoverSolver VertexCoverSolver.cpp utils/BucketGraph.cpp utils/Reductions.cpp)
 
 # Add header-only dependencies
 #target_include_directories(ex2 PRIVATE "${polyscope_SOURCE_DIR}/deps/args")
