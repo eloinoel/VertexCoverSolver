@@ -284,6 +284,7 @@ RULE_APPLICATION_RESULT Reductions::rule_Unconfined(BucketGraph* G, int* k, bool
 {
     list<int> S;
     list<int> neighbours;
+    list<int> uniqueNeighbours;
     // TODO: concurrent modification issue, when setting verts inactive?
     // TODO: maybe iterate over vertexreferences
     for (auto vertex = G->getActiveList()->begin(); vertex != G->getActiveList()->end(); ++vertex)
@@ -294,6 +295,7 @@ RULE_APPLICATION_RESULT Reductions::rule_Unconfined(BucketGraph* G, int* k, bool
         // S and neighbours of S list, that are kept up to date
         S = list<int>();
         neighbours = list<int>();
+        uniqueNeighbours = list<int>();
         S.push_back(vertex->getIndex());
         for (auto neighbour = vertex->adj->begin(); neighbour != vertex->adj->end(); ++neighbour)
         {
@@ -303,32 +305,41 @@ RULE_APPLICATION_RESULT Reductions::rule_Unconfined(BucketGraph* G, int* k, bool
         while(true)
         {
             int best = -1;
-            int bestNeighbourhoodSize = -1;
+            int bestUniqueNeighboursSize = -1;
+            uniqueNeighbours.clear();
             // find best neighbour
             for (auto u = neighbours.begin(); u != neighbours.end(); ++u)
             {
                 if(!u->getActive()) { continue; }
                 bool valid = true;
-                int ns = 0;
+                int SNeighbours = 0;
                 for (auto it=u->adj->begin(); it != u->adj->end(); ++it)
                 {
                     if(!u->getActive()) { continue; }
-                    if (true) {   // TODO: how to check if S contains it
-                        ns++;
-                        if(ns > 1) { valid = false; break; }
+                    if(it->is_linked(neighbours))
+                    {
+                        uniqueNeighbours.push_back(it->index);
+                    }
+                    // if u has more than one neighbour in S, u does not fit the criteria
+                    if (it->is_linked(S)) { // TODO: check if is_linked works
+                        SNeighbours++;
+                        if(SNeighbours > 1) { valid = false; break; }
                     }
                 }
                 if(!valid) { continue; }
                 // TODO: update best/bestNeighbourhoodSize if u is better than the current best
+                if(best != -1 || uniqueNeighbours.size() < bestUniqueNeighboursSize) { continue; }
+                best = u->index;
+                bestUniqueNeighboursSize = uniqueNeighbours.size();
             }
             // if no expansion vertex found, vertex "vertex" is not unconfined (continue with next vertex)
             if(best == -1) { break; }
-            if(bestNeighbourhoodSize == 0)
+            if(bestUniqueNeighboursSize == 0)
             {
                 // TODO: delete vertex and take it into the vc
                 break;
             }
-            if(bestNeighbourhoodSize > 0)
+            if(bestUniqueNeighboursSize > 0)
             {
                 // TODO: push vertex neighbours into S and add non-intersecting neighbourhood to neighbourhood
             }
