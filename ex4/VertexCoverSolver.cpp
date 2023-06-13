@@ -4,6 +4,7 @@
 #include <math.h>          // INFINITY
 #include "utils/ColorPrint.h"
 #include "utils/BucketGraph.h"
+#include "utils/SATSolver.h"
 
 
 #include <signal.h>
@@ -348,6 +349,11 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
         {
             cout << "Select correct version please.";
         }
+    }
+    else if(version == 6)
+    {
+        // For now it all runs from its constructor function
+        SATSolver SATSolver;
     }
     else
     {

@@ -405,3 +405,8 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 
+*.csv
+*.txt
+vc-data-students/benchmark-fast.sh
+vc-data-students/verifier.py
+vc-data-students/verifier.py
