@@ -160,8 +160,8 @@ private:
     std::vector<int> pairU;
     std::vector<int> pairV;
     std::vector<int> dist;
-    std::vector<int>* unmatched;
-    std::vector<int>* next_unmatched;
+    std::vector<int>* unmatched = nullptr;
+    std::vector<int>* next_unmatched = nullptr;
     int NIL;
     int currentLPBound;
     bool didInitialMatchingCalculation = false;
@@ -211,6 +211,7 @@ public:
     void printBucketQueue();
     void printBucketSizes();
     void printVertices(std::vector<int>* vertices);
+    void printVertices(std::unordered_map<int, bool>* vertices);
     std::vector<std::string>* getEdgesToConsoleString();
     std::vector<std::string>* getOriginalEdgesToConsoleString();
     int getOriginalEdgeCount();

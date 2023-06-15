@@ -235,12 +235,12 @@ string SATSolver::getSolution(string outFile)
             if(line[0] == 'v')
                 solution = line;
             // Process each line
-//            std::cout << line << std::endl;
+//            std::cout << line << '\n';
         }
 
         inputFile.close(); // Close the file
     } else {
-        std::cerr << "Failed to open the file." << std::endl;
+        std::cerr << "Failed to open the file." << '\n';
         return "";
     }
 
@@ -254,19 +254,19 @@ void SATSolver::solver() {
     bool printDebug = false;
     vector<pair<string, string>> edges;
     if(printDebug)
-        std::cout << "SAT Solver: " << "Reading input" << std::endl;
+        std::cout << "SAT Solver: " << "Reading input" << '\n';
     edges = readStandardInput();
     if(printDebug)
-        std::cout << "SAT Solver: " << "Read input" << std::endl;
+        std::cout << "SAT Solver: " << "Read input" << '\n';
 
     if(edges.empty())
         return;
     if(printDebug)
-        std::cout << "SAT Solver: " << "Creating OPB-File" << std::endl;
+        std::cout << "SAT Solver: " << "Creating OPB-File" << '\n';
     string opbFileName = "solvers/input";
     createOpbFile(opbFileName, edges);
     if(printDebug)
-        std::cout << "SAT Solver: " << "OPB created" << std::endl;
+        std::cout << "SAT Solver: " << "OPB created" << '\n';
 
     // Add ending to file namae for execution
     opbFileName += ".opb ";
@@ -281,7 +281,7 @@ void SATSolver::solver() {
     command += opbFileName;
     command += "-of > " + outFileName;
     if(printDebug)
-        std::cout << "SAT Solver: " << "Created execution command" << std::endl;
+        std::cout << "SAT Solver: " << "Created execution command" << '\n';
 
 
     if(printDebug)
@@ -296,18 +296,18 @@ void SATSolver::solver() {
     } else {
         // Process the return value as needed
         if(printDebug)
-            std::cout << "SAT Solver: " << "Solver was Executed properly" << std::endl;
+            std::cout << "SAT Solver: " << "Solver was Executed properly" << '\n';
     }
 
     if(printDebug)
-        std::cout << "SAT Solver: " << "Getting the solution" << std::endl;
+        std::cout << "SAT Solver: " << "Getting the solution" << '\n';
     string solverSolution = getSolution(outFileName);
 
     if(printDebug)
         cout << "The solver solution is: " << solverSolution << endl;
 
     if(printDebug)
-        std::cout << "SAT Solver: " << "Writting the solution out!" << std::endl;
+        std::cout << "SAT Solver: " << "Writting the solution out!" << '\n';
 
     writeOutputSolutionToOutput(solverSolution);
     // Close the output file
