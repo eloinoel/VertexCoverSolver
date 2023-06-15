@@ -172,7 +172,7 @@ public:
     inline BucketGraph() {  }
 
     /* creates and initialises a graph from standard input */
-    static BucketGraph* readStandardInput();
+    static BucketGraph* readStandardInput(bool initLP = true, bool initDominationHelper = true);
     std::vector<std::string>* getStringsFromVertexIndices(std::vector<int>* vertices);
     std::vector<std::string>* getStringsFromVertexIndices(std::unordered_map<int, bool>* vertices);
     /* creates a graph from the current graph and resets its data structures */
@@ -210,6 +210,7 @@ public:
     void printActiveList();
     void printBucketQueue();
     void printBucketSizes();
+    void printVertices(std::vector<int>* vertices);
     std::vector<std::string>* getEdgesToConsoleString();
     std::vector<std::string>* getOriginalEdgesToConsoleString();
     int getOriginalEdgeCount();

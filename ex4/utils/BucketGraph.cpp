@@ -15,10 +15,10 @@ typedef ColorPrint cp;
 /*-----------------   Graph Construction   -----------------*/
 /*----------------------------------------------------------*/
 
-BucketGraph* BucketGraph::readStandardInput()
+BucketGraph* BucketGraph::readStandardInput(bool initLP, bool initDominationHelper)
 {
     //init
-
+    auto startReadStandardInput = std::chrono::high_resolution_clock::now();
 	BucketGraph* G = new BucketGraph();
     int vertexIndex = 0;
     G->originalVertexNames = std::unordered_map<std::string, std::pair<int, int>>();
@@ -127,6 +127,8 @@ BucketGraph* BucketGraph::readStandardInput()
         std::pair<std::string, std::string> edge_pair = std::pair<std::string, std::string>({vertex0, vertex1});
         G->edges.push_back(edge_pair);
     }
+    auto endReadStandardInput = std::chrono::high_resolution_clock::now();
+    
     
     G->initActiveList(); //sets vertex references and generates activeList
     G->initAdjMap(); //sets references in adjacency lists of vertices
@@ -137,6 +139,10 @@ BucketGraph* BucketGraph::readStandardInput()
     G->initDominationHelper(); // Domination
 //    G->reductions->initDominationVector(G);
 //    G->reductions->printDominationSets();
+    auto endInit = std::chrono::high_resolution_clock::now();
+    double readStandardInput = (std::chrono::duration_cast<std::chrono::microseconds>(endReadStandardInput - startReadStandardInput).count() /  1000) / (double) 1000;
+    double initialization = (std::chrono::duration_cast<std::chrono::microseconds>(endInit - endReadStandardInput).count() /  1000) / (double) 1000;
+    //std::cout << "Finished readStandardInput in " << readStandardInput + initialization << " seconds (read Input: " << readStandardInput << " + Other initializations: " << initialization << ")" << std::endl;
     return G;
 }
 
@@ -648,6 +654,14 @@ std::vector<std::string>* BucketGraph::getStringsFromVertexIndices(std::unordere
         solution->push_back(stringcpy);
     }
     return solution;
+}
+
+void BucketGraph::printVertices(std::vector<int>* vertices)
+{
+    for (int i = 0; i < (int) vertices->size(); ++i)
+    {
+        std::cout <<  vertexReferences[vertices->at(i)]->strName << std::endl;
+    }
 }
 
 

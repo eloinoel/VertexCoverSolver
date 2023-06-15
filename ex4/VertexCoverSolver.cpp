@@ -5,6 +5,7 @@
 #include "utils/ColorPrint.h"
 #include "utils/BucketGraph.h"
 #include "utils/SATSolver.h"
+#include <chrono>
 
 
 #include <signal.h>
@@ -18,7 +19,7 @@ typedef ColorPrint cp;
 /*---------------   Exercise 4 Solver Code   ---------------*/
 /*----------------------------------------------------------*/
 
-unordered_map<int, bool>* heuristicSolver(BucketGraph* G, int* numRec)
+vector<int>* heuristicSolver(BucketGraph* G, int* numRec)
 {
 
     // Apply Reduction Rules for the first time
@@ -26,7 +27,7 @@ unordered_map<int, bool>* heuristicSolver(BucketGraph* G, int* numRec)
     G->preprocess(&numPreprocessingVCVertices);
     numPreprocessingVCVertices = -numPreprocessingVCVertices; */
 
-    unordered_map<int, bool>* vc = new unordered_map<int, bool>();
+    vector<int>* vc = new vector<int>();
     while(true)
     {
         (*numRec)++;
@@ -48,7 +49,8 @@ unordered_map<int, bool>* heuristicSolver(BucketGraph* G, int* numRec)
 
         //take vertex into vc
         G->setInactive(vertex);
-        vc->insert({vertex, true});
+        //vc->insert({vertex, true});
+        vc->push_back(vertex);
     }
 
     return vc;
@@ -269,23 +271,42 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
 {
     if(version == 0)
     {
-        BucketGraph* G = BucketGraph::readStandardInput();
+        auto startGraph = std::chrono::high_resolution_clock::now();
+        BucketGraph* G = BucketGraph::readStandardInput(false, false);
+        auto endGraph = std::chrono::high_resolution_clock::now();
         if (G == nullptr)
             throw invalid_argument("Error constructing graph from input file.");
         if (printGraph)
             G->print();
 
-        int numRecursions = 0;
-        unordered_map<int, bool>* vc = heuristicSolver(G, &numRecursions);
+        
 
 		if(printVC)
         {
-            writeSolutionToConsole(G->getStringsFromVertexIndices(vc));
-            cout << "#recursive steps: " << numRecursions << endl;
-        }
+            int numRecursions = 0;
+            auto startHeuristic = std::chrono::high_resolution_clock::now();
+            //unordered_map<int, bool>* vc = heuristicSolver(G, &numRecursions);
+            vector<int>* vc = heuristicSolver(G, &numRecursions);
+            auto endHeuristic = std::chrono::high_resolution_clock::now();
 
-        if (printVCSize)
-            cout << "VC size: " << vc->size() << endl;
+            auto startPrintSolution = std::chrono::high_resolution_clock::now();
+            //writeSolutionToConsole(G->getStringsFromVertexIndices(vc));
+            G->printVertices(vc);
+            auto endPrintSolution = std::chrono::high_resolution_clock::now();
+
+            double Graph = (std::chrono::duration_cast<std::chrono::microseconds>(endGraph - startGraph).count() /  1000) / (double) 1000;
+            double Heur = (std::chrono::duration_cast<std::chrono::microseconds>(endHeuristic - startHeuristic).count() /  1000) / (double) 1000;
+            double Print = (std::chrono::duration_cast<std::chrono::microseconds>(endPrintSolution - startPrintSolution).count() /  1000) / (double) 1000;
+            //std::cout << "Computed heuristic solution in " << Graph + Heur + Print << " seconds (Graph construction: " << Graph << " + Heuristic solving: " << Heur << " + Printing solution: " << Print << ")" << std::endl;
+            double HeurInt = (std::chrono::duration_cast<std::chrono::microseconds>(endHeuristic - startHeuristic).count() /  1000);
+            double GraphInt = (std::chrono::duration_cast<std::chrono::microseconds>(endGraph - startGraph).count() /  1000);
+            double PrintInt = (std::chrono::duration_cast<std::chrono::microseconds>(endPrintSolution - startPrintSolution).count() /  1000);
+            cout << "#recursive steps: " << /* GraphInt + HeurInt +  */PrintInt << endl;
+            //cout << "#recursive steps: " << numRecursions << endl;
+
+            if (printVCSize)
+                cout << "VC size: " << vc->size() << endl;
+        }
     }
     else if(version == 1)
     {
@@ -371,7 +392,7 @@ int main(int argc, char* argv[]) {
 	{
         chooseImplementationAndOutput(0, false, false, false, false, true, false);
         //chooseImplementationAndOutput(1, true, false, false, true, true, false); //print alot
-        signal(SIGINT, my_sig_handler); //catches SIGINT to output anything
+        //signal(SIGINT, my_sig_handler); //catches SIGINT to output anything
         //chooseImplementationAndOutput(5, false, false, false, false, true, false);
 	}
 	catch (const exception& e)
