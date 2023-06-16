@@ -56,7 +56,7 @@ typedef ColorPrint cp;
     return vc;
 } */
 
-unordered_map<int, bool>* heuristicSolver(BucketGraph* G, int* numRec)
+unordered_map<int, bool>* maxHeuristicSolver(BucketGraph* G, int* numRec)
 {
 
     // Apply Reduction Rules for the first time
@@ -93,6 +93,64 @@ unordered_map<int, bool>* heuristicSolver(BucketGraph* G, int* numRec)
     return vc;
 }
 
+//https://ieeexplore.ieee.org/abstract/document/6486444
+unordered_map<int, bool>* minHeuristicSolver(BucketGraph* G, int* numRec)
+{
+
+    // Apply Reduction Rules for the first time
+    /* int numPreprocessingVCVertices = 0;
+    G->preprocess(&numPreprocessingVCVertices);
+    numPreprocessingVCVertices = -numPreprocessingVCVertices; */
+
+    unordered_map<int, bool>* vc = new unordered_map<int, bool>();
+    while(true)
+    {
+        (*numRec)++;
+
+        int vertex = G->getMinDegreeVertex();
+        //no vertices left or edges left
+        if (vertex == -1)
+        {
+            break;
+        }
+
+        //take neighbours into vc
+        vector<int>* neighbours = G->getNeighbours(vertex);
+        for(int i = 0; i < (int) neighbours->size(); ++i)
+        {
+            G->setInactive(neighbours->at(i));
+            vc->insert({neighbours->at(i), true});
+        }
+        delete neighbours;
+    }
+
+    int redundanceCount = 0;
+    //scan the solution space for redundant vertices, this is probably dumb as fuck
+    for(auto it = vc->begin(); it != vc->end(); ++it)
+    {
+        Vertex* v = G->getVertex(it->first);
+        vector<int>* neighboursOfV = v->getAdj();
+        bool redundantVertex = true;
+        //all neighbours in vc as well
+        for(int i = 0; i < (int) neighboursOfV->size(); i++)
+        {
+            int neighbourOfV = neighboursOfV->at(i);
+            if(vc->find(neighbourOfV) == vc->end())
+            {
+                redundantVertex = false;
+                break; // TODO: break or continue?
+            }
+        }
+        if(redundantVertex)
+        {
+            vc->erase(it);
+            ++redundanceCount;
+        }
+    }
+
+    return vc;
+}
+
 /*----------------------------------------------------------*/
 /*---------------   Exercise 3 Solver Code   ---------------*/
 /*----------------------------------------------------------*/
@@ -104,7 +162,6 @@ unordered_map<int, bool>* vcVertexBranchingRecursive(BucketGraph* G, int k, int 
     {
 		return nullptr;
 	}
-
     int previousK = k;
     bool cut = false;
     //if(depth /* % 10 */ == 0) { cut = G->reduce(&k); }
@@ -322,7 +379,7 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
         {
             int numRecursions = 0;
             //auto startHeuristic = std::chrono::high_resolution_clock::now();
-            unordered_map<int, bool>* vc = heuristicSolver(G, &numRecursions);
+            unordered_map<int, bool>* vc = maxHeuristicSolver(G, &numRecursions);
             //vector<int>* vc = heuristicSolver(G, &numRecursions);
             //auto endHeuristic = std::chrono::high_resolution_clock::now();
 
