@@ -303,9 +303,12 @@ RULE_APPLICATION_RESULT Reductions::rule_Unconfined(BucketGraph* G, int* k, bool
     Reduction* reduction = new Reduction(RULE::DEGREE_ONE, 0, nullptr, new std::vector<int>());
     // TODO: concurrent modification issue, when setting verts inactive?
     // TODO: maybe iterate over vertexreferences
-    for (int v = 0; v<G->getNumVertices(); v++)
+    for (int v = 0; v</* std::min(3, G->getTotalNumVertices()) */G->getTotalNumVertices(); v++)
     {
+        std::cout << cp::dye("getting vertex", 'y') << std::endl;
         Vertex* vertex = G->getVertex(v);
+        std::cout << cp::dye("checking if vertex " + std::to_string(vertex->getIndex()) + " is unconfined", 'b') << std::endl;
+        //if (vertex->getDegree() == 0) { continue; }
     //for (auto vertex = G->getActiveList()->begin(); vertex != G->getActiveList()->end(); ++vertex)
         if(!vertex->getActive()) { continue; }
         // S and neighbours of S list, that are kept up to date
@@ -320,6 +323,8 @@ RULE_APPLICATION_RESULT Reductions::rule_Unconfined(BucketGraph* G, int* k, bool
         }
         //G->print();
         //std::cout << cp::dye("checking if vertex " + std::to_string(vertex->getIndex()) + " is unconfined", 'b') << std::endl;
+        //std::cout << cp::dye("checking if vertex is unconfined", 'b') << std::endl;
+        //int index = vertex->getIndex();
         // search continuation loop
         while(true)
         {
@@ -379,11 +384,11 @@ RULE_APPLICATION_RESULT Reductions::rule_Unconfined(BucketGraph* G, int* k, bool
             //std::cout << cp::dye("Best neighbour: " + std::to_string(best), 'y') << std::endl;
 
             // if no expansion vertex found, vertex "vertex" is not unconfined (continue with next vertex)
-            if(best == -1) { /* std::cout << cp::dye("vertex is not unconfined", 'r') << std::endl; */ break; }
+            if(best == -1) { std::cout << cp::dye("vertex is not unconfined", 'r') << std::endl; break; }
             if(bestUniqueNeighboursSize == 0)
             {
                 applied = true;
-                //std::cout << cp::dye("vertex is unconfined", 'g') << std::endl;
+                std::cout << cp::dye("vertex is unconfined", 'g') << std::endl;
                 reduction->deletedVCVertices->push_back(vertex->getIndex());
                 reduction->kDecrement++;
                 (*k) = (*k) - 1;
@@ -392,6 +397,7 @@ RULE_APPLICATION_RESULT Reductions::rule_Unconfined(BucketGraph* G, int* k, bool
             }
             if(bestUniqueNeighboursSize > 0)
             {
+                std::cout << cp::dye("continuing search", 'y') << std::endl;
                 // push u's neighbours into S and add non-intersecting neighbourhood to neighbours
                 for(int elem : uniqueNeighbours)
                 {
@@ -424,18 +430,21 @@ RULE_APPLICATION_RESULT Reductions::rule_Unconfined(BucketGraph* G, int* k, bool
                 } */
                 continue;
             }
-            //std::cout << cp::dye("vertex is not unconfined", 'r') << std::endl;
+            std::cout << cp::dye("vertex is not unconfined", 'r') << std::endl;
             break;
         }
     }
     //G->print();
+    std::cout << cp::dye("checking if applied", 'r') << std::endl;
     // if there were any applications return APPLICABLE
     if (applied) {
+        std::cout << cp::dye("was applied", 'r') << std::endl;
         appliedRules->push_back(reduction);
         return APPLICABLE;
     }
-    delete reduction->deletedVCVertices;
-    delete reduction;
+    std::cout << cp::dye("wasn't applied", 'r') << std::endl;
+    /* delete reduction->deletedVCVertices; // TODO: readd
+    delete reduction; */
     return INAPPLICABLE;
     /* list<int> S;
     list<int> neighbours;
