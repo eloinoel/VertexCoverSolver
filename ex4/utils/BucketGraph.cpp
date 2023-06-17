@@ -964,11 +964,15 @@ int BucketGraph::getMinDegreeVertex()
     //return a vertex of degree > 0
     if(!containsConnectedVertex())
         return -1;
-    if(bucketQueue.size() < 2)
-        throw std::invalid_argument("getMinDegreeVertex: Inconsistency error because bucketQueue does not include enough buckets");
 
     auto smallestDegreeBucket = bucketQueue.begin();
-    ++smallestDegreeBucket;
+    if(bucketQueue.size() < 2 && smallestDegreeBucket->degree == 0)
+        throw std::invalid_argument("getMinDegreeVertex: Inconsistency error because bucketQueue does not include enough buckets");
+
+    if(smallestDegreeBucket->degree == 0)
+    {
+        ++smallestDegreeBucket;
+    }
 
     if(smallestDegreeBucket->vertices.size() == 0)
         throw std::invalid_argument("getMinDegreeVertex: Inconsistency error because min degree bucket is empty");

@@ -19,50 +19,17 @@ typedef ColorPrint cp;
 /*---------------   Exercise 4 Solver Code   ---------------*/
 /*----------------------------------------------------------*/
 
-/* vector<int>* heuristicSolver(BucketGraph* G, int* numRec)
+unordered_map<int, bool>* maxHeuristicSolver(BucketGraph* G, int* numRec, bool applyReductions)
 {
 
     // Apply Reduction Rules for the first time
-    //int numPreprocessingVCVertices = 0;
-    //G->preprocess(&numPreprocessingVCVertices);
-    //numPreprocessingVCVertices = -numPreprocessingVCVertices;
-
-    vector<int>* vc = new vector<int>();
-    while(true)
+    int numPreprocessingVCVertices = 0;
+    if(applyReductions)
     {
-        (*numRec)++;
-
-        int vertex = G->getMaxDegreeVertex();
-        //no vertices left
-        if (vertex == -1)
-        {
-            break;
-        }
-
-        int vertexDeg = G->getVertexDegree(vertex);
-
-        //graph has no edges left
-        if (vertexDeg == 0)
-        {
-            break;
-        }
-
-        //take vertex into vc
-        G->setInactive(vertex);
-        //vc->insert({vertex, true});
-        vc->push_back(vertex);
+        G->preprocess(&numPreprocessingVCVertices);
+        numPreprocessingVCVertices = -numPreprocessingVCVertices;
     }
 
-    return vc;
-} */
-
-unordered_map<int, bool>* maxHeuristicSolver(BucketGraph* G, int* numRec)
-{
-
-    // Apply Reduction Rules for the first time
-    /* int numPreprocessingVCVertices = 0;
-    G->preprocess(&numPreprocessingVCVertices);
-    numPreprocessingVCVertices = -numPreprocessingVCVertices; */
 
     unordered_map<int, bool>* vc = new unordered_map<int, bool>();
     while(true)
@@ -87,27 +54,28 @@ unordered_map<int, bool>* maxHeuristicSolver(BucketGraph* G, int* numRec)
         //take vertex into vc
         G->setInactive(vertex);
         vc->insert({vertex, true});
-        //vc->push_back(vertex);
     }
-
+    
+    if(applyReductions)
+    {
+        //pop all data reduction rules
+        int k = 0;
+        G->unreduce(&k, vc->size()+numPreprocessingVCVertices, vc);
+    }
+    
     return vc;
 }
 
 //https://ieeexplore.ieee.org/abstract/document/6486444
 unordered_map<int, bool>* minHeuristicSolver(BucketGraph* G, int* numRec)
 {
-
-    // Apply Reduction Rules for the first time
-    /* int numPreprocessingVCVertices = 0;
-    G->preprocess(&numPreprocessingVCVertices);
-    numPreprocessingVCVertices = -numPreprocessingVCVertices; */
-
     unordered_map<int, bool>* vc = new unordered_map<int, bool>();
     while(true)
     {
         (*numRec)++;
 
         int vertex = G->getMinDegreeVertex();
+        //cout << "looking at vertex " << vertex << "\n";
         //no vertices left or edges left
         if (vertex == -1)
         {
@@ -126,7 +94,7 @@ unordered_map<int, bool>* minHeuristicSolver(BucketGraph* G, int* numRec)
 
     int redundanceCount = 0;
     //scan the solution space for redundant vertices, this is probably dumb as fuck
-    for(auto it = vc->begin(); it != vc->end(); ++it)
+    /* for(auto it = vc->begin(); it != vc->end(); ++it)
     {
         Vertex* v = G->getVertex(it->first);
         vector<int>* neighboursOfV = v->getAdj();
@@ -138,17 +106,38 @@ unordered_map<int, bool>* minHeuristicSolver(BucketGraph* G, int* numRec)
             if(vc->find(neighbourOfV) == vc->end())
             {
                 redundantVertex = false;
-                break; // TODO: break or continue?
+                break;
             }
         }
         if(redundantVertex)
         {
             vc->erase(it);
             ++redundanceCount;
+            cout << cp::dye("minHeuristicSolver: found redundant vertex", 'r');
         }
-    }
+    } */
 
     return vc;
+}
+
+/* 
+*   timeout in microseconds
+*/
+void resetGraphAfterBranching(BucketGraph* G, unordered_map<int, bool>* vc, int timeout)
+{
+    for(auto it = vc->begin(); it != vc->end(); ++it)
+    {
+        G->setActive(it->first);
+    }
+}
+
+void fastVC(BucketGraph* G, unordered_map<int, bool>* vc)
+{
+    /* int 
+    while ()
+    {
+        
+    } */
 }
 
 /*----------------------------------------------------------*/
@@ -358,6 +347,7 @@ void my_sig_handler(sig_atomic_t s)
  * 1: Bucketgraph
 
  * 5: (b) apply data reduction and output smaller graph and diff in vc size
+ * 6: SAT Solver
  * ....
 */
 void chooseImplementationAndOutput(int version = 1, bool printGraph = false, bool printMappings = false, 
@@ -379,13 +369,19 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
         {
             int numRecursions = 0;
             //auto startHeuristic = std::chrono::high_resolution_clock::now();
-            unordered_map<int, bool>* vc = maxHeuristicSolver(G, &numRecursions);
+            unordered_map<int, bool>* vcMax = maxHeuristicSolver(G, &numRecursions, true);
+            //resetGraphAfterBranching(G, vcMax);
+            //unordered_map<int, bool>* vcMin = minHeuristicSolver(G, &numRecursions);
             //vector<int>* vc = heuristicSolver(G, &numRecursions);
             //auto endHeuristic = std::chrono::high_resolution_clock::now();
+            /* unordered_map<int, bool>* bestVC = vcMax;
+            if(vcMin->size() < bestVC->size())
+            {
+                bestVC = vcMin;
+            } */
 
             //auto startPrintSolution = std::chrono::high_resolution_clock::now();
-            //writeSolutionToConsole(G->getStringsFromVertexIndices(vc));
-            G->printVertices(vc);
+            G->printVertices(vcMax);
             //auto endPrintSolution = std::chrono::high_resolution_clock::now();
 
             //double Graph = (std::chrono::duration_cast<std::chrono::microseconds>(endGraph - startGraph).count() /  1000) / (double) 1000;
@@ -396,10 +392,11 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
             //double GraphInt = (std::chrono::duration_cast<std::chrono::microseconds>(endGraph - startGraph).count() /  1000);
             //double PrintInt = (std::chrono::duration_cast<std::chrono::microseconds>(endPrintSolution - startPrintSolution).count() /  1000);
             //cout << "#recursive steps: " << /* GraphInt + HeurInt +  */PrintInt << endl;
+            //cout << "#recursive steps: " << 1000 + vcMax->size() - vcMin->size() << endl;
             cout << "#recursive steps: " << numRecursions << endl;
 
             if (printVCSize)
-                cout << "VC size: " << vc->size() << endl;
+                cout << "VC size: " << vcMax->size() << endl;
         }
     }
     else if(version == 1)
