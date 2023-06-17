@@ -135,6 +135,9 @@ class BucketGraph
 public:
     // Size n
     std::vector<int>* dominationHelper;
+
+    bool LP_INITIALISED = false;
+
 private:
     /* each index represents a vertex, that maps to a node object that may be contained in the activeList */
     std::vector<Vertex*> vertexReferences;
@@ -172,7 +175,7 @@ public:
     inline BucketGraph() {  }
 
     /* creates and initialises a graph from standard input */
-    static BucketGraph* readStandardInput(bool initLP = true, bool initDominationHelper = true);
+    static BucketGraph* readStandardInput(bool initReductionDataStructures = true);
     std::vector<std::string>* getStringsFromVertexIndices(std::vector<int>* vertices);
     std::vector<std::string>* getStringsFromVertexIndices(std::unordered_map<int, bool>* vertices);
     /* creates a graph from the current graph and resets its data structures */
@@ -198,6 +201,7 @@ public:
     inline list<Bucket>* getBucketQueue() { return &bucketQueue; };
     inline Bucket* getBucket(int degree) { return bucketReferences[degree]; };
     int getMaxDegreeVertex();
+    int getRandomMaxDegreeVertex(int cap = -1);
     /* returns min degree vertex of degree > 0 and -1 if doesn't exist */
     int getMinDegreeVertex();
     /* heuristic from paper which generally worsens performance a bit but reduces number of recursive steps */
@@ -228,6 +232,8 @@ public:
 
     /* apply initial data reduction rules to graph */
     void preprocess(int* k);
+    /* apply initial data reduction rules to graph and possibly omit certain rules, 0: deg1, 1: deg2, 2: domination, 3: LP, 4: unconfined etc. */
+    void preprocess(int* k, std::vector<bool>& rulesToApply);
     /* apply data reduction rules to graph, returns true if no vertex cover can be found for this k */
     bool reduce(int* k);
     /* vc is not nullptr, if deleted vertices should be appended to vc*/

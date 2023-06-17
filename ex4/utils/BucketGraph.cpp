@@ -2,6 +2,7 @@
 #include <fstream>  //ifstream file opening
 #include <sstream>
 #include <math.h>
+#include <random>
 #include <chrono>
 using namespace std::chrono;
 
@@ -15,7 +16,7 @@ typedef ColorPrint cp;
 /*-----------------   Graph Construction   -----------------*/
 /*----------------------------------------------------------*/
 
-BucketGraph* BucketGraph::readStandardInput(bool initLP, bool initDominationHelper)
+BucketGraph* BucketGraph::readStandardInput(bool initReductionDataStructures)
 {
     //init
     //auto startReadStandardInput = std::chrono::high_resolution_clock::now();
@@ -133,10 +134,15 @@ BucketGraph* BucketGraph::readStandardInput(bool initLP, bool initDominationHelp
     G->initActiveList(); // sets vertex references and generates activeList
     G->initAdjMap(); // sets references in adjacency lists of vertices
     G->initBucketQueue(); // initialise bucket queue
-    if(initLP) { G->initMatching(); } // LP Bound matching fields
-    G->reductions = new Reductions();
 
-    if(initDominationHelper) { G->initDominationHelper(); }// Domination
+    if(initReductionDataStructures)
+    {
+        G->initMatching(); // LP Bound matching fields
+        G->reductions = new Reductions();
+
+        G->initDominationHelper(); // Domination
+    }
+
 //    G->reductions->initDominationVector(G);
 //    G->reductions->printDominationSets();
     //auto endInit = std::chrono::high_resolution_clock::now();
@@ -351,6 +357,7 @@ void BucketGraph::initMatching()
     nv = vertexReferences.size();
     // run matching algorithm to calculate initial matching and setup flow
     hopcroftKarpMatchingSize();
+    LP_INITIALISED = true;
 }
 
 bool BucketGraph::isAdjMapConsistent()
@@ -955,6 +962,45 @@ int BucketGraph::getMaxDegreeVertex()
     return bucketQueue.back().vertices.front().index;
 }
 
+int BucketGraph::getRandomMaxDegreeVertex(int cap)
+{
+    if(bucketQueue.empty())
+        return -1;
+
+    int maxDegree = bucketQueue.back().degree;
+    list<BucketVertex>* bucket = getVerticesOfDegree(maxDegree);
+    
+    if(bucket == nullptr || bucket->size() == 0)
+        throw std::invalid_argument("getRandomMaxDegreeVertex: max degree bucket doesn't exist or is empty");
+
+    auto startRandomNrCalc = std::chrono::high_resolution_clock::now();
+    //choose random vertex
+    int maxRange = bucket->size() - 1;
+    if(cap > 0 && cap < maxRange)
+        maxRange = cap;
+
+    std::random_device rd; // obtain a random number from hardware
+    std::mt19937 gen(rd()); // seed the generator
+    std::uniform_int_distribution<> distr(0, maxRange); // define the range
+    int randomIndex = (int) distr(gen);
+    auto endRandomNrCalc = std::chrono::high_resolution_clock::now();
+
+    auto startIteratorCalc = std::chrono::high_resolution_clock::now();
+    auto it = bucket->begin();
+    for(int i = 0; i < randomIndex; ++i)
+    {
+        ++it;
+    }
+    auto endIteratorCalc = std::chrono::high_resolution_clock::now();
+
+    double randomNrCalc = (std::chrono::duration_cast<std::chrono::microseconds>(endRandomNrCalc - startRandomNrCalc).count());
+    double iteratorCalc = (std::chrono::duration_cast<std::chrono::microseconds>(endIteratorCalc - startIteratorCalc).count());
+    //std::cout << "randomNrCalc: " << randomNrCalc << ", iteratorCalc: " << iteratorCalc << '\n';
+
+    return it->index;
+
+}
+
 /* returns min degree vertex of degree > 0 and -1 if doesn't exist */
 int BucketGraph::getMinDegreeVertex()
 {
@@ -1146,6 +1192,25 @@ void BucketGraph::preprocess(int* k)
     }
 }
 
+/*
+ * 0: deg1,
+ * 1: deg2,
+ * 2: domination,
+ * 3: LP,
+ * 4: unconfined etc.
+*/
+void BucketGraph::preprocess(int* k, std::vector<bool>& rulesToApply)
+{
+    while(true)
+    {
+        if(rulesToApply[0] && reductions->rule_DegreeOne(this, k, false) == APPLICABLE) continue;
+        if(rulesToApply[1] && reductions->rule_DegreeTwo(this, k, false) == APPLICABLE) continue;
+        if(rulesToApply[2] && reductions->rule_Domination(this, k, false) == APPLICABLE) continue;
+        if(rulesToApply[3] && reductions->rule_LPFlow(this, k, false) == APPLICABLE) continue;
+        return;
+    }
+}
+
 bool BucketGraph::reduce(int* k)
 {
     //initialisise
@@ -1187,11 +1252,13 @@ bool BucketGraph::reduce(int* k)
 
 void BucketGraph::unreduce(int* k, int previousK, std::unordered_map<int, bool>* vc)
 {
+    if(reductions->appliedRules == nullptr)
+        throw std::invalid_argument("unreduce: appliedRules is nullptr");
     if(reductions->appliedRules->empty())
         return;
 
     //pop rules
-    while(*k < previousK || (!reductions->appliedRules->empty() && reductions->appliedRules->back()->kDecrement == 0))
+    while(!reductions->appliedRules->empty() && (*k < previousK || reductions->appliedRules->back()->kDecrement == 0))
     {
         Reduction* rule = reductions->appliedRules->back();
         //std::cout << "> unreducing: ";
@@ -1213,10 +1280,11 @@ void BucketGraph::unreduce(int* k, int previousK, std::unordered_map<int, bool>*
                 }
                 break;
             case DEGREE_TWO:
-                //std::cout << "deg2 unreduce" << '\n';
+                //std::cout << "deg2 unreduce" << std::endl;
                 *k = *k + rule->kDecrement;
-                if(rule->mergeVertexInfo == nullptr)
+                if(rule->mergeVertexInfo == nullptr) //didn't merge
                 {
+                    //std::cout << "deg2 non-merged" << std::endl;
                     for(int i = 0; i < (int) rule->deletedVCVertices->size(); i++)
                     {
                         setActive(rule->deletedVCVertices->at(i));
@@ -1234,7 +1302,9 @@ void BucketGraph::unreduce(int* k, int previousK, std::unordered_map<int, bool>*
                 }
                 else
                 {
+                    //std::cout << "deg2 merged" << std::endl;
                     unmerge(rule); //handles setting vertices back active
+                    //std::cout << "deg2 post unmerge" << std::endl;
                     if(vc != nullptr)
                     {
                         //if vc contains vertex that was merged into, add neighbours of deg2 vertex to the solution
@@ -1286,7 +1356,6 @@ void BucketGraph::unreduce(int* k, int previousK, std::unordered_map<int, bool>*
                 {
                     std::cout << "nullptr" << '\n';
                 } */
-
                 *k = *k + rule->kDecrement;
                 setActive(rule->deletedVCVertices);
                 //std::cout << "after set active" << '\n';
@@ -1336,7 +1405,6 @@ void BucketGraph::unreduce(int* k, int previousK, std::unordered_map<int, bool>*
         if (rule->deletedVertices != nullptr) delete rule->deletedVertices;
         reductions->appliedRules->pop_back();
         delete rule;
-        //TODO: delete debug at the end
         if(*k > previousK)
         {
             throw std::invalid_argument("unreduce error: " + std::to_string(*k) + " > " + std::to_string(previousK) + ", stop coding garbage");
@@ -1484,53 +1552,34 @@ void BucketGraph::unmerge(Reduction* mergeRule)
     //printBucketQueue();
     /* print();
     printBucketQueue(); */
-    /* if(mergeRule->mergeVertexInfo == nullptr)
+    if(mergeRule->mergeVertexInfo == nullptr)
     {
-        std::cout << "nullptr" << '\n';
-    } */
+        throw std::invalid_argument("unmerge: mergeVertexInfo is nullptr");
+    }
     //restore adjacency list and other fields of the merge vertex
     int mergeVertex = std::get<0>(*mergeRule->mergeVertexInfo);
-    /* for(int i = 0; i < (int) mergeRule->deletedVertices->size(); i++)
-    {
-        if(mergeRule->deletedVertices->at(i) != mergeVertex)
-        {
-            setActive(mergeRule->deletedVertices->at(i));
-        }
-    } */
     int v0 = mergeRule->deletedVertices->front();
     int v1 = mergeRule->deletedVCVertices->at(0);
     int v2 = mergeRule->deletedVCVertices->at(1);
     
-    // TODO:
-    //std::cout << cp::dye("unmerging vertex " + std::to_string(mergeVertex) + " --> " + std::to_string(v0) + ", " + std::to_string(v1) + ", " + std::to_string(v2), 'g') << '\n';
-    //if(mergeVertex == 21) { print(); }
+    //std::cout << cp::dye("unmerging vertex " + std::to_string(mergeVertex) + " --> " + std::to_string(v0) + ", " + std::to_string(v1) + ", " + std::to_string(v2), 'g') << std::endl;
 
     if(mergeVertex != v0) { setActive(v0); }
     if(mergeVertex != v1) { setActive(v1); }
     if(mergeVertex != v2) { setActive(v2); }
 
-    //std::cout << "mergeVertex: " << mergeVertex << ", N's: " << v0 << ", " << v1 << ", " << v2 << '\n';
+    //std::cout << "mergeVertex: " << mergeVertex << ", N's: " << v0 << ", " << v1 << ", " << v2 << std::endl;
 
-
-
-    //std::cout << "before remove from bucket queue" << '\n';
+    //std::cout << "before remove from bucket queue" << std::endl;
     removeFromBucketQueue(mergeVertex);
-    //std::cout << "after remove from bucket queue" << '\n';
+    //std::cout << "after remove from bucket queue" << std::endl;
     //delete merge vertex from adjacency lists of neighbours that he didn't have before merge
     //std::cout << "unmerge_debug1" << '\n';
     std::vector<int>* added_vertices = std::get<3>(*mergeRule->mergeVertexInfo);
     for(int i = 0; i < (int) added_vertices->size(); i++)
     {
-        //if(mergeVertex == 21) { std::cout << "decrementing degree " << vertexReferences[mergeVertex]->degree << " for added vertex " << added_vertices->at(i) << '\n'; }
         vertexReferences[added_vertices->at(i)]->adj->pop_back(); //should work if all rules are popped in right order
-        /* for(auto jt = vertexReferences[added_vertices->at(i)]->adj->begin(); jt != vertexReferences[added_vertices->at(i)]->adj->end(); ++jt) //TODO: more efficient way
-        {
-            if(*jt == mergeVertex)
-            {
-                vertexReferences[added_vertices->at(i)]->adj->erase(jt);
-                break;
-            }
-        } */
+        //std::cout << "deg2 post adj pop" << std::endl;
         vertexReferences[mergeVertex]->degree--;
         //std::cout << "after pop" << '\n';
         vertexReferences[added_vertices->at(i)]->adj_map->erase(vertexReferences[added_vertices->at(i)]->adj_map->find(mergeVertex));
@@ -1557,7 +1606,6 @@ void BucketGraph::unmerge(Reduction* mergeRule)
     //std::cout << "after add to bucket queue" << '\n';
     //std::cout << "mergeVertex: " << mergeVertex << ", N's: " << v0 << ", " << v1 << ", " << v2 << '\n';
 
-    //if(mergeVertex == 21) { print(); }
     // TODO: free mergeVertexInfo members
     delete mergeRule->mergeVertexInfo;
 }

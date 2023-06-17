@@ -19,24 +19,39 @@ typedef ColorPrint cp;
 /*---------------   Exercise 4 Solver Code   ---------------*/
 /*----------------------------------------------------------*/
 
-unordered_map<int, bool>* maxHeuristicSolver(BucketGraph* G, int* numRec, bool applyReductions)
+void resetGraphAfterBranching(BucketGraph* G, unordered_map<int, bool>* vc)
 {
+    for(auto it = vc->begin(); it != vc->end(); ++it)
+    {
+        G->setActive(it->first);
+    }
+}
 
+unordered_map<int, bool>* maxHeuristicSolver(BucketGraph* G, int* numRec, bool applyReductions = false, bool randomise = false)
+{
     // Apply Reduction Rules for the first time
     int numPreprocessingVCVertices = 0;
     if(applyReductions)
     {
-        G->preprocess(&numPreprocessingVCVertices);
+        vector<bool> rulesToApply = vector<bool> ({true, true, true, false});
+        G->preprocess(&numPreprocessingVCVertices, rulesToApply);
         numPreprocessingVCVertices = -numPreprocessingVCVertices;
     }
-
 
     unordered_map<int, bool>* vc = new unordered_map<int, bool>();
     while(true)
     {
         (*numRec)++;
+        int vertex = -1;
+        if(randomise)
+        {
+            vertex = G->getRandomMaxDegreeVertex(10);
+        }
+        else
+        {
+            vertex = G->getMaxDegreeVertex();
+        }
 
-        int vertex = G->getMaxDegreeVertex();
         //no vertices left
         if (vertex == -1)
         {
@@ -56,15 +71,88 @@ unordered_map<int, bool>* maxHeuristicSolver(BucketGraph* G, int* numRec, bool a
         vc->insert({vertex, true});
     }
     
+    resetGraphAfterBranching(G, vc);
+    //undo reductions
     if(applyReductions)
     {
-        //pop all data reduction rules
         int k = 0;
         G->unreduce(&k, vc->size()+numPreprocessingVCVertices, vc);
+        G->resetLPBoundDataStructures();
     }
-    
+
     return vc;
 }
+
+/* bool outOfTime(std::chrono::steady_clock::time_point startTime, int timeoutCap)
+{
+    auto currentTime = std::chrono::high_resolution_clock::now();
+    double currentDuration = (std::chrono::duration_cast<std::chrono::microseconds>(currentTime - startTime).count() /  1000) / (double) 1000;
+    return currentDuration > timeoutCap;
+}
+
+unordered_map<int, bool>* chooseSmallestHeuristicSolution(BucketGraph* G, int* numRec, bool applyReductions = false, int numRandomSolverCalls = 20, int timeoutSoftCap = 30)
+{
+    auto startTime = std::chrono::high_resolution_clock::now();
+
+    unordered_map<int, bool>* vcMax = maxHeuristicSolver(G, numRec, false);
+
+    if(outOfTime(startTime, timeoutSoftCap))
+        return vcMax;
+
+    //preprocessing on
+    int vcMaxPreprocessingNumRec = 0;
+    unordered_map<int, bool>* vcMaxPreprocessing = nullptr;
+    if(applyReductions)
+    {
+        vcMaxPreprocessing = maxHeuristicSolver(G, &vcMaxPreprocessingNumRec, true);
+        //select the best solution
+        if(vcMaxPreprocessing->size() < vcMax->size())
+        {
+            delete vcMax;
+            vcMax = vcMaxPreprocessing;
+            *numRec = vcMaxPreprocessingNumRec;
+        }
+        else
+        {
+            delete vcMaxPreprocessing;
+        }
+    }
+
+    if(outOfTime(startTime, timeoutSoftCap))
+        return vcMax;
+
+
+    //selecting random max degree vertices
+    int vcMaxRandomNumRec;
+    unordered_map<int, bool>* vcMaxRandom = nullptr;
+    if(numRandomSolverCalls > 0)
+    {
+        for(int i = 0; i < numRandomSolverCalls - 1; ++i)
+        {
+            vcMaxRandomNumRec = 0;
+            if(vcMaxRandom == nullptr)
+            {
+                vcMaxRandom = maxHeuristicSolver(G, &vcMaxRandomNumRec, true);
+            }
+
+            if(vcMaxRandom->size() < vcMax->size())
+            {
+                delete vcMax;
+                vcMax = vcMaxRandom;
+                *numRec = vcMaxRandomNumRec;
+            }
+            else
+            {
+                delete vcMaxRandom;
+            }
+
+            if(outOfTime(startTime, timeoutSoftCap))
+                return vcMax;
+        }
+    }
+
+    return vcMax;
+} */
 
 //https://ieeexplore.ieee.org/abstract/document/6486444
 unordered_map<int, bool>* minHeuristicSolver(BucketGraph* G, int* numRec)
@@ -118,17 +206,6 @@ unordered_map<int, bool>* minHeuristicSolver(BucketGraph* G, int* numRec)
     } */
 
     return vc;
-}
-
-/* 
-*   timeout in microseconds
-*/
-void resetGraphAfterBranching(BucketGraph* G, unordered_map<int, bool>* vc, int timeout)
-{
-    for(auto it = vc->begin(); it != vc->end(); ++it)
-    {
-        G->setActive(it->first);
-    }
 }
 
 void fastVC(BucketGraph* G, unordered_map<int, bool>* vc)
@@ -356,47 +433,77 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
     if(version == 0)
     {
         auto startGraph = std::chrono::high_resolution_clock::now();
-        BucketGraph* G = BucketGraph::readStandardInput(false, false);
+        BucketGraph* G = BucketGraph::readStandardInput();
         auto endGraph = std::chrono::high_resolution_clock::now();
         if (G == nullptr)
             throw invalid_argument("Error constructing graph from input file.");
         if (printGraph)
             G->print();
 
-        
-
 		if(printVC)
         {
             int numRecursions = 0;
-            //auto startHeuristic = std::chrono::high_resolution_clock::now();
-            unordered_map<int, bool>* vcMax = maxHeuristicSolver(G, &numRecursions, true);
-            //resetGraphAfterBranching(G, vcMax);
+            auto startHeuristicWrapper = std::chrono::high_resolution_clock::now();
+            unordered_map<int, bool>* vc = maxHeuristicSolver(G, &numRecursions, false);
+            //unordered_map<int, bool>* vc = chooseSmallestHeuristicSolution(G, &numRecursions, true, 10); //TODO: doesn't compile yet
+            auto endHeuristicWrapper = std::chrono::high_resolution_clock::now();
+
+            G->printVertices(vc);
+
+            cout << "#recursive steps: " << numRecursions << endl;
+            double heuristicWrapperDuration = (std::chrono::duration_cast<std::chrono::microseconds>(endHeuristicWrapper - startHeuristicWrapper).count() /  1000) / (double) 1000;
+            //std::cout << "HeuristicWrapper: " << heuristicWrapperDuration << " seconds, \n"; 
+
+            
+            /* 
+            auto startHeuristic = std::chrono::high_resolution_clock::now();
+            unordered_map<int, bool>* vcMax = maxHeuristicSolver(G, &numRecursions, false);
+            auto endHeuristic = std::chrono::high_resolution_clock::now();
+
+            auto startPreprocess = std::chrono::high_resolution_clock::now();
+            unordered_map<int, bool>* vcMaxPreprocess = maxHeuristicSolver(G, &numRecursions, true);
+            auto endPreprocess = std::chrono::high_resolution_clock::now();
+
+            auto startRandomHeuristic = std::chrono::high_resolution_clock::now();
+            unordered_map<int, bool>* vcMaxRandom = maxHeuristicSolver(G, &numRecursions, false, true);
+            auto endRandomHeuristic = std::chrono::high_resolution_clock::now(); */
+
+
             //unordered_map<int, bool>* vcMin = minHeuristicSolver(G, &numRecursions);
             //vector<int>* vc = heuristicSolver(G, &numRecursions);
-            //auto endHeuristic = std::chrono::high_resolution_clock::now();
-            /* unordered_map<int, bool>* bestVC = vcMax;
-            if(vcMin->size() < bestVC->size())
+            
+            //unordered_map<int, bool>* bestVC = vcMax;
+            /* if(vcMaxNoPreprocess->size() < bestVC->size())
             {
-                bestVC = vcMin;
+                bestVC = vcMaxNoPreprocess;
             } */
+            /* if(vcMaxRandom->size() < bestVC->size())
+            {
+                bestVC = vcMaxRandom;
+            } */
+            //cout << "before print vertices" << endl;
+            /* auto startPrintSolution = std::chrono::high_resolution_clock::now();
+            G->printVertices(bestVC);
+            auto endPrintSolution = std::chrono::high_resolution_clock::now();
 
-            //auto startPrintSolution = std::chrono::high_resolution_clock::now();
-            G->printVertices(vcMax);
-            //auto endPrintSolution = std::chrono::high_resolution_clock::now();
-
-            //double Graph = (std::chrono::duration_cast<std::chrono::microseconds>(endGraph - startGraph).count() /  1000) / (double) 1000;
-            //double Heur = (std::chrono::duration_cast<std::chrono::microseconds>(endHeuristic - startHeuristic).count() /  1000) / (double) 1000;
-            //double Print = (std::chrono::duration_cast<std::chrono::microseconds>(endPrintSolution - startPrintSolution).count() /  1000) / (double) 1000;
-            //std::cout << "Computed heuristic solution in " << Graph + Heur + Print << " seconds (Graph construction: " << Graph << " + Heuristic solving: " << Heur << " + Printing solution: " << Print << ")" << '\n';
+            double Graph = (std::chrono::duration_cast<std::chrono::microseconds>(endGraph - startGraph).count() /  1000) / (double) 1000;
+            double Heur = (std::chrono::duration_cast<std::chrono::microseconds>(endHeuristic - startHeuristic).count() /  1000) / (double) 1000;
+            double HeurRandom = (std::chrono::duration_cast<std::chrono::microseconds>(endRandomHeuristic - startRandomHeuristic).count() /  1000) / (double) 1000;
+            double HeurPreprocess = (std::chrono::duration_cast<std::chrono::microseconds>(endPreprocess - startPreprocess).count() /  1000) / (double) 1000;
+            double Print = (std::chrono::duration_cast<std::chrono::microseconds>(endPrintSolution - startPrintSolution).count() /  1000) / (double) 1000;
+            std::cout << "Computed heuristic solution in " << Graph + Heur + HeurRandom + HeurPreprocess + Print << " seconds (Graph construction: " << Graph << " + Heuristic solving: " << Heur + HeurRandom + HeurPreprocess<< " + Printing solution: " << Print << ")" << '\n';
+            std::cout << "Heuristic: " << Heur << " seconds, Preprocess + Heuristic: " << HeurPreprocess << " seconds, Random Heuristic: " << HeurRandom << " seconds" << '\n'; */
             //double HeurInt = (std::chrono::duration_cast<std::chrono::microseconds>(endHeuristic - startHeuristic).count() /  1000);
             //double GraphInt = (std::chrono::duration_cast<std::chrono::microseconds>(endGraph - startGraph).count() /  1000);
             //double PrintInt = (std::chrono::duration_cast<std::chrono::microseconds>(endPrintSolution - startPrintSolution).count() /  1000);
             //cout << "#recursive steps: " << /* GraphInt + HeurInt +  */PrintInt << endl;
-            //cout << "#recursive steps: " << 1000 + vcMax->size() - vcMin->size() << endl;
-            cout << "#recursive steps: " << numRecursions << endl;
-
-            if (printVCSize)
-                cout << "VC size: " << vcMax->size() << endl;
+            //cout << "#recursive steps: " << 1000000 + vcMax->size() - vcMaxNoPreprocess->size() << endl;
+            //cout << "#recursive steps: " << 1000000 + vcMax->size() - vcMaxRandom->size() << endl;
+            //cout << vcMax->size() << endl;
+            //cout << vcMaxNoPreprocess->size() << endl;
+            //cout << "#recursive steps: " << numRecursions << endl;
+            /* if (printVCSize)
+                cout << "VC size: " << vcMax->size() << endl; */
         }
     }
     else if(version == 1)

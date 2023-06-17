@@ -146,6 +146,8 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeTwo(BucketGraph* G, int* k, bool 
 
 RULE_APPLICATION_RESULT Reductions::rule_LPFlow(BucketGraph* G, int* k, bool checkBudget)
 {
+    if(!G->LP_INITIALISED)
+        throw std::invalid_argument("LP data structures not initialised");
     std::vector<int>* delVertices = new std::vector<int>();
     std::vector<int>* delVCVertices = new std::vector<int>();
     //auto startHop = std::chrono::high_resolution_clock::now();
