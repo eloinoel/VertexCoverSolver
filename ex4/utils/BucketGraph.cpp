@@ -936,6 +936,11 @@ std::vector<int>* BucketGraph::getNeighbours(int vertexIndex)
     return neighbours;
 }
 
+bool BucketGraph::containsConnectedVertex()
+{
+    return (bucketQueue.back().degree != 0);
+}
+
 int BucketGraph::getMaxDegree()
 {
     if(bucketQueue.empty())
@@ -947,8 +952,32 @@ int BucketGraph::getMaxDegreeVertex()
 {
     if(bucketQueue.empty())
         return -1;
-
     return bucketQueue.back().vertices.front().index;
+}
+
+/* returns min degree vertex of degree > 0 and -1 if doesn't exist */
+int BucketGraph::getMinDegreeVertex()
+{
+    if(bucketQueue.empty())
+        return -1;
+    
+    //return a vertex of degree > 0
+    if(!containsConnectedVertex())
+        return -1;
+
+    auto smallestDegreeBucket = bucketQueue.begin();
+    if(bucketQueue.size() < 2 && smallestDegreeBucket->degree == 0)
+        throw std::invalid_argument("getMinDegreeVertex: Inconsistency error because bucketQueue does not include enough buckets");
+
+    if(smallestDegreeBucket->degree == 0)
+    {
+        ++smallestDegreeBucket;
+    }
+
+    if(smallestDegreeBucket->vertices.size() == 0)
+        throw std::invalid_argument("getMinDegreeVertex: Inconsistency error because min degree bucket is empty");
+
+    return smallestDegreeBucket->vertices.back().index;
 }
 
 int BucketGraph::getMaxDegreeVertexMinimisingNeighbourEdges()

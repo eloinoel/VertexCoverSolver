@@ -193,10 +193,13 @@ public:
     int getNthActiveNeighbour(int vertex, int n);
     std::pair<int, int>* getFirstTwoActiveNeighbours(int vertex);
 
+    bool containsConnectedVertex();
     int getMaxDegree();
     inline list<Bucket>* getBucketQueue() { return &bucketQueue; };
     inline Bucket* getBucket(int degree) { return bucketReferences[degree]; };
     int getMaxDegreeVertex();
+    /* returns min degree vertex of degree > 0 and -1 if doesn't exist */
+    int getMinDegreeVertex();
     /* heuristic from paper which generally worsens performance a bit but reduces number of recursive steps */
     int getMaxDegreeVertexMinimisingNeighbourEdges();
     int getVertexDegree(int vertexIndex);
