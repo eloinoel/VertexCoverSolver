@@ -1111,6 +1111,11 @@ int BucketGraph::getNumConnectedVertices()
     return numVertices;
 }
 
+int BucketGraph::getTotalNumVertices()
+{
+    return vertexReferences.size();
+}
+
 int BucketGraph::getNumVertices()
 {
     return numVertices;

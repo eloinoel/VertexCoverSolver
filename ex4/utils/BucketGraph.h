@@ -20,6 +20,7 @@ class Reductions;
 class Reduction;
 
 using namespace boost::intrusive;
+using namespace boost;
 
 class BucketVertex : public list_base_hook<>
 {
@@ -35,14 +36,14 @@ class Bucket : public list_base_hook<>
 {
 public:
     int degree;
-    list<BucketVertex> vertices;
-    boost::intrusive::list<BucketVertex>::const_iterator stable_iterator;
+    intrusive::list<BucketVertex> vertices;
+    intrusive::list<BucketVertex>::const_iterator stable_iterator;
 
 public:
     Bucket(int _degree, std::vector<BucketVertex*>& _vertices)
      : degree(_degree)
     {
-        vertices = list<BucketVertex>();
+        vertices = intrusive::list<BucketVertex>();
         for (BucketVertex* vertex : _vertices)
         {
             vertices.push_back(*vertex);
@@ -83,7 +84,7 @@ public:
     *   Whenever the element, the iterator points to is deleted, the iterator is incremented
     *   When a new element is inserted into the bucket during iteration, the iterator will iterate over it later
     */
-    inline boost::intrusive::list<BucketVertex>::const_iterator* getStableIterator()
+    inline intrusive::list<BucketVertex>::const_iterator* getStableIterator()
     {
         stable_iterator = vertices.iterator_to(*vertices.begin());
         return &stable_iterator;
@@ -140,7 +141,7 @@ private:
     std::vector<Vertex*> vertexReferences;
 
     /* doubly linked list, that acts as a list of active vertices, O(1) access, deletion and insertion */
-    list<Vertex> activeList;
+    intrusive::list<Vertex> activeList;
 
     int numEdges;
     int numVertices;
@@ -150,7 +151,7 @@ private:
     /* each index represents a degree, that maps to a Bucket object that may be contained in the bucketQueue */
     std::vector<Bucket*> bucketReferences;
     /* priority queue of buckets that contain vertices of a certain degree (buckets are ordered after their degree ascendingly from front() to back()) */
-    list<Bucket> bucketQueue;
+    intrusive::list<Bucket> bucketQueue;
 
     /* used for reading in data, maps from original vertex name from input data to index and degree */
     std::unordered_map<std::string, std::pair<int, int>> originalVertexNames;
@@ -180,6 +181,7 @@ public:
 
     bool vertexHasEdgeTo(int vertex, int secondVertex); //O(1)
     int getNumConnectedVertices();
+    int getTotalNumVertices();
     int getNumVertices();
     int getNumEdges();
 
@@ -195,7 +197,7 @@ public:
 
     bool containsConnectedVertex();
     int getMaxDegree();
-    inline list<Bucket>* getBucketQueue() { return &bucketQueue; };
+    inline intrusive::list<Bucket>* getBucketQueue() { return &bucketQueue; };
     inline Bucket* getBucket(int degree) { return bucketReferences[degree]; };
     int getMaxDegreeVertex();
     /* returns min degree vertex of degree > 0 and -1 if doesn't exist */
@@ -203,8 +205,8 @@ public:
     /* heuristic from paper which generally worsens performance a bit but reduces number of recursive steps */
     int getMaxDegreeVertexMinimisingNeighbourEdges();
     int getVertexDegree(int vertexIndex);
-    list<BucketVertex>* getVerticesOfDegree(int degree);
-    inline list<Vertex>* getActiveList() { return &activeList; }
+    intrusive::list<BucketVertex>* getVerticesOfDegree(int degree);
+    inline intrusive::list<Vertex>* getActiveList() { return &activeList; }
     /* returns -1 if no vertex of degree */
     int getFirstVertexOfDegree(int degree);
     inline Vertex* getVertex(int index) { if(index < (int) vertexReferences.size()) return vertexReferences[index]; else return nullptr; }

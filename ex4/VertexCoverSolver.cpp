@@ -6,6 +6,7 @@
 #include "utils/BucketGraph.h"
 #include "utils/SATSolver.h"
 #include <chrono>
+#include <random>
 
 
 #include <signal.h>
@@ -120,10 +121,7 @@ unordered_map<int, bool>* minHeuristicSolver(BucketGraph* G, int* numRec)
     return vc;
 }
 
-/* 
-*   timeout in microseconds
-*/
-void resetGraphAfterBranching(BucketGraph* G, unordered_map<int, bool>* vc, int timeout)
+void resetGraphAfterBranching(BucketGraph* G, unordered_map<int, bool>* vc)
 {
     for(auto it = vc->begin(); it != vc->end(); ++it)
     {
@@ -131,13 +129,97 @@ void resetGraphAfterBranching(BucketGraph* G, unordered_map<int, bool>* vc, int 
     }
 }
 
-void fastVC(BucketGraph* G, unordered_map<int, bool>* vc)
+void initGainLoss(BucketGraph* G, unordered_map<int, bool>* vc, std::vector<int>* gain, std::vector<int>* loss)
 {
-    /* int 
-    while ()
+    for (int i=0; i<gain->size(); ++i)
     {
-        
-    } */
+        (*gain)[i] = 0;
+        (*loss)[i] = 0;
+    }
+    for (auto it = vc->begin(); it != vc->end(); ++it)
+    {
+        Vertex* v = G->getVertex(it->first);
+        for (auto u = v->getAdj()->begin(); u != v->getAdj()->end(); ++u)
+        {
+            if(vc->find(*u) == vc->end())
+            {
+                (*loss)[it->first]++;
+            }
+        }
+    }
+}
+
+int getMinLossIndex(unordered_map<int, bool>* vc, std::vector<int>* loss)
+{
+    int min = INT32_MAX;
+    int minIndex = -1;
+    for (int i=0; i<vc->size(); ++i)
+    {
+        if (loss->at(i) < min)
+        {
+            min = loss->at(i);
+            minIndex = i;
+            continue;
+        }
+    }
+    return minIndex;
+}
+
+void removeMinLossVCVertex(BucketGraph* G, unordered_map<int, bool>* vc, std::vector<int>* gain, std::vector<int>* loss)
+{
+    int u_index = getMinLossIndex(vc, loss);
+    auto u = vc->find(u_index);
+    if (u == vc->end()) { throw invalid_argument("Iterator of u not found"); }
+    vc->erase(u);
+    (*gain)[u_index] = (*loss)[u_index];
+    (*loss)[u_index] = 0;
+    Vertex* uVertex = G->getVertex(u_index);
+    for (auto neighbour = uVertex->getAdj()->begin(); neighbour != uVertex->getAdj()->end(); ++neighbour)
+    {
+        (*gain)[*neighbour]++;
+    }
+}
+
+void addRandomUncoveredEdgeMaxGainEndpointVertex(BucketGraph* G, unordered_map<int, bool>* vc, std::vector<int>* gain, std::vector<int>* loss)
+{
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> distr(0, G->getBucketQueue()->size());
+    int rand = (int) distr(gen) + (G->getNumVertices() - G->getNumConnectedVertices());
+
+    // TODO:
+}
+
+/*
+*   timeout in milliseconds
+*/
+unordered_map<int, bool>* fastVC(BucketGraph* G, unordered_map<int, bool>* vc, int timeout)
+{
+    int n = G->getTotalNumVertices();
+    std::vector<int> gain = std::vector<int>(n);
+    std::vector<int> loss = std::vector<int>(n);
+    unordered_map<int, bool> bestVC (*vc);
+    unordered_map<int, bool> currentVC (*vc);
+    initGainLoss(G, &currentVC, &gain, &loss);
+    auto startFastVC = std::chrono::high_resolution_clock::now();
+    while (true)
+    {
+        auto currentFastVC = std::chrono::high_resolution_clock::now();
+        int fastVC = std::chrono::duration_cast<std::chrono::microseconds>(currentFastVC - startFastVC).count() / 1000;
+        if (fastVC >= timeout) { break; }
+        // we found an improved vc! time to overwrite our previous best solution and search further
+        if (G->getMaxDegree() <= 0)
+        {
+            // TODO: check that this is overridden by VALUE!
+            bestVC = currentVC;
+            removeMinLossVCVertex(G, &currentVC, &gain, &loss);
+        }
+        // TODO: replace removeMinLossVCVertex with BMS function, only checking a set number of vertices and taking that minimum
+        removeMinLossVCVertex(G, &currentVC, &gain, &loss);
+
+
+    }
+    return &bestVC;
 }
 
 /*----------------------------------------------------------*/
