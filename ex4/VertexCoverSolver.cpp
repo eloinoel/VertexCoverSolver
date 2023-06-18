@@ -229,7 +229,7 @@ void writeSolutionToConsole(vector<string>* vc)
 {
 	for (auto it = vc->begin(); it != vc->end(); ++it)
 	{
-		cout << *it << endl;
+		cout << *it << "\n";
 	}
 }
 
@@ -375,6 +375,14 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
     {
         // For now it all runs from its constructor function
         SATSolver SATSolver;
+
+        std::string solutionSAT = SATSolver.solver();
+
+        if(solutionSAT == "-1")
+            return;
+
+        SATSolver.writeOutputSolutionToOutput(solutionSAT);
+
     }
     else
     {
@@ -390,11 +398,12 @@ int main(int argc, char* argv[]) {
 
 	try
 	{
-        chooseImplementationAndOutput(0, false, false, false, false, true, false);
-        //chooseImplementationAndOutput(1, true, false, false, true, true, false); //print alot
-        //signal(SIGINT, my_sig_handler); //catches SIGINT to output anything
-        //chooseImplementationAndOutput(5, false, false, false, false, true, false);
-	}
+//        chooseImplementationAndOutput(0, false, false, false, false, true, false);
+//        //chooseImplementationAndOutput(1, true, false, false, true, true, false); //print alot
+//        //signal(SIGINT, my_sig_handler); //catches SIGINT to output anything
+
+        chooseImplementationAndOutput(6, false, false, false, false, true, false);
+    }
 	catch (const exception& e)
 	{
 		cerr << ColorPrint::dye("Error while running vertex cover solver.\n", 'r');

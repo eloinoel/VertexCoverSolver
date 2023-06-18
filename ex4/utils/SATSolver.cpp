@@ -4,6 +4,15 @@
 #include <fstream>
 #include <sstream>
 
+#include <csignal>
+
+//#include <unistd.h>
+//#include <sys/types.h>
+//#include <sys/wait.h>
+//#include <csignal>
+//#include <thread>
+//#include <atomic>
+
 #include <vector>
 #include <array>
 #include <unordered_map>
@@ -11,6 +20,7 @@
 #include "SATSolver.h"
 
 using namespace std;
+
 
 string SATSolver::eraseLeadingTrailingWhitespacesFromString(string str)
 {
@@ -132,7 +142,7 @@ vector<pair<string, string>> SATSolver::readStandardInput()
             indexToNames[vertexIndex] = vertex1;
             vertexIndex++;
         }
-
+//        cout << vertex0 << " " << vertex1 << "\n";
         //save edges
         pair<string, string> edge_pair = pair<string, string>({vertex0, vertex1});
         edgeCount++;
@@ -160,20 +170,6 @@ string SATSolver::writeOpbMinCond()
     return res;
 }
 
-//string SATSolver::writeIntObpConstraint(pair<int, int> p)
-//{
-//    string res;
-//
-//    string varPre = "+1*x";
-//    string cond = ">= +1;";
-//
-//    res = varPre + to_string(p.first) + " ";
-//    res += varPre + to_string(p.second) + " ";
-//    res += cond;
-//
-//    return res;
-//}
-
 string SATSolver::writeStringObpConstraint(pair<string, string> p)
 {
     string res;
@@ -193,16 +189,43 @@ void SATSolver::createOpbFile(string file_name, vector<pair<string, string>> edg
     file_name += ".opb";
     ofstream out(file_name);
 
-    out << writeOpbMinCond() << endl;
+    out << writeOpbMinCond() << "\n";
 
     for (int i = 0; i < edgeCount; ++i) {
-        out << writeStringObpConstraint(edges.at(i)) << endl;
+        out << writeStringObpConstraint(edges.at(i)) << "\n";
     }
     out.close();
 }
 
+string SATSolver::getSolution(string outFile)
+{
+    std::ifstream inputFile(outFile); // Open the input file
+    string solution = "\n";
+    string interrupted = "c *** Interrupted ***";
+
+    if (inputFile.is_open()) { // Check if the file was opened successfully
+        std::string line;
+        while (std::getline(inputFile, line)) {
+            if(line.find(interrupted) != string::npos)
+                return "-1";
+
+            if(line[0] == 'v')
+                solution = line;
+        }
+
+        inputFile.close(); // Close the file
+    } else {
+        std::cerr << "Failed to open the file.\n";
+        return "";
+    }
+
+    solution.erase(0, 2);
+    return solution;
+}
+
 void SATSolver::writeOutputSolutionToOutput(string output)
 {
+
     stringstream ss(output);
     string s;
     vector<string> v;
@@ -210,63 +233,42 @@ void SATSolver::writeOutputSolutionToOutput(string output)
         v.push_back(s);
     }
     if((int)v.size() == 1){
-        cout << endl;
+//        cout  << "\n";
         return;
     }
     string sol;
     int vertexId;
     for (int i = 0; i < (int)v.size(); ++i) {
         sol = v.at(i);
-        if(sol[0] == 'x') {
+        if(sol[0] != '-')
+        {
             sol.erase(0, 1);
-            cout << sol << endl;
+            cout << sol << "\n";
         }
     }
 }
 
-string SATSolver::getSolution(string outFile)
-{
-    std::ifstream inputFile(outFile); // Open the input file
-    string solution;
-
-    if (inputFile.is_open()) { // Check if the file was opened successfully
-        std::string line;
-        while (std::getline(inputFile, line)) {
-            if(line[0] == 'v')
-                solution = line;
-            // Process each line
-//            std::cout << line << std::endl;
-        }
-
-        inputFile.close(); // Close the file
-    } else {
-        std::cerr << "Failed to open the file." << std::endl;
-        return "";
-    }
-
-    solution.erase(0, 2);
-//    cout << solution << endl;
-    return solution;
-}
-
-void SATSolver::solver() {
+string SATSolver::solver() {
 
     bool printDebug = false;
-    vector<pair<string, string>> edges;
-    if(printDebug)
-        std::cout << "SAT Solver: " << "Reading input" << std::endl;
-    edges = readStandardInput();
-    if(printDebug)
-        std::cout << "SAT Solver: " << "Read input" << std::endl;
+    vector <pair<string, string>> edges;
 
-    if(edges.empty())
-        return;
-    if(printDebug)
-        std::cout << "SAT Solver: " << "Creating OPB-File" << std::endl;
+    if (printDebug)
+        std::cout << "SAT Solver: " << "Reading input\n";
+    edges = readStandardInput();
+    if (printDebug)
+        std::cout << "SAT Solver: " << "Read input\n";
+
+    if (edges.empty())
+        return "";
+    if (printDebug)
+        std::cout << "SAT Solver: " << "Creating OPB-File\n";
+
     string opbFileName = "solvers/input";
     createOpbFile(opbFileName, edges);
-    if(printDebug)
-        std::cout << "SAT Solver: " << "OPB created" << std::endl;
+
+    if (printDebug)
+        std::cout << "SAT Solver: " << "OPB created\n";
 
     // Add ending to file namae for execution
     opbFileName += ".opb ";
@@ -274,18 +276,16 @@ void SATSolver::solver() {
     // Open the output file
     string outFileName = "solvers/";
     outFileName += "output.txt";
-    std::ofstream outputFile(outFileName);
 
     // Command as a string
     std::string command = "./solvers/uwrmaxsat ";
     command += opbFileName;
     command += "-of > " + outFileName;
-    if(printDebug)
-        std::cout << "SAT Solver: " << "Created execution command" << std::endl;
 
+    std::ofstream outputFile(outFileName);
 
-    if(printDebug)
-        cout << command << endl;
+    if (printDebug)
+        cout << command << "\n";
 
     // Execute the command and redirect the output to the file
     int result = system(command.c_str());
@@ -293,26 +293,35 @@ void SATSolver::solver() {
     if (result == -1) {
         // Handle the error
         std::cerr << "Something went wrong when executing the solver!\n";
-    } else {
-        // Process the return value as needed
-        if(printDebug)
-            std::cout << "SAT Solver: " << "Solver was Executed properly" << std::endl;
     }
 
-    if(printDebug)
-        std::cout << "SAT Solver: " << "Getting the solution" << std::endl;
-    string solverSolution = getSolution(outFileName);
-
-    if(printDebug)
-        cout << "The solver solution is: " << solverSolution << endl;
-
-    if(printDebug)
-        std::cout << "SAT Solver: " << "Writting the solution out!" << std::endl;
-
-    writeOutputSolutionToOutput(solverSolution);
-    // Close the output file
     outputFile.close();
 
+    if (printDebug)
+        cout << "SAT Solver: Getting the solution\n";
+
+    string solverSolution = getSolution(outFileName);
+
+//    cout << "The solver solution is: " << solverSolution << "\n";
+
+    if (solverSolution == "-1") {
+        raise(SIGINT);
+
+//        ofstream out("time.txt");
+//
+//        out << "Command terminated by signal 9" << "\n";
+//
+//        out.close();
+        return "-1";
+    }
+
+    if (printDebug)
+        cout << "The solver solution is: " << solverSolution << "\n";
+
+    if (printDebug)
+        cout << "SAT Solver: " << "Writting the solution out!\n";
+
+
+    return solverSolution;
 
 }
-
