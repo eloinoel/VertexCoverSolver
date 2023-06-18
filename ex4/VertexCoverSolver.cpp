@@ -280,18 +280,47 @@ void removeMinLossVCVertex(BucketGraph* G, unordered_map<int, bool>* vc, std::ve
     Vertex* uVertex = G->getVertex(u_index);
     for (auto neighbour = uVertex->getAdj()->begin(); neighbour != uVertex->getAdj()->end(); ++neighbour)
     {
+        if (!(G->getVertex(*neighbour)->getActive())) { continue; }
         (*gain)[*neighbour]++;
     }
 }
 
 void addRandomUncoveredEdgeMaxGainEndpointVertex(BucketGraph* G, unordered_map<int, bool>* vc, std::vector<int>* gain, std::vector<int>* loss)
 {
+    int v = G->getRandomConnectedVertex(10);
+    Vertex* vertex = G->getVertex(v);
+
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_int_distribution<> distr(0, G->getBucketQueue()->size());
-    int rand = (int) distr(gen) + (G->getNumVertices() - G->getNumConnectedVertices());
+    std::uniform_int_distribution<> distr(0, vertex->getAdj()->size());
+    int rnd = (int) distr(gen);
+    int neighbour = vertex->getAdj()->at(rnd);
+    Vertex* neighbourVertex = G->getVertex(neighbour);
 
-    // TODO:
+    // TODO: break ties by age
+    // add vertex with higher gain into vc
+    if((*gain)[v] > (*gain)[neighbour])
+    {
+        for (auto u = vertex->getAdj()->begin(); u != vertex->getAdj()->end(); ++u)
+        {
+            if (!(G->getVertex(*u)->getActive())) { continue; }
+            (*gain)[*u]--;
+        }
+        G->setInactive(v);
+        vc->insert({v, true});
+        (*gain)[v] = 0;
+    }
+    else
+    {
+        for (auto u = neighbourVertex->getAdj()->begin(); u != neighbourVertex->getAdj()->end(); ++u)
+        {
+            if (!(G->getVertex(*u)->getActive())) { continue; }
+            (*gain)[*u]--;
+        }
+        G->setInactive(neighbour);
+        vc->insert({neighbour, true});
+        (*gain)[neighbour] = 0;
+    }
 }
 
 /*
@@ -320,9 +349,9 @@ unordered_map<int, bool>* fastVC(BucketGraph* G, unordered_map<int, bool>* vc, i
         }
         // TODO: replace removeMinLossVCVertex with BMS function, only checking a set number of vertices and taking that minimum
         removeMinLossVCVertex(G, currentVC, &gain, &loss);
-
-
+        addRandomUncoveredEdgeMaxGainEndpointVertex(G, currentVC, &gain, &loss);
     }
+    delete currentVC;
     return bestVC;
 }
 
