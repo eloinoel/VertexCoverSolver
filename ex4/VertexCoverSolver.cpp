@@ -277,10 +277,10 @@ int getMinLossIndex(unordered_map<int, bool>* vc, std::vector<int>* loss)
 
 int getBMSMinLossIndex(unordered_map<int, bool>* vc, std::vector<int>* loss, int k)
 {
-    if (vc == nullptr) { throw invalid_argument("getMinLossIndex: passed vc is nullptr"); }
-    if (vc->empty()) { throw invalid_argument("getMinLossIndex: passed vc is empty"); }
-    if (k > (int) vc->size()) { throw invalid_argument("getMinLossIndex: passed k is larger than passed vc"); }
-    if (k < 1) { throw invalid_argument("getMinLossIndex: passed k that smaller than 1"); }
+    if (vc == nullptr) { throw invalid_argument("getMinLossIndex: passed vc is nullptr\n"); }
+    if (vc->empty()) { throw invalid_argument("getMinLossIndex: passed vc is empty\n"); }
+    if (k > (int) vc->size()) { throw invalid_argument("getMinLossIndex: passed k is larger than passed vc\n"); }
+    if (k < 1) { throw invalid_argument("getMinLossIndex: passed k that smaller than 1\n"); }
 
     int min = INT32_MAX;
     int minIndex = -1;
@@ -331,7 +331,7 @@ void removeMinLossVCVertex(BucketGraph* G, unordered_map<int, bool>* vc, std::ve
         std::cout << "vc[" << i << "]: " << it->first << std::endl;
         i++;
     } */
-    if (u == vc->end()) { throw invalid_argument("removeMinLossVCVertex: Iterator of u not found"); }
+    if (u == vc->end()) { throw invalid_argument("removeMinLossVCVertex: Iterator of u not found\n"); }
     vc->erase(u);
     G->setActive(u_index);
     (*gain)[u_index] = (*loss)[u_index];
@@ -350,7 +350,7 @@ void removeBMSMinLossVCVertex(BucketGraph* G, unordered_map<int, bool>* vc, std:
     int u_index = getBMSMinLossIndex(vc, loss, k);
     auto u = vc->find(u_index);
 
-    if (u == vc->end()) { throw invalid_argument("removeMinLossVCVertex: Iterator of u not found"); }
+    if (u == vc->end()) { throw invalid_argument("removeMinLossVCVertex: Iterator of u not found\n"); }
     vc->erase(u);
     G->setActive(u_index);
     (*gain)[u_index] = (*loss)[u_index];
@@ -451,9 +451,8 @@ unordered_map<int, bool>* fastVC(BucketGraph* G, unordered_map<int, bool>* vc, d
             bestVC = new unordered_map<int, bool>(*currentVC);
             removeMinLossVCVertex(G, currentVC, &gain, &loss);
         }
-        // TODO: replace removeMinLossVCVertex with BMS function, only checking a set number of vertices and taking that minimum
-        //removeMinLossVCVertex(G, currentVC, &gain, &loss);
-        removeBMSMinLossVCVertex(G, currentVC, &gain, &loss, std::max(1, (int) currentVC->size() / 4));
+        // TODO: test different k's and find suitable k value
+        removeBMSMinLossVCVertex(G, currentVC, &gain, &loss, std::min(100, (int) currentVC->size())/* std::max(1, (int) currentVC->size() / 4) */);
         addRandomUncoveredEdgeMaxGainEndpointVertex(G, currentVC, &gain, &loss, &additionTime, numRecursions);
     }
     delete currentVC;
@@ -727,6 +726,7 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
                 bucketGraph->setInactive(it->first);
             }
             //std::cout << "before fastVC" << std::endl;
+            // TODO: find suitable timout value for localSearch
             auto localSearchVC = fastVC(bucketGraph, heuristicVC, 5/* MAX_TIME_BUDGET - currentDuration - PRINT_TIME */);
             int localSearchVCSize = localSearchVC->size();
             int heuristicVCSize = heuristicVC->size();
