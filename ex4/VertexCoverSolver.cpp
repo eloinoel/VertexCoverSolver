@@ -84,10 +84,10 @@ unordered_map<int, bool>* maxHeuristicSolver(BucketGraph* G, int* numRec, bool a
     return vc;
 }
 
-bool outOfTime(std::chrono::time_point<std::chrono::high_resolution_clock> startTime, int timeoutCap)
+bool outOfTime(std::chrono::time_point<std::chrono::high_resolution_clock> startTime, double timeoutCap)
 {
     auto currentTime = std::chrono::high_resolution_clock::now();
-    double currentDuration = (std::chrono::duration_cast<std::chrono::microseconds>(currentTime - startTime).count() /  1000) / (double) 1000;
+    double currentDuration = std::chrono::duration_cast<std::chrono::microseconds>(currentTime - startTime).count() / (double) 1000000;
     return currentDuration > timeoutCap;
 }
 
@@ -169,7 +169,6 @@ void chooseSmallestHeuristicSolution(BucketGraph* G, int* numRec, unordered_map<
                 {
                     best_solution = 2;
                 }
-                
             }
             else
             {
@@ -241,6 +240,7 @@ unordered_map<int, bool>* minHeuristicSolver(BucketGraph* G, int* numRec)
 
 void initGainLoss(BucketGraph* G, unordered_map<int, bool>* vc, std::vector<int>* gain, std::vector<int>* loss)
 {
+    std::cout << "corrupted size vs. prev_size" << std::endl;
     for (int i = 0; i < (int) gain->size(); ++i)
     {
         (*gain)[i] = 0;
@@ -283,19 +283,17 @@ void removeMinLossVCVertex(BucketGraph* G, unordered_map<int, bool>* vc, std::ve
 {
     int u_index = getMinLossIndex(vc, loss);
     auto u = vc->find(u_index);
-    std::cout << "uIndex: " << u_index << std::endl;
+    /* std::cout << "uIndex: " << u_index << std::endl;
     std::cout << "vc size: " << vc->size() << std::endl;
     int i=0;
     for (auto it = vc->begin(); it != vc->end(); ++it)
     {
         std::cout << "vc[" << i << "]: " << it->first << std::endl;
         i++;
-    }
-    //std::cout << "vc[0]: " << vc->at(0) << std::endl;
-    //std::cout << vc->at(1) << std::endl;
-    //std::cout << u->first << std::endl;
+    } */
     if (u == vc->end()) { throw invalid_argument("removeMinLossVCVertex: Iterator of u not found"); }
     vc->erase(u);
+    G->setActive(u_index);
     (*gain)[u_index] = (*loss)[u_index];
     (*loss)[u_index] = 0;
     Vertex* uVertex = G->getVertex(u_index);
@@ -311,16 +309,23 @@ void addRandomUncoveredEdgeMaxGainEndpointVertex(BucketGraph* G, unordered_map<i
 {
     std::cout << "Adding to vc..." << std::endl;
     int v = G->getRandomConnectedVertex(10);
+    if (v == -1) { return; }
     Vertex* vertex = G->getVertex(v);
+    if (vertex->getDegree() == 0) { throw invalid_argument("addRandomUncoveredEdgeMaxGainEndpointVertex: Got vertex of degree 0\n"); }
     std::cout << cp::dye("Chose edge adjacent to vertex: " + std::to_string(v), 'y') << std::endl;
 
+    auto neighbours = G->getNeighbours(v);  // TODO: slow getNeighbours
+    std::cout << "neighbours size: " << neighbours->size() << std::endl;
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_int_distribution<> distr(0, vertex->getAdj()->size());
+    //std::uniform_int_distribution<> distr(0, vertex->getAdj()->size());
+    std::uniform_int_distribution<> distr(0, neighbours->size()-1);
     int rnd = (int) distr(gen);
+    std::cout << cp::dye("Chose vertex neighbours index: " + std::to_string(rnd), 'y') << std::endl;
     //int neighbour = vertex->getAdj()->at(rnd);
-    int neighbour = G->getNeighbours(v)->at(rnd);   // TODO: slow getNeighbours
+    int neighbour = neighbours->at(rnd);
     Vertex* neighbourVertex = G->getVertex(neighbour);
+    std::cout << cp::dye("Chose vertex neighbour: " + std::to_string(neighbour), 'y') << std::endl;
 
     // TODO: break ties by age
     // add vertex with higher gain into vc
@@ -351,31 +356,38 @@ void addRandomUncoveredEdgeMaxGainEndpointVertex(BucketGraph* G, unordered_map<i
 }
 
 /*
-*   timeout in milliseconds
+*   vertices of vertex cover vc need to be inactive in graph G
+*   timeout in seconds
+*   vc is not changed, you need to update it manually after the function call
 */
-unordered_map<int, bool>* fastVC(BucketGraph* G, unordered_map<int, bool>* vc, int timeout)
+unordered_map<int, bool>* fastVC(BucketGraph* G, unordered_map<int, bool>* vc, double timeout)
 {
-    if (vc == nullptr) { throw invalid_argument("fastVC: passed vc is nullptr"); }
-    //if (vc->empty()) { throw invalid_argument("fastVC: passed vc is empty"); }
+    std::cout << "before guards" << std::endl;
+    if (vc == nullptr) { throw invalid_argument("fastVC: passed vc is nullptr\n"); }
+    for (auto it = vc->begin(); it != vc->end(); ++it)
+    {
+        if (G->getVertex(it->first)->getActive())
+        {
+            throw invalid_argument("fastVC: passed vc vertices must be set to inactive in graph\n");
+        }
+    }
 
+    std::cout << "before inits" << std::endl;
     int n = G->getTotalNumVertices();
     std::vector<int> gain = std::vector<int>(n);
     std::vector<int> loss = std::vector<int>(n);
-    unordered_map<int, bool>* bestVC = new unordered_map<int, bool>(*vc);
     unordered_map<int, bool>* currentVC = new unordered_map<int, bool>(*vc);
+    unordered_map<int, bool>* bestVC = nullptr;
     initGainLoss(G, currentVC, &gain, &loss);
     auto startFastVC = std::chrono::high_resolution_clock::now();
-    while (true && bestVC->size() > 0)
+    while (true && vc->size() > 1)
     {
-        auto currentFastVC = std::chrono::high_resolution_clock::now();
-        int fastVCDur = std::chrono::duration_cast<std::chrono::microseconds>(currentFastVC - startFastVC).count() / 1000;
-        if (fastVCDur >= timeout) { break; }
+        if (outOfTime(startFastVC, timeout)) { break; }
         // we found an improved vc! time to overwrite our previous best solution and search further
         if (G->getMaxDegree() <= 0)
         {
-            //std::cout << cp::dye("Found " + std::to_string(v), 'g') << " to vc" << std::endl;
-            // TODO: check that this is overridden by VALUE!
-            delete bestVC;  // TODO: disgusting heap allocation
+            std::cout << cp::dye("Found vc of size: " + std::to_string(currentVC->size()), 'g') << std::endl;
+            if (bestVC != nullptr) { delete bestVC; }
             bestVC = new unordered_map<int, bool>(*currentVC);
             removeMinLossVCVertex(G, currentVC, &gain, &loss);
         }
@@ -630,25 +642,39 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
             const int INITIAL_SOLUTION_GENERATION_TIME_CAP = 20; //in seconds
             const int HEURISTIC_SOLVER_TIME_CAP = INITIAL_SOLUTION_GENERATION_TIME_CAP - graphConstructionDuration;
             const int NUM_RANDOM_SOLUTION_GENERATIONS = 30;
+            const int PRINT_TIME = 5;
 
+            std::cout << "before maxHeuristicSolver" << std::endl;
             heuristicNumRecursions = 0;
             auto startHeuristicWrapper = std::chrono::high_resolution_clock::now();
             //first generate a fast heuristic solution
             heuristicVC = maxHeuristicSolver(bucketGraph, &heuristicNumRecursions, false, false);
-            //see if we can find a better initial solution 
+            std::cout << "after maxHeuristicSolver" << std::endl;
+            //see if we can find a better initial solution
             //chooseSmallestHeuristicSolution(bucketGraph, &heuristicNumRecursions, heuristicVC, true, true, NUM_RANDOM_SOLUTION_GENERATIONS, HEURISTIC_SOLVER_TIME_CAP);
             auto endHeuristicWrapper = std::chrono::high_resolution_clock::now();
             double heuristicWrapperDuration = (std::chrono::duration_cast<std::chrono::microseconds>(endHeuristicWrapper - startHeuristicWrapper).count() /  1000) / (double) 1000;
 
-            auto localSearchVC = fastVC(bucketGraph, heuristicVC, MAX_TIME_BUDGET);
-
             double currentDuration = (std::chrono::duration_cast<std::chrono::microseconds>(endHeuristicWrapper - startGraph).count() /  1000) / (double) 1000;
+            //set graph to state that it is in when vc vertices are inactive --> for fastVC() method
+            std::cout << "before setInactive" << std::endl;
+            for(auto it = heuristicVC->begin(); it != heuristicVC->end(); ++it)
+            {
+                bucketGraph->setInactive(it->first);
+            }
+            std::cout << "before fastVC" << std::endl;
+            auto localSearchVC = fastVC(bucketGraph, heuristicVC, 0.5/* MAX_TIME_BUDGET - currentDuration - PRINT_TIME */);
+            delete heuristicVC;
+            heuristicVC = localSearchVC;
+            //auto localSearchVC = heuristicVC;
+
+            currentDuration = (std::chrono::duration_cast<std::chrono::microseconds>(endHeuristicWrapper - startGraph).count() /  1000) / (double) 1000;
             auto startPrintSolution = std::chrono::high_resolution_clock::now();
             //cout << "end heuristic size: " << heuristicVC->size() << endl;
             if(!interrupted_by_sig)
             {
                 //safely print solution, otherwise wait SIG
-                if(currentDuration < MAX_TIME_BUDGET - 5)
+                if(currentDuration < MAX_TIME_BUDGET - PRINT_TIME)
                 {
                     printing_sol = true;
                     bucketGraph->printVertices(localSearchVC);
