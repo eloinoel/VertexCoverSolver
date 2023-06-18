@@ -97,19 +97,19 @@ bool outOfTime(std::chrono::time_point<std::chrono::high_resolution_clock> start
 * call with nullptr as @currentSmallestVC if want to generate simple and fast max heuristic solution at beginning
 //TODO: possible optimisation to only calculate preprocessing once at beginning and copy graph and then just add reduction vertices to solutions
 */
-unordered_map<int, bool>* chooseSmallestHeuristicSolution(BucketGraph* G, int* numRec, unordered_map<int, bool>* currentSmallestVC, bool applyReductions = true, bool includeRandomsWithReductions = true, int numRandomSolverCalls = 20, int timeoutSoftCap = 20)
+unordered_map<int, bool>* chooseSmallestHeuristicSolution(BucketGraph* G, int* numRec, unordered_map<int, bool>** currentSmallestVC, bool applyReductions = true, bool includeRandomsWithReductions = true, int numRandomSolverCalls = 20, int timeoutSoftCap = 20)
 {
     int best_solution = 0; //0: maxHeuristic, 1: with preprocessing, 2: randomised, 3: randomised with preprocessing
     auto startTime = std::chrono::high_resolution_clock::now();
 
-    if(currentSmallestVC == nullptr)
+    if(*currentSmallestVC == nullptr)
     {
-        currentSmallestVC = maxHeuristicSolver(G, numRec);
+        *currentSmallestVC = maxHeuristicSolver(G, numRec);
     }
 
-    //cout << "maxHeuristicSolver size: " << currentSmallestVC->size() << ", addr: " << currentSmallestVC << endl;
+    //cout << "maxHeuristicSolver size: " << (*currentSmallestVC)->size() << ", addr: " << *currentSmallestVC << endl;
 
-    if(outOfTime(startTime, timeoutSoftCap)) { return currentSmallestVC; }
+    if(outOfTime(startTime, timeoutSoftCap)) { return *currentSmallestVC; }
 
     //preprocessing on
     int vcMaxPreprocessingNumRec = 0;
@@ -118,10 +118,10 @@ unordered_map<int, bool>* chooseSmallestHeuristicSolution(BucketGraph* G, int* n
     {
         vcMaxPreprocessing = maxHeuristicSolver(G, &vcMaxPreprocessingNumRec, true);
         //select the best solution
-        if(vcMaxPreprocessing->size() < currentSmallestVC->size())
+        if(vcMaxPreprocessing->size() < (*currentSmallestVC)->size())
         {
-            delete currentSmallestVC;
-            currentSmallestVC = vcMaxPreprocessing;
+            delete *currentSmallestVC;
+            *currentSmallestVC = vcMaxPreprocessing;
             *numRec = vcMaxPreprocessingNumRec;
             best_solution = 1;
         }
@@ -131,9 +131,9 @@ unordered_map<int, bool>* chooseSmallestHeuristicSolution(BucketGraph* G, int* n
         }
     }
 
-    //cout << "after Preprocessing size: " << currentSmallestVC->size() << ", addr: " << currentSmallestVC << endl;
+    //cout << "after Preprocessing size: " << (*currentSmallestVC)->size() << ", addr: " << *currentSmallestVC << endl;
 
-    if(outOfTime(startTime, timeoutSoftCap)) { return currentSmallestVC; }
+    if(outOfTime(startTime, timeoutSoftCap)) { return *currentSmallestVC; }
 
     //selecting random max degree vertices
     int vcMaxRandomNumRec;
@@ -154,10 +154,10 @@ unordered_map<int, bool>* chooseSmallestHeuristicSolution(BucketGraph* G, int* n
                 vcMaxRandom = maxHeuristicSolver(G, &vcMaxRandomNumRec, false, true);
             }
 
-            if(vcMaxRandom->size() < currentSmallestVC->size())
+            if(vcMaxRandom->size() < (*currentSmallestVC)->size())
             {
-                delete currentSmallestVC;
-                currentSmallestVC = vcMaxRandom;
+                delete *currentSmallestVC;
+                *currentSmallestVC = vcMaxRandom;
                 *numRec = vcMaxRandomNumRec;
                 if(usedPreprocessing)
                 {
@@ -174,13 +174,13 @@ unordered_map<int, bool>* chooseSmallestHeuristicSolution(BucketGraph* G, int* n
                 delete vcMaxRandom;
             }
 
-            if(outOfTime(startTime, timeoutSoftCap)) { return currentSmallestVC; }
+            if(outOfTime(startTime, timeoutSoftCap)) { return *currentSmallestVC; }
         }
     }
-    //cout << "after random size: " << currentSmallestVC->size() << ", addr: " << currentSmallestVC << endl;
+    //cout << "after random size: " << (*currentSmallestVC)->size() << ", addr: " << *currentSmallestVC << endl;
     //cout << "#recursive steps: " << best_solution << endl;
 
-    return currentSmallestVC;
+    return *currentSmallestVC;
 }
 
 //https://ieeexplore.ieee.org/abstract/document/6486444
@@ -632,9 +632,11 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
             heuristicNumRecursions = 0;
             auto startHeuristicWrapper = std::chrono::high_resolution_clock::now();
             //first generate a fast heuristic solution
+            //cout << "before heuristic solver" << endl;
             heuristicVC = maxHeuristicSolver(bucketGraph, &heuristicNumRecursions, false, false);
             //see if we can find a better initial solution 
-            heuristicVC = chooseSmallestHeuristicSolution(bucketGraph, &heuristicNumRecursions, heuristicVC, true, true, NUM_RANDOM_SOLUTION_GENERATIONS, HEURISTIC_SOLVER_TIME_CAP);
+            //heuristicVC = chooseSmallestHeuristicSolution(bucketGraph, &heuristicNumRecursions, &heuristicVC, true, true, NUM_RANDOM_SOLUTION_GENERATIONS, HEURISTIC_SOLVER_TIME_CAP);
+            chooseSmallestHeuristicSolution(bucketGraph, &heuristicNumRecursions, &heuristicVC, true, true, NUM_RANDOM_SOLUTION_GENERATIONS, HEURISTIC_SOLVER_TIME_CAP);
             auto endHeuristicWrapper = std::chrono::high_resolution_clock::now();
             double heuristicWrapperDuration = (std::chrono::duration_cast<std::chrono::microseconds>(endHeuristicWrapper - startHeuristicWrapper).count() /  1000) / (double) 1000;
 
@@ -642,6 +644,8 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
 
             double currentDuration = (std::chrono::duration_cast<std::chrono::microseconds>(endHeuristicWrapper - startGraph).count() /  1000) / (double) 1000;
             auto startPrintSolution = std::chrono::high_resolution_clock::now();
+
+            //cout << "before print" << endl;
             if(!interrupted_by_sig)
             {
                 //safely print solution, otherwise wait SIG
