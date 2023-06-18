@@ -596,7 +596,7 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
 
             auto localSearchVC = fastVC(G, vc, MAX_TIME_BUDGET);
             auto startPrintSolution = std::chrono::high_resolution_clock::now();
-            G->printVertices(vc);
+            G->printVertices(localSearchVC);
             auto endPrintSolution = std::chrono::high_resolution_clock::now();
             double printDuration = (std::chrono::duration_cast<std::chrono::microseconds>(endPrintSolution - startPrintSolution).count() /  1000) / (double) 1000;
 
