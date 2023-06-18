@@ -344,7 +344,8 @@ unordered_map<int, bool>* fastVC(BucketGraph* G, unordered_map<int, bool>* vc, i
         if (G->getMaxDegree() <= 0)
         {
             // TODO: check that this is overridden by VALUE!
-            bestVC = currentVC;
+            delete bestVC;
+            bestVC = new unordered_map<int, bool>(*currentVC);
             removeMinLossVCVertex(G, currentVC, &gain, &loss);
         }
         // TODO: replace removeMinLossVCVertex with BMS function, only checking a set number of vertices and taking that minimum
@@ -593,6 +594,7 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
             auto endHeuristicWrapper = std::chrono::high_resolution_clock::now();
             double heuristicWrapperDuration = (std::chrono::duration_cast<std::chrono::microseconds>(endHeuristicWrapper - startHeuristicWrapper).count() /  1000) / (double) 1000;
 
+            auto localSearchVC = fastVC(G, vc, MAX_TIME_BUDGET);
             auto startPrintSolution = std::chrono::high_resolution_clock::now();
             G->printVertices(vc);
             auto endPrintSolution = std::chrono::high_resolution_clock::now();
