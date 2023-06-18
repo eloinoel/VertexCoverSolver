@@ -968,6 +968,57 @@ int BucketGraph::getMaxDegreeVertex()
     return bucketQueue.back().vertices.front().index;
 }
 
+
+int BucketGraph::getRandomConnectedVertex(int randomRangeCap)
+{
+    if(bucketQueue.empty())
+        return -1;
+
+    int minBucket = 0;
+    int numBuckets = bucketQueue.size();
+    int smallestBucketDegree = bucketQueue.front().degree;
+    if (smallestBucketDegree == 0) { minBucket == 1; }
+
+    std::random_device rd; // obtain a random number from hardware
+    std::mt19937 gen(rd()); // seed the generator
+    std::uniform_int_distribution<> bucketDistr(minBucket, numBuckets); // define the range
+
+    int randomBucketIndex = (int) bucketDistr(gen);
+    auto bucketIt = bucketQueue.begin();
+    for(int i = 0; i < randomBucketIndex; ++i)
+    {
+        ++bucketIt;
+    }
+    list<BucketVertex>* bucket = &(bucketIt->vertices);
+    if(bucket == nullptr || bucket->size() == 0)
+        throw std::invalid_argument("getRandomConnectedVertex: random bucket doesn't exist or is empty");
+
+    auto startRandomNrCalc = std::chrono::high_resolution_clock::now();
+    //choose random vertex
+    int maxRange = bucket->size() - 1;
+    if(randomRangeCap > 0 && randomRangeCap < maxRange)
+        maxRange = randomRangeCap;
+
+    std::uniform_int_distribution<> distr(0, maxRange); // define the range
+    int randomIndex = (int) distr(gen);
+    auto endRandomNrCalc = std::chrono::high_resolution_clock::now();
+
+    auto startIteratorCalc = std::chrono::high_resolution_clock::now();
+    auto it = bucket->begin();
+    for(int i = 0; i < randomIndex; ++i)
+    {
+        ++it;
+    }
+    auto endIteratorCalc = std::chrono::high_resolution_clock::now();
+
+    double randomNrCalc = (std::chrono::duration_cast<std::chrono::microseconds>(endRandomNrCalc - startRandomNrCalc).count());
+    double iteratorCalc = (std::chrono::duration_cast<std::chrono::microseconds>(endIteratorCalc - startIteratorCalc).count());
+    //std::cout << "randomNrCalc: " << randomNrCalc << ", iteratorCalc: " << iteratorCalc << '\n';
+
+    return it->index;
+
+}
+
 int BucketGraph::getRandomMaxDegreeVertex(int randomRangeCap)
 {
     if(bucketQueue.empty())
