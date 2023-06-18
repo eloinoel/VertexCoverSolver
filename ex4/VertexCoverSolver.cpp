@@ -71,7 +71,7 @@ unordered_map<int, bool>* maxHeuristicSolver(BucketGraph* G, int* numRec, bool a
         G->setInactive(vertex);
         vc->insert({vertex, true});
     }
-    
+
     resetGraphAfterBranching(G, vc);
     //undo reductions
     if(applyReductions)
@@ -167,7 +167,7 @@ unordered_map<int, bool>* chooseSmallestHeuristicSolution(BucketGraph* G, int* n
                 {
                     best_solution = 2;
                 }
-                
+
             }
             else
             {
@@ -659,7 +659,7 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
 
             auto endPrintSolution = std::chrono::high_resolution_clock::now();
             double printDuration = (std::chrono::duration_cast<std::chrono::microseconds>(endPrintSolution - startPrintSolution).count() /  1000) / (double) 1000;
-            //std::cout << "Total duration: " << graphConstructionDuration + heuristicWrapperDuration + printDuration << " seconds, Graph construction:" << graphConstructionDuration << " seconds, HeuristicWrapper: " << heuristicWrapperDuration << " seconds, Print solution: " << printDuration << "\n"; 
+            //std::cout << "Total duration: " << graphConstructionDuration + heuristicWrapperDuration + printDuration << " seconds, Graph construction:" << graphConstructionDuration << " seconds, HeuristicWrapper: " << heuristicWrapperDuration << " seconds, Print solution: " << printDuration << "\n";
 
             /*
             auto startHeuristic = std::chrono::high_resolution_clock::now();
@@ -677,7 +677,7 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
 
             //unordered_map<int, bool>* vcMin = minHeuristicSolver(G, &numRecursions);
             //vector<int>* vc = heuristicSolver(G, &numRecursions);
-            
+
             //unordered_map<int, bool>* bestVC = vcMax;
             /* if(vcMaxNoPreprocess->size() < bestVC->size())
             {
@@ -780,6 +780,14 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
     {
         // For now it all runs from its constructor function
         SATSolver SATSolver;
+
+        std::string solutionSAT = SATSolver.solver();
+
+        if(solutionSAT == "-1")
+            return;
+
+        SATSolver.writeOutputSolutionToOutput(solutionSAT);
+
     }
     else
     {
@@ -799,7 +807,8 @@ int main(int argc, char* argv[]) {
         //chooseImplementationAndOutput(1, true, false, false, true, true, false); //print alot
         //signal(SIGINT, my_sig_handler); //catches SIGINT to output anything
         //chooseImplementationAndOutput(5, false, false, false, false, true, false);
-	}
+        //chooseImplementationAndOutput(6, false, false, false, false, true, false);
+    }
 	catch (const exception& e)
 	{
 		cerr << ColorPrint::dye("Error while running vertex cover solver.\n", 'r');
