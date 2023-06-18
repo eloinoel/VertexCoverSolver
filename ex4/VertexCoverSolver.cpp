@@ -234,13 +234,13 @@ unordered_map<int, bool>* minHeuristicSolver(BucketGraph* G, int* numRec)
     return vc;
 }
 
-void initGainLossAdditionTime(BucketGraph* G, unordered_map<int, bool>* vc, std::vector<int>* gain, std::vector<int>* loss, std::vector<int>* additionTime)
+void initGainLossAge(BucketGraph* G, unordered_map<int, bool>* vc, std::vector<int>* gain, std::vector<int>* loss, std::vector<int>* age)
 {
     for (int i = 0; i < (int) gain->size(); ++i)
     {
         (*gain)[i] = 0;
         (*loss)[i] = 0;
-        (*additionTime)[i] = 0;
+        (*age)[i] = 0;
     }
     for (auto it = vc->begin(); it != vc->end(); ++it)
     {
@@ -255,7 +255,7 @@ void initGainLossAdditionTime(BucketGraph* G, unordered_map<int, bool>* vc, std:
     }
 }
 
-int getMinLossIndex(unordered_map<int, bool>* vc, std::vector<int>* loss)
+int getMinLossIndex(unordered_map<int, bool>* vc, std::vector<int>* loss, std::vector<int>* age)
 {
     if (vc == nullptr) { throw invalid_argument("getMinLossIndex: passed vc is nullptr"); }
     if (vc->empty()) { throw invalid_argument("getMinLossIndex: passed vc is empty"); }
@@ -265,7 +265,8 @@ int getMinLossIndex(unordered_map<int, bool>* vc, std::vector<int>* loss)
 
     for (auto it = vc->begin(); it != vc->end(); ++it)
     {
-        if (loss->at(it->first) < min)
+        // TODO: use age as tiebreaker?
+        if (loss->at(it->first) < min || (loss->at(it->first) == min && age->at(it->first) < age->at(minIndex)))
         {
             min = loss->at(it->first);
             minIndex = it->first;
@@ -275,7 +276,7 @@ int getMinLossIndex(unordered_map<int, bool>* vc, std::vector<int>* loss)
     return minIndex;
 }
 
-int getBMSMinLossIndex(unordered_map<int, bool>* vc, std::vector<int>* loss, int k)
+int getBMSMinLossIndex(unordered_map<int, bool>* vc, std::vector<int>* loss, std::vector<int>* age, int k)
 {
     if (vc == nullptr) { throw invalid_argument("getMinLossIndex: passed vc is nullptr\n"); }
     if (vc->empty()) { throw invalid_argument("getMinLossIndex: passed vc is empty\n"); }
@@ -288,13 +289,8 @@ int getBMSMinLossIndex(unordered_map<int, bool>* vc, std::vector<int>* loss, int
     std::random_device rd;
     std::mt19937 gen(rd());
     int partitionSize = vc->size() / k;
-    //std::uniform_int_distribution<> distr(0, vc->size()-1);
     std::uniform_int_distribution<> distr(0, partitionSize-1);
 
-    for (int i = 0; i < k; ++i)
-    {
-
-    }
     int i=0;
     for (auto it = vc->begin(); it != vc->end() && i<k; ++i, ++it)
     {
@@ -309,7 +305,7 @@ int getBMSMinLossIndex(unordered_map<int, bool>* vc, std::vector<int>* loss, int
             ++it;
         }
 
-        if (loss->at(it->first) < min)
+        if (loss->at(it->first) < min || (loss->at(it->first) == min && age->at(it->first) < age->at(minIndex)))
         {
             min = loss->at(it->first);
             minIndex = it->first;
@@ -319,9 +315,9 @@ int getBMSMinLossIndex(unordered_map<int, bool>* vc, std::vector<int>* loss, int
     return minIndex;
 }
 
-void removeMinLossVCVertex(BucketGraph* G, unordered_map<int, bool>* vc, std::vector<int>* gain, std::vector<int>* loss)
+void removeMinLossVCVertex(BucketGraph* G, unordered_map<int, bool>* vc, std::vector<int>* gain, std::vector<int>* loss, std::vector<int>* age, int numRecursions)
 {
-    int u_index = getMinLossIndex(vc, loss);
+    int u_index = getMinLossIndex(vc, loss, age);
     auto u = vc->find(u_index);
     /* std::cout << "uIndex: " << u_index << std::endl;
     std::cout << "vc size: " << vc->size() << std::endl;
@@ -336,6 +332,7 @@ void removeMinLossVCVertex(BucketGraph* G, unordered_map<int, bool>* vc, std::ve
     G->setActive(u_index);
     (*gain)[u_index] = (*loss)[u_index];
     (*loss)[u_index] = 0;
+    (*age)[u_index] = numRecursions;
     Vertex* uVertex = G->getVertex(u_index);
     for (auto neighbour = uVertex->getAdj()->begin(); neighbour != uVertex->getAdj()->end(); ++neighbour)
     {
@@ -345,9 +342,9 @@ void removeMinLossVCVertex(BucketGraph* G, unordered_map<int, bool>* vc, std::ve
     //std::cout << cp::dye("Removed " + std::to_string(u_index), 'r') << " from vc" << std::endl;
 }
 
-void removeBMSMinLossVCVertex(BucketGraph* G, unordered_map<int, bool>* vc, std::vector<int>* gain, std::vector<int>* loss, int k)
+void removeBMSMinLossVCVertex(BucketGraph* G, unordered_map<int, bool>* vc, std::vector<int>* gain, std::vector<int>* loss, std::vector<int>* age, int numRecursions, int k)
 {
-    int u_index = getBMSMinLossIndex(vc, loss, k);
+    int u_index = getBMSMinLossIndex(vc, loss, age, k);
     auto u = vc->find(u_index);
 
     if (u == vc->end()) { throw invalid_argument("removeMinLossVCVertex: Iterator of u not found\n"); }
@@ -355,6 +352,7 @@ void removeBMSMinLossVCVertex(BucketGraph* G, unordered_map<int, bool>* vc, std:
     G->setActive(u_index);
     (*gain)[u_index] = (*loss)[u_index];
     (*loss)[u_index] = 0;
+    (*age)[u_index] = numRecursions;
     Vertex* uVertex = G->getVertex(u_index);
     for (auto neighbour = uVertex->getAdj()->begin(); neighbour != uVertex->getAdj()->end(); ++neighbour)
     {
@@ -363,10 +361,12 @@ void removeBMSMinLossVCVertex(BucketGraph* G, unordered_map<int, bool>* vc, std:
     }
 }
 
-void addRandomUncoveredEdgeMaxGainEndpointVertex(BucketGraph* G, unordered_map<int, bool>* vc, std::vector<int>* gain, std::vector<int>* loss, std::vector<int>* additionTime, int numRecursions)
+void addRandomUncoveredEdgeMaxGainEndpointVertex(BucketGraph* G, unordered_map<int, bool>* vc, std::vector<int>* gain, std::vector<int>* loss, std::vector<int>* age, int numRecursions)
 {
     //std::cout << "Adding to vc..." << std::endl;
-    int v = G->getRandomConnectedVertex(10);
+    //int v = G->getRandomConnectedVertex(10);    // TODO: consider pseudo randomness (are all vertices selectable?)
+    int v = G->getRandomConnectedVertex(INT32_MAX); // TODO: test more what limit is appropriate
+
     if (v == -1) { return; }
     Vertex* vertex = G->getVertex(v);
     if (vertex->getDegree() == 0) { throw invalid_argument("addRandomUncoveredEdgeMaxGainEndpointVertex: Got vertex of degree 0\n"); }
@@ -384,17 +384,18 @@ void addRandomUncoveredEdgeMaxGainEndpointVertex(BucketGraph* G, unordered_map<i
     //std::cout << cp::dye("Chose vertex neighbour: " + std::to_string(neighbour), 'y') << std::endl;
 
     // add vertex with higher gain into vc
-    if((*gain)[v] > (*gain)[neighbour] || ((*gain)[v] == (*gain)[neighbour] && (*additionTime)[v] <= (*additionTime)[neighbour]))
+    if((*gain)[v] > (*gain)[neighbour] || ((*gain)[v] == (*gain)[neighbour] && (*age)[v] <= (*age)[neighbour]))
     {
         for (auto u = vertex->getAdj()->begin(); u != vertex->getAdj()->end(); ++u)
         {
             if (!(G->getVertex(*u)->getActive())) { continue; }
             (*gain)[*u]--;
+            (*loss)[v]++;
         }
         G->setInactive(v);
         vc->insert({v, true});
         (*gain)[v] = 0;
-        (*additionTime)[v] = numRecursions;
+        (*age)[v] = numRecursions;
         //std::cout << cp::dye("Added " + std::to_string(v), 'g') << " to vc" << std::endl;
     }
     else
@@ -407,7 +408,7 @@ void addRandomUncoveredEdgeMaxGainEndpointVertex(BucketGraph* G, unordered_map<i
         G->setInactive(neighbour);
         vc->insert({neighbour, true});
         (*gain)[neighbour] = 0;
-        (*additionTime)[neighbour] = numRecursions;
+        (*age)[neighbour] = numRecursions;
         //std::cout << cp::dye("Added " + std::to_string(neighbour), 'g') << " to vc" << std::endl;
     }
 }
@@ -417,7 +418,7 @@ void addRandomUncoveredEdgeMaxGainEndpointVertex(BucketGraph* G, unordered_map<i
 *   timeout in seconds
 *   vc is not changed, you need to update it manually after the function call
 */
-unordered_map<int, bool>* fastVC(BucketGraph* G, unordered_map<int, bool>* vc, double timeout)
+unordered_map<int, bool>* fastVC(BucketGraph* G, unordered_map<int, bool>* vc, int* numRec, double timeout)
 {
     //std::cout << "before guards" << std::endl;
     if (vc == nullptr) { throw invalid_argument("fastVC: passed vc is nullptr\n"); }
@@ -434,14 +435,15 @@ unordered_map<int, bool>* fastVC(BucketGraph* G, unordered_map<int, bool>* vc, d
     int n = G->getTotalNumVertices();
     std::vector<int> gain = std::vector<int>(n);
     std::vector<int> loss = std::vector<int>(n);
-    std::vector<int> additionTime = std::vector<int>(n);
+    std::vector<int> age = std::vector<int>(n);
     unordered_map<int, bool>* currentVC = new unordered_map<int, bool>(*vc);
     unordered_map<int, bool>* bestVC = new unordered_map<int, bool>(*vc);
-    initGainLossAdditionTime(G, currentVC, &gain, &loss, &additionTime);
+    initGainLossAge(G, currentVC, &gain, &loss, &age);
     auto startFastVC = std::chrono::high_resolution_clock::now();
     while (true && vc->size() > 1)
     {
         if (outOfTime(startFastVC, timeout)) { break; }
+        auto foundVCCheckStart = std::chrono::high_resolution_clock::now();
         numRecursions++;
         // we found an improved vc! time to overwrite our previous best solution and search further
         if (G->getMaxDegree() <= 0)
@@ -449,12 +451,23 @@ unordered_map<int, bool>* fastVC(BucketGraph* G, unordered_map<int, bool>* vc, d
             //std::cout << cp::dye("Found vc of size: " + std::to_string(currentVC->size()), 'g') << std::endl;
             delete bestVC;
             bestVC = new unordered_map<int, bool>(*currentVC);
-            removeMinLossVCVertex(G, currentVC, &gain, &loss);
+            removeMinLossVCVertex(G, currentVC, &gain, &loss, &age, numRecursions);
         }
         // TODO: test different k's and find suitable k value
-        removeBMSMinLossVCVertex(G, currentVC, &gain, &loss, std::min(100, (int) currentVC->size())/* std::max(1, (int) currentVC->size() / 4) */);
-        addRandomUncoveredEdgeMaxGainEndpointVertex(G, currentVC, &gain, &loss, &additionTime, numRecursions);
+
+
+        auto rmMinLossStart = std::chrono::high_resolution_clock::now();
+        //removeBMSMinLossVCVertex(G, currentVC, &gain, &loss, &age, numRecursions, std::min(500000, (int) currentVC->size())/* std::max(1, (int) currentVC->size() / 4) */);
+        removeMinLossVCVertex(G, currentVC, &gain, &loss, &age, numRecursions);
+        auto addUncEdgeEndpointStart = std::chrono::high_resolution_clock::now();
+        addRandomUncoveredEdgeMaxGainEndpointVertex(G, currentVC, &gain, &loss, &age, numRecursions);
+        auto addUncEdgeEndpointEnd = std::chrono::high_resolution_clock::now();
+        /* double foundVCCheck = std::chrono::duration_cast<std::chrono::microseconds>(rmMinLossStart - foundVCCheckStart).count() / (double) 1000000;
+        double rmMinLoss = std::chrono::duration_cast<std::chrono::microseconds>(addUncEdgeEndpointStart - rmMinLossStart).count() / (double) 1000000;
+        double addUncEdgeEndpoint = std::chrono::duration_cast<std::chrono::microseconds>(addUncEdgeEndpointEnd - addUncEdgeEndpointStart).count() / (double) 100000;
+        std::cout << "Completed local search iteration in " << foundVCCheck + rmMinLoss + addUncEdgeEndpoint << " seconds (VCCheck: " << foundVCCheck << " + rmMinLoss: " << rmMinLoss << " + addUncEdgeEndpoint: " << addUncEdgeEndpoint << ")" << '\n'; */
     }
+    (*numRec) = (*numRec) + numRecursions;
     delete currentVC;
     return bestVC;
 }
@@ -727,7 +740,7 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
             }
             //std::cout << "before fastVC" << std::endl;
             // TODO: find suitable timout value for localSearch
-            auto localSearchVC = fastVC(bucketGraph, heuristicVC, 5/* MAX_TIME_BUDGET - currentDuration - PRINT_TIME */);
+            auto localSearchVC = fastVC(bucketGraph, heuristicVC, &heuristicNumRecursions, /* 5 */MAX_TIME_BUDGET - currentDuration - PRINT_TIME);
             int localSearchVCSize = localSearchVC->size();
             int heuristicVCSize = heuristicVC->size();
             delete heuristicVC;
@@ -744,8 +757,9 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
                 {
                     printing_sol = true;
                     bucketGraph->printVertices(heuristicVC);
-                    //cout << "#recursive steps: " << heuristicNumRecursions << endl;
-                    cout << "#recursive steps: " << 1000000 + localSearchVCSize - heuristicVCSize/* vcMax->size() - vcMaxRandom->size() */ << endl;
+                    cout << "#recursive steps: " << heuristicNumRecursions << endl;
+                    cout << "#solution size: " << localSearchVCSize << endl;    // TODO: remove print of solution size
+                    //cout << "#recursive steps: " << 1000000 + localSearchVCSize - heuristicVCSize/* vcMax->size() - vcMaxRandom->size() */ << endl;
                 }
                 else
                 {
