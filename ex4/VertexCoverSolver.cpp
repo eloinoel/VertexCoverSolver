@@ -19,6 +19,32 @@ typedef ColorPrint cp;
 /*----------------------------------------------------------*/
 /*---------------   Exercise 4 Solver Code   ---------------*/
 /*----------------------------------------------------------*/
+int writeSATSolverSolutionToVC(BucketGraph* G, unordered_map<int, bool>* vertexCover, string output)
+{
+    int cnt = 0;
+    stringstream ss(output);
+    string s;
+    vector <string> v;
+    while (getline(ss, s, ' ')) {
+        v.push_back(s);
+    }
+    if ((int) v.size() == 1) {
+        return 0;
+    }
+    string sol;
+    int vertexId;
+    for (int i = 0; i < (int) v.size(); ++i) {
+        sol = v.at(i);
+        if (sol[0] != '-') {
+            sol.erase(0, 1);
+            int vertex = stoi(sol);
+            vertexCover->insert({vertex, true});
+            cnt++;
+        }
+    }
+    return cnt;
+}
+
 
 void resetGraphAfterBranching(BucketGraph* G, unordered_map<int, bool>* vc)
 {
@@ -888,16 +914,118 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
     }
     else if(version == 6)
     {
-        // For now it all runs from its constructor function
+        bool preprocess = true;
+        bool vcImplementation = false;
+
         SATSolver SATSolver;
+        vector <pair<string, string>> edges;
+        std::string solutionSAT;
 
-        std::string solutionSAT = SATSolver.solver();
+        BucketGraph *G;
+        int numPreprocessingVCVertices = 0;
+        unordered_map<int, bool>* vc = new unordered_map<int, bool>();
 
-        if(solutionSAT == "-1")
-            return;
+//        cout << "SAT Solver :)\n";
+        if(vcImplementation)
+        {
+            if (preprocess) {
+//            cout << "Preprocessing Option!\n";
+                G = BucketGraph::readStandardInput();
+//            cout << "Read the input!\n";
+                vector<bool> rulesToApply = vector<bool>({true, true, true, true});
+//            G->preprocessSAT(&numPreprocessingVCVertices, rulesToApply);
+                G->preprocess(&numPreprocessingVCVertices, rulesToApply);
+                numPreprocessingVCVertices = -numPreprocessingVCVertices;
 
-        SATSolver.writeOutputSolutionToOutput(solutionSAT);
+                edges = G->getPreprocessedEdges();
+                SATSolver.setSATSolverUp(edges);
+            } else {
+                edges = SATSolver.readStandardInput();
+            }
+            solutionSAT = SATSolver.solver(edges);
 
+//            vector<string>* solPointer;
+
+            if (solutionSAT == "-1")
+                return;
+
+            int cnt = 0;
+//            SATSolver.writeSolverSolutionToVC(G, vc, solutionSAT);
+            cnt += writeSATSolverSolutionToVC(G, vc, solutionSAT);
+//            cout << "SAT Solver: " << cnt << endl;
+
+
+//            {
+//              stringstream ss(solutionSAT);
+//            string s;
+//            vector <string> v;
+//            while (getline(ss, s, ' ')) {
+//                v.push_back(s);
+//            }
+//            if ((int) v.size() == 1) {
+//                return;
+//            }
+//            string sol;
+//            int vertexId;
+//            for (int i = 0; i < (int) v.size(); ++i) {
+//                sol = v.at(i);
+//                if (sol[0] != '-') {
+//                    sol.erase(0, 1);
+//                    int vertex = stoi(sol);
+//                    vc->insert({vertex, true});
+//                }
+//                }
+//            }
+
+            resetGraphAfterBranching(G, vc);
+//            //undo reductions
+            if (preprocess) {
+                int k = 0;
+                G->unreduce(&k, vc->size() + numPreprocessingVCVertices, vc);
+                G->resetLPBoundDataStructures();
+            }
+
+            if (printVC) {
+                G->printVertices(vc);
+//            cout << "#recursive steps: " << numRecursiveSteps << endl;
+
+                if (printVCSize) {
+                    cout << "vc size: " << vc->size() << endl;
+                }
+            }
+        }
+        else
+        {
+            if (preprocess) {
+                G = BucketGraph::readStandardInput();
+                vector<bool> rulesToApply = vector<bool>({true, true, true, true});
+                G->preprocessSAT(&numPreprocessingVCVertices, rulesToApply);
+                numPreprocessingVCVertices = -numPreprocessingVCVertices;
+
+                edges = G->getPreprocessedEdges();
+                SATSolver.setSATSolverUp(edges);
+            } else {
+                edges = SATSolver.readStandardInput();
+            }
+            int vcSize = 0;
+            solutionSAT = SATSolver.solver(edges);
+
+            if (solutionSAT == "-1")
+                return;
+
+            if (printVC)
+            {
+                vcSize += SATSolver.writeOutputSolutionToOutput(solutionSAT);
+//                cout << "SAT Solver: " << vcSize << endl;
+                if(preprocess)
+                    vcSize += G->printPreprocessedVertices();
+                if (printVCSize) {
+                    cout << "vc size: " << vcSize << endl;
+                }
+            }
+        }
+
+        delete vc;
     }
     else
     {
@@ -917,11 +1045,11 @@ int main(int argc, char* argv[]) {
         //chooseImplementationAndOutput(1, true, false, false, true, true, false); //print alot
         //signal(SIGINT, my_sig_handler); //catches SIGINT to output anything
         //chooseImplementationAndOutput(5, false, false, false, false, true, false);
-        //chooseImplementationAndOutput(6, false, false, false, false, true, false);
+//        chooseImplementationAndOutput(6, false, false, false, false, true, false);
     }
 	catch (const exception& e)
 	{
 		cerr << ColorPrint::dye("Error while running vertex cover solver.\n", 'r');
-        cerr << ColorPrint::dye(e.what() ,'r');
+        cerr << ColorPrint::dye(e.what() ,'r') << '\n';
 	}
 }

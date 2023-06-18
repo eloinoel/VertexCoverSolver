@@ -12,6 +12,7 @@
 
 using namespace std;
 
+class BucketGraph;
 
 class SATSolver {
 public:
@@ -26,16 +27,25 @@ public:
     SATSolver(){};
 //    SATSolver(){solver();};
 
-    string solver();
+    string solver(vector<pair<string, string>> edges);
+//    string solver(vector<pair<string, string>> edges);
 
-    void writeOutputSolutionToOutput(string output);
+    int writeOutputSolutionToOutput(string output);
 
+    void writeSolverSolutionToVC(BucketGraph* G, unordered_map<int, bool>* vc, string output);
+
+    vector<pair<string, string>> readStandardInput();
+
+    void setSATSolverUp(vector<pair<string, string>> edges);
+
+    void setNumEdges(int numEdges){edgeCount = numEdges;};
+    void setNumVertices(int numVertices){vertexIndex = numVertices;};
+//    vector<pair<string, string>> getPreprocessedInput();
 private:
+
     string eraseLeadingTrailingWhitespacesFromString(string str);
 
     bool isVertexCharacter(char c);
-
-    vector<pair<string, string>> readStandardInput();
 
     string writeOpbMinCond();
 

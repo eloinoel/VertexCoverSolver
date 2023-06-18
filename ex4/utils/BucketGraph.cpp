@@ -129,7 +129,7 @@ BucketGraph* BucketGraph::readStandardInput(bool initReductionDataStructures)
         G->edges.push_back(edge_pair);
     }
     //auto endReadStandardInput = std::chrono::high_resolution_clock::now();
-    
+
     
     G->initActiveList(); // sets vertex references and generates activeList
     G->initAdjMap(); // sets references in adjacency lists of vertices
@@ -1186,6 +1186,7 @@ int BucketGraph::getNthActiveNeighbour(int vertex, int n)
 std::pair<int, int>* BucketGraph::getFirstTwoActiveNeighbours(int vertex)
 {
     std::pair<int, int>* neighbours = new std::pair<int, int>({-1, -1});
+
     if(vertex >= (int) vertexReferences.size())
     {
         throw std::invalid_argument("getFirstActiveNeighbour: vertex");
@@ -1273,6 +1274,19 @@ void BucketGraph::preprocess(int* k, std::vector<bool>& rulesToApply)
     {
         if(rulesToApply[0] && reductions->rule_DegreeOne(this, k, false) == APPLICABLE) continue;
         if(rulesToApply[1] && reductions->rule_DegreeTwo(this, k, false) == APPLICABLE) continue;
+        if(rulesToApply[2] && reductions->rule_Domination(this, k, false) == APPLICABLE) continue;
+        if(rulesToApply[3] && reductions->rule_LPFlow(this, k, false) == APPLICABLE) continue;
+        return;
+    }
+}
+
+void BucketGraph::preprocessSAT(int* k, std::vector<bool>& rulesToApply)
+{
+//    std::cout << "Preprocessor Secure!" << '\n';
+    while(true)
+    {
+        if(rulesToApply[0] && reductions->rule_DegreeOne(this, k, false) == APPLICABLE) continue;
+        if(rulesToApply[1] && reductions->rule_DegreeTwo_Secure(this, k) == APPLICABLE) continue;
         if(rulesToApply[2] && reductions->rule_Domination(this, k, false) == APPLICABLE) continue;
         if(rulesToApply[3] && reductions->rule_LPFlow(this, k, false) == APPLICABLE) continue;
         return;
@@ -2271,4 +2285,134 @@ bool BucketGraph::vertexCanBeAddedToClique(int vertex, std::vector<int>* clique)
         }
     }
     return true;
+}
+
+
+std::vector<std::pair<std::string,std::string>> BucketGraph::getPreprocessedEdges()
+{
+    using namespace std;
+
+    vector<pair<string,string>> activeEdges;
+
+    for (int i = 0; i < (int)edges.size(); ++i) {
+        pair<string,string> edge = edges.at(i);
+
+        // Get vertex index
+        int vertex1 = originalVertexNames[edge.first].first;
+        int vertex2 = originalVertexNames[edge.second].first;
+
+        if(isActive(vertex1) && isActive(vertex2))
+            activeEdges.push_back(edge);
+    }
+
+    return activeEdges;
+}
+
+int BucketGraph::printPreprocessedVertices()
+{
+    if(reductions->appliedRules == nullptr)
+        throw std::invalid_argument("unreduce: appliedRules is nullptr");
+    if(reductions->appliedRules->empty())
+        return 0;
+
+    int cnt = 0;
+
+    //pop rules
+    while(!reductions->appliedRules->empty())
+    {
+        Reduction* rule = reductions->appliedRules->back();
+        //std::cout << "> unreducing: ";
+        switch(rule->rule)
+        {
+            case DEGREE_ZERO:
+//                setActive(rule->deletedVertices);
+                break;
+
+            case DEGREE_ONE:
+                for(int i = 0; i < (int) rule->deletedVCVertices->size(); i++)
+                {
+//                        vc->insert({rule->deletedVCVertices->at(i), true});
+                    int vertexId = rule->deletedVCVertices->at(i);
+                    std::cout << vertexReferences[vertexId]->strName << '\n';
+                    cnt++;
+                }
+                break;
+            case DEGREE_TWO:
+                //std::cout << "deg2 unreduce" << std::endl;
+//                *k = *k + rule->kDecrement;
+
+
+                        for(int i = 0; i < (int) rule->deletedVCVertices->size(); i++)
+                        {
+                            int vertexId = rule->deletedVCVertices->at(i);
+                            std::cout << vertexReferences[vertexId]->strName << '\n';
+                            cnt++;
+                        }
+
+                break;
+            case HIGH_DEGREE:
+//                *k = *k + rule->kDecrement;
+//                setActive(rule->deletedVCVertices);
+//                if(vc != nullptr)
+//                {
+//                    for(int i = 0; i < (int) rule->deletedVCVertices->size(); i++)
+//                    {
+//                        vc->insert({rule->deletedVCVertices->at(i), true});
+//                    }
+//                    //vc->insert(vc->end(), rule->deletedVCVertices->begin(), rule->deletedVCVertices->end());
+//                }
+                break;
+            case DOMINATION:
+                for(int i = 0; i < (int) rule->deletedVCVertices->size(); i++)
+                {
+                    int vertexId = rule->deletedVCVertices->at(i);
+                    std::cout << vertexReferences[vertexId]->strName << '\n';
+                    cnt++;
+                }
+                break;
+            case LPFLOW:
+//                *k = *k + rule->kDecrement;
+                //std::cout << "Restoring component:";
+//                setActive(rule->deletedVertices);
+//                setActive(rule->deletedVCVertices);
+                /* std::cout << " {";
+                for (int j=0; j<(int) rule->deletedVertices->size(); j++)
+                {
+                    if(vertexReferences[rule->deletedVertices->at(j)]->isActive) { std::cout << "!"; }
+                    std::cout << rule->deletedVertices->at(j) << ", ";
+                }
+                std::cout << "} / ";
+                std::cout << "{";
+                for (int j=0; j<(int) rule->deletedVCVertices->size(); j++)
+                {
+                    if(vertexReferences[rule->deletedVCVertices->at(j)]->isActive) { std::cout << "!"; }
+                    std::cout << rule->deletedVCVertices->at(j) << ", ";
+                }
+                std::cout << "}" << '\n'; */
+//                if(vc != nullptr)
+//                {
+                    for(int i = 0; i < (int) rule->deletedVCVertices->size(); i++)
+                    {
+//                        vc->insert({rule->deletedVCVertices->at(i), true});
+                        int vertexId = rule->deletedVCVertices->at(i);
+                        std::cout << vertexReferences[vertexId]->strName << '\n';
+                        cnt++;
+                    }
+                    //vc->insert(vc->end(), rule->deletedVCVertices->begin(), rule->deletedVCVertices->end());
+//                }
+                break;
+            default:
+                throw std::invalid_argument("unreduce error: unknown rule");
+                break;
+        }
+        if (rule->deletedVCVertices != nullptr) delete rule->deletedVCVertices;
+        if (rule->deletedVertices != nullptr) delete rule->deletedVertices;
+        reductions->appliedRules->pop_back();
+        delete rule;
+//        if(*k > previousK)
+//        {
+//            throw std::invalid_argument("unreduce error: " + std::to_string(*k) + " > " + std::to_string(previousK) + ", stop coding garbage");
+//        }
+    }
+    return cnt;
 }

@@ -144,6 +144,85 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeTwo(BucketGraph* G, int* k, bool 
     return APPLICABLE;
 }
 
+RULE_APPLICATION_RESULT Reductions::rule_DegreeTwo_Secure(BucketGraph* G, int* k)
+{
+    list<BucketVertex>* degTwoBucket = G->getVerticesOfDegree(2);
+
+    if(degTwoBucket == nullptr || degTwoBucket->empty()) return INAPPLICABLE;
+
+    int cnt = 0;
+    std::vector<int> tempVC;
+    std::vector<int> tempDeleted;
+    std::unordered_map<int, int> alreadyInactive;
+//
+    for(auto it = degTwoBucket->begin(); it != degTwoBucket->end(); it++)
+    {
+//        std::cout << "start of while loop" << '\n';
+        if(!G->isActive(it->index))
+            continue;
+//        std::cout << "Degree 2 vertex: " << it->index << '\n';
+
+//        std::pair<int, int> neighbours = G->getActiveTwoNeighbours(it->index);
+        std::pair<int, int>* neighbours = G->getFirstTwoActiveNeighbours(it->index);
+
+        if(alreadyInactive[it->index] == 1 || alreadyInactive[neighbours->first] == 1 || alreadyInactive[neighbours->second] == 1)
+        {
+//            std::cout << "Nope not this vertex: " << it->index << '\n';
+//            std::cout << neighbours->first << ", " << neighbours->second << '\n';
+            continue;
+        }
+//
+//        std::cout << "degree of deg2 vertex: " << it->index << '\n';
+        if(!G->isActive(neighbours->first) || !G->isActive(neighbours->second)) {
+            continue;
+        }
+
+//        std::cout << neighbours->first << ", " << neighbours->second << '\n';
+//
+//
+//        // CASE The neighbours know each other, take them into vc
+        if(G->vertexHasEdgeTo(neighbours->first, neighbours->second))
+        {
+//            std::cout << "Neighbours know each other! " << '\n';
+
+            int n1 = neighbours->first;
+            int n2 = neighbours->second;
+            tempDeleted.push_back(n1);
+            tempDeleted.push_back(n2);
+            tempDeleted.push_back(it->index);
+
+            cnt++;
+
+            alreadyInactive[it->index] = 1;
+            alreadyInactive[neighbours->first] = 1;
+            alreadyInactive[neighbours->second] = 1;
+
+        }
+//        std::cout << "---------" << '\n';
+    }
+
+    if(tempDeleted.empty() || cnt == 0) {
+        return INAPPLICABLE;
+    }
+//    std::cout << "I have " << cnt<< " elements\n";
+
+    for (int i = 0; i < cnt; ++i) {
+//        std::cout << "I deleted Vertex: " << tempDeleted.at(3*i) << tempDeleted.at(3*i+1) << tempDeleted.at(3*i+2) << '\n';
+        Reduction* delVer = new Reduction(RULE::DEGREE_TWO, 0, new std::vector<int>(), new std::vector<int>());
+        delVer->deletedVCVertices->push_back(tempDeleted.at(3*i + 0));
+        delVer->deletedVCVertices->push_back(tempDeleted.at(3*i + 1));
+        delVer->deletedVertices->push_back(tempDeleted.at(3*i + 2));
+
+        G->setInactive(delVer->deletedVCVertices);
+        G->setInactive(delVer->deletedVertices);
+
+        appliedRules->push_back(delVer);
+    }
+
+    return APPLICABLE;
+//    return INAPPLICABLE;
+}
+
 RULE_APPLICATION_RESULT Reductions::rule_LPFlow(BucketGraph* G, int* k, bool checkBudget)
 {
     if(!G->LP_INITIALISED)

@@ -237,6 +237,7 @@ public:
     void preprocess(int* k);
     /* apply initial data reduction rules to graph and possibly omit certain rules, 0: deg1, 1: deg2, 2: domination, 3: LP, 4: unconfined etc. */
     void preprocess(int* k, std::vector<bool>& rulesToApply);
+
     /* apply data reduction rules to graph, returns true if no vertex cover can be found for this k */
     bool reduce(int* k);
     /* vc is not nullptr, if deleted vertices should be appended to vc*/
@@ -264,6 +265,11 @@ public:
         }
     }
 
+    /* apply data reduction rules that can immediately be taken into the vertex cover*/
+    void preprocessSAT(int* k, std::vector<bool>& rulesToApply);
+
+    std::vector<std::pair<std::string,std::string>> getPreprocessedEdges();
+    int printPreprocessedVertices();
     //----------------------- Domination Rule ------------------------------------
     bool isActive(int vertexIndex){ return vertexReferences[vertexIndex]->isActive;};
 private:
