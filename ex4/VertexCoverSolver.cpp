@@ -1027,11 +1027,11 @@ int main(int argc, char* argv[]) {
     std::ios::sync_with_stdio(false); //By default, cin/cout waste time synchronizing themselves with the C library’s stdio buffers, so that you can freely intermix calls to scanf/printf with operations on cin/cout
 	try
 	{
-//        chooseImplementationAndOutput(0, false, false, false, false, true, false);
+        chooseImplementationAndOutput(0, false, false, false, false, true, false);
         //chooseImplementationAndOutput(1, true, false, false, true, true, false); //print alot
         //signal(SIGINT, my_sig_handler); //catches SIGINT to output anything
         //chooseImplementationAndOutput(5, false, false, false, false, true, false);
-        chooseImplementationAndOutput(6, false, false, false, false, true, false);
+//        chooseImplementationAndOutput(6, false, false, false, false, true, false);
     }
 	catch (const exception& e)
 	{
