@@ -583,7 +583,7 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
 
 		if(printVC)
         {
-            const int MAX_TIME_BUDGET = 30;
+            const int MAX_TIME_BUDGET = 60;
             const int INITIAL_SOLUTION_GENERATION_TIME_CAP = 20; //in seconds
             const int HEURISTIC_SOLVER_TIME_CAP = INITIAL_SOLUTION_GENERATION_TIME_CAP - graphConstructionDuration;
             const int NUM_RANDOM_SOLUTION_GENERATIONS = 30;
@@ -605,8 +605,7 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
 
             //std::cout << "Total duration: " << graphConstructionDuration + heuristicWrapperDuration + printDuration << " seconds, Graph construction:" << graphConstructionDuration << " seconds, HeuristicWrapper: " << heuristicWrapperDuration << " seconds, Print solution: " << printDuration << "\n"; 
 
-            
-            /* 
+            /*
             auto startHeuristic = std::chrono::high_resolution_clock::now();
             unordered_map<int, bool>* vcMax = maxHeuristicSolver(G, &numRecursions, false);
             auto endHeuristic = std::chrono::high_resolution_clock::now();
