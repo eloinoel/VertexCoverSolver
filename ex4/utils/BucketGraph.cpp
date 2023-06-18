@@ -971,6 +971,7 @@ int BucketGraph::getMaxDegreeVertex()
 
 int BucketGraph::getRandomConnectedVertex(int randomRangeCap)
 {
+    //std::cout << "bucketQueue size: " << bucketQueue.size() << std::endl;
     if(bucketQueue.empty())
         return -1;
 
@@ -978,17 +979,19 @@ int BucketGraph::getRandomConnectedVertex(int randomRangeCap)
     int numBuckets = bucketQueue.size();
     int smallestBucketDegree = bucketQueue.front().degree;
     if (smallestBucketDegree == 0) { minBucket = 1; }
+    if (bucketQueue.size() == 1 && smallestBucketDegree == 0) { return -1; }
 
     std::random_device rd; // obtain a random number from hardware
     std::mt19937 gen(rd()); // seed the generator
-    std::uniform_int_distribution<> bucketDistr(minBucket, numBuckets); // define the range
+    std::uniform_int_distribution<> bucketDistr(minBucket, numBuckets-1); // define the range
 
     int randomBucketIndex = (int) bucketDistr(gen);
     auto bucketIt = bucketQueue.begin();
-    for(int i = 0; i < randomBucketIndex; ++i)
+    for(int i = 0; i < randomBucketIndex ; ++i)
     {
         ++bucketIt;
     }
+    //std::cout << "chose bucket of degree: " << bucketIt->degree << std::endl;
     list<BucketVertex>* bucket = &(bucketIt->vertices);
     if(bucket == nullptr || bucket->size() == 0)
         throw std::invalid_argument("getRandomConnectedVertex: random bucket doesn't exist or is empty");
@@ -1029,6 +1032,9 @@ int BucketGraph::getRandomMaxDegreeVertex(int randomRangeCap)
     
     if(bucket == nullptr || bucket->size() == 0)
         throw std::invalid_argument("getRandomMaxDegreeVertex: max degree bucket doesn't exist or is empty");
+
+    if(maxDegree == 0) //no need to randomise here
+        return bucket->begin()->index;
 
     auto startRandomNrCalc = std::chrono::high_resolution_clock::now();
     //choose random vertex
