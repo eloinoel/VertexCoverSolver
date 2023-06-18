@@ -84,7 +84,7 @@ unordered_map<int, bool>* maxHeuristicSolver(BucketGraph* G, int* numRec, bool a
     return vc;
 }
 
-/* bool outOfTime(std::chrono::steady_clock::time_point startTime, int timeoutCap)
+bool outOfTime(std::chrono::time_point<std::chrono::high_resolution_clock> startTime, int timeoutCap)
 {
     auto currentTime = std::chrono::high_resolution_clock::now();
     double currentDuration = (std::chrono::duration_cast<std::chrono::microseconds>(currentTime - startTime).count() /  1000) / (double) 1000;
@@ -95,11 +95,14 @@ unordered_map<int, bool>* chooseSmallestHeuristicSolution(BucketGraph* G, int* n
 {
     auto startTime = std::chrono::high_resolution_clock::now();
 
-    unordered_map<int, bool>* vcMax = maxHeuristicSolver(G, numRec, false);
+    unordered_map<int, bool>* vcMax = maxHeuristicSolver(G, numRec);
+
+    cout << "before outOfTime" << endl;
 
     if(outOfTime(startTime, timeoutSoftCap))
         return vcMax;
 
+    cout << "before preprocessing solver" << endl;
     //preprocessing on
     int vcMaxPreprocessingNumRec = 0;
     unordered_map<int, bool>* vcMaxPreprocessing = nullptr;
@@ -123,6 +126,7 @@ unordered_map<int, bool>* chooseSmallestHeuristicSolution(BucketGraph* G, int* n
         return vcMax;
 
 
+    cout << "before random" << endl;
     //selecting random max degree vertices
     int vcMaxRandomNumRec;
     unordered_map<int, bool>* vcMaxRandom = nullptr;
@@ -133,7 +137,7 @@ unordered_map<int, bool>* chooseSmallestHeuristicSolution(BucketGraph* G, int* n
             vcMaxRandomNumRec = 0;
             if(vcMaxRandom == nullptr)
             {
-                vcMaxRandom = maxHeuristicSolver(G, &vcMaxRandomNumRec, true);
+                vcMaxRandom = maxHeuristicSolver(G, &vcMaxRandomNumRec, false, true);
             }
 
             if(vcMaxRandom->size() < vcMax->size())
@@ -151,9 +155,10 @@ unordered_map<int, bool>* chooseSmallestHeuristicSolution(BucketGraph* G, int* n
                 return vcMax;
         }
     }
+    cout << "after random" << endl;
 
     return vcMax;
-} */
+}
 
 //https://ieeexplore.ieee.org/abstract/document/6486444
 unordered_map<int, bool>* minHeuristicSolver(BucketGraph* G, int* numRec)
@@ -211,7 +216,7 @@ unordered_map<int, bool>* minHeuristicSolver(BucketGraph* G, int* numRec)
 
 void initGainLoss(BucketGraph* G, unordered_map<int, bool>* vc, std::vector<int>* gain, std::vector<int>* loss)
 {
-    for (int i=0; i<gain->size(); ++i)
+    for (int i = 0; i < (int) gain->size(); ++i)
     {
         (*gain)[i] = 0;
         (*loss)[i] = 0;
@@ -233,7 +238,7 @@ int getMinLossIndex(unordered_map<int, bool>* vc, std::vector<int>* loss)
 {
     int min = INT32_MAX;
     int minIndex = -1;
-    for (int i=0; i<vc->size(); ++i)
+    for (int i = 0; i < (int) vc->size(); ++i)
     {
         if (loss->at(i) < min)
         {
@@ -278,9 +283,9 @@ unordered_map<int, bool>* fastVC(BucketGraph* G, unordered_map<int, bool>* vc, i
     int n = G->getTotalNumVertices();
     std::vector<int> gain = std::vector<int>(n);
     std::vector<int> loss = std::vector<int>(n);
-    unordered_map<int, bool> bestVC (*vc);
-    unordered_map<int, bool> currentVC (*vc);
-    initGainLoss(G, &currentVC, &gain, &loss);
+    unordered_map<int, bool>* bestVC = new unordered_map<int, bool>(*vc);
+    unordered_map<int, bool>* currentVC = new unordered_map<int, bool>(*vc);
+    initGainLoss(G, currentVC, &gain, &loss);
     auto startFastVC = std::chrono::high_resolution_clock::now();
     while (true)
     {
@@ -292,14 +297,14 @@ unordered_map<int, bool>* fastVC(BucketGraph* G, unordered_map<int, bool>* vc, i
         {
             // TODO: check that this is overridden by VALUE!
             bestVC = currentVC;
-            removeMinLossVCVertex(G, &currentVC, &gain, &loss);
+            removeMinLossVCVertex(G, currentVC, &gain, &loss);
         }
         // TODO: replace removeMinLossVCVertex with BMS function, only checking a set number of vertices and taking that minimum
-        removeMinLossVCVertex(G, &currentVC, &gain, &loss);
+        removeMinLossVCVertex(G, currentVC, &gain, &loss);
 
 
     }
-    return &bestVC;
+    return bestVC;
 }
 
 /*----------------------------------------------------------*/
@@ -527,10 +532,11 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
 
 		if(printVC)
         {
+            cout << "before solver" << endl;
             int numRecursions = 0;
             auto startHeuristicWrapper = std::chrono::high_resolution_clock::now();
-            unordered_map<int, bool>* vc = maxHeuristicSolver(G, &numRecursions, false);
-            //unordered_map<int, bool>* vc = chooseSmallestHeuristicSolution(G, &numRecursions, true, 10); //TODO: doesn't compile yet
+            //unordered_map<int, bool>* vc = maxHeuristicSolver(G, &numRecursions, false);
+            unordered_map<int, bool>* vc = chooseSmallestHeuristicSolution(G, &numRecursions, true, 10, 10); //TODO: doesn't compile yet
             auto endHeuristicWrapper = std::chrono::high_resolution_clock::now();
 
             G->printVertices(vc);
@@ -674,7 +680,7 @@ int main(int argc, char* argv[]) {
     std::ios::sync_with_stdio(false); //By default, cin/cout waste time synchronizing themselves with the C library’s stdio buffers, so that you can freely intermix calls to scanf/printf with operations on cin/cout
 	try
 	{
-        chooseImplementationAndOutput(1, false, false, false, false, true, false);
+        chooseImplementationAndOutput(0, false, false, false, false, true, false);
         //chooseImplementationAndOutput(1, true, false, false, true, true, false); //print alot
         //signal(SIGINT, my_sig_handler); //catches SIGINT to output anything
         //chooseImplementationAndOutput(5, false, false, false, false, true, false);
