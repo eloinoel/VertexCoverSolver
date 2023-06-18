@@ -54,7 +54,7 @@ public:
 class Reductions
 {
 public:
-    public:
+
     int rule_0 , rule_1, rule_2 , rule_High, rule_Dom, rule_LPF, rule_B;
 
     bool dominationHeuristic = true;
@@ -92,6 +92,7 @@ public:
     RULE_APPLICATION_RESULT rule_DegreeOne(BucketGraph* G, int* k, bool checkBudget);
 
     RULE_APPLICATION_RESULT rule_DegreeTwo(BucketGraph* G, int* k, bool checkBudget);
+    RULE_APPLICATION_RESULT rule_DegreeTwo_Secure(BucketGraph* G, int* k);
 
     RULE_APPLICATION_RESULT rule_LPFlow(BucketGraph* G, int* k, bool checkBudget);
     

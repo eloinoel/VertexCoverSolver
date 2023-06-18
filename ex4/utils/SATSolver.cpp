@@ -18,6 +18,7 @@
 #include <unordered_map>
 
 #include "SATSolver.h"
+#include "BucketGraph.h"
 
 using namespace std;
 
@@ -153,6 +154,41 @@ vector<pair<string, string>> SATSolver::readStandardInput()
 
 }
 
+
+void SATSolver::setSATSolverUp(vector <pair<std::string, std::string>> edges)
+{
+    edgeCount = (int)edges.size();
+    vertexIndex = 0;
+
+    for (int i = 0; i < edgeCount; ++i) {
+        pair<string,string> edge = edges.at(i);
+
+        string vertex0 = edge.first;
+        string vertex1 = edge.second;
+
+        auto entry = originalVertexNames.find(vertex0);
+        if (entry == originalVertexNames.end())
+        {
+            //vertex not in map
+            originalVertexNames.insert({vertex0, vertexIndex});
+            indexToNames[vertexIndex] = vertex0;
+            namesList.push_back(vertex0);
+            vertexIndex++;
+        }
+
+        entry = originalVertexNames.find(vertex1);
+        if (entry == originalVertexNames.end())
+        {
+            //vertex not in map
+            originalVertexNames.insert({vertex1, vertexIndex});
+            namesList.push_back(vertex1);
+            indexToNames[vertexIndex] = vertex1;
+            vertexIndex++;
+        }
+    }
+}
+
+
 string SATSolver::writeOpbMinCond()
 {
     string res = "min: ";
@@ -192,6 +228,7 @@ void SATSolver::createOpbFile(string file_name, vector<pair<string, string>> edg
     out << writeOpbMinCond() << "\n";
 
     for (int i = 0; i < edgeCount; ++i) {
+//        cout << edges.at(i).first << " " << edges.at(i).second << "\n";
         out << writeStringObpConstraint(edges.at(i)) << "\n";
     }
     out.close();
@@ -223,40 +260,73 @@ string SATSolver::getSolution(string outFile)
     return solution;
 }
 
-void SATSolver::writeOutputSolutionToOutput(string output)
+int SATSolver::writeOutputSolutionToOutput(string output) {
+    stringstream ss(output);
+    string s;
+    vector <string> v;
+    int cnt = 0;
+    while (getline(ss, s, ' ')) {
+        v.push_back(s);
+    }
+    if ((int) v.size() == 1) {
+//        cout  << "\n";
+        return 0;
+    }
+    string sol;
+    int vertexId;
+    for (int i = 0; i < (int) v.size(); ++i) {
+        sol = v.at(i);
+        if (sol[0] != '-') {
+            cnt++;
+            sol.erase(0, 1);
+            cout << sol << "\n";
+        }
+    }
+    return cnt;
+}
+
+void SATSolver::writeSolverSolutionToVC(BucketGraph* G, unordered_map<int, bool>* vc, string output)
 {
     stringstream ss(output);
     string s;
-    vector<string> v;
-    while ( getline( ss, s, ' ' ) ) {
+    vector <string> v;
+    while (getline(ss, s, ' ')) {
         v.push_back(s);
     }
-    if((int)v.size() == 1){
+    if ((int) v.size() == 1) {
 //        cout  << "\n";
         return;
     }
     string sol;
     int vertexId;
-    for (int i = 0; i < (int)v.size(); ++i) {
+    for (int i = 0; i < (int) v.size(); ++i) {
         sol = v.at(i);
-        if(sol[0] != '-')
-        {
+        if (sol[0] != '-') {
             sol.erase(0, 1);
-            cout << sol << "\n";
+//            cout << sol << "\n";
+            int vertex = stoi(sol);
+//            if(G->isActive(vertex))
+//                G->setInactive(vertex);
+            cout << vertex << '\n';
+            if(vc != nullptr) {
+                vc->insert({vertex, true});
+            }
         }
     }
 }
 
-string SATSolver::solver() {
 
+string SATSolver::solver(vector<pair<string, string>> edges) {
+
+//    bool printDebug = true;
     bool printDebug = false;
-    vector <pair<string, string>> edges;
+//    vector <pair<string, string>> edges;
 
-    if (printDebug)
-        std::cout << "SAT Solver: " << "Reading input\n";
-    edges = readStandardInput();
-    if (printDebug)
-        std::cout << "SAT Solver: " << "Read input\n";
+//    if (printDebug)
+//        std::cout << "SAT Solver: " << "Reading input\n";
+//    edges = readStandardInput();
+//    if (printDebug)
+//        std::cout << "SAT Solver: " << "Read input\n";
 
     if (edges.empty())
         return "";
