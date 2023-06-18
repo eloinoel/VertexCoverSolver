@@ -977,7 +977,7 @@ int BucketGraph::getRandomConnectedVertex(int randomRangeCap)
     int minBucket = 0;
     int numBuckets = bucketQueue.size();
     int smallestBucketDegree = bucketQueue.front().degree;
-    if (smallestBucketDegree == 0) { minBucket == 1; }
+    if (smallestBucketDegree == 0) { minBucket = 1; }
 
     std::random_device rd; // obtain a random number from hardware
     std::mt19937 gen(rd()); // seed the generator

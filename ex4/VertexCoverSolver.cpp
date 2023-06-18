@@ -261,14 +261,18 @@ void initGainLoss(BucketGraph* G, unordered_map<int, bool>* vc, std::vector<int>
 
 int getMinLossIndex(unordered_map<int, bool>* vc, std::vector<int>* loss)
 {
+    if (vc == nullptr) { throw invalid_argument("getMinLossIndex: passed vc is nullptr"); }
+    if (vc->empty()) { throw invalid_argument("getMinLossIndex: passed vc is empty"); }
+
     int min = INT32_MAX;
     int minIndex = -1;
-    for (int i = 0; i < (int) vc->size(); ++i)
+
+    for (auto it = vc->begin(); it != vc->end(); ++it)
     {
-        if (loss->at(i) < min)
+        if (loss->at(it->first) < min)
         {
-            min = loss->at(i);
-            minIndex = i;
+            min = loss->at(it->first);
+            minIndex = it->first;
             continue;
         }
     }
@@ -279,7 +283,18 @@ void removeMinLossVCVertex(BucketGraph* G, unordered_map<int, bool>* vc, std::ve
 {
     int u_index = getMinLossIndex(vc, loss);
     auto u = vc->find(u_index);
-    if (u == vc->end()) { throw invalid_argument("Iterator of u not found"); }
+    std::cout << "uIndex: " << u_index << std::endl;
+    std::cout << "vc size: " << vc->size() << std::endl;
+    int i=0;
+    for (auto it = vc->begin(); it != vc->end(); ++it)
+    {
+        std::cout << "vc[" << i << "]: " << it->first << std::endl;
+        i++;
+    }
+    //std::cout << "vc[0]: " << vc->at(0) << std::endl;
+    //std::cout << vc->at(1) << std::endl;
+    //std::cout << u->first << std::endl;
+    if (u == vc->end()) { throw invalid_argument("removeMinLossVCVertex: Iterator of u not found"); }
     vc->erase(u);
     (*gain)[u_index] = (*loss)[u_index];
     (*loss)[u_index] = 0;
@@ -289,18 +304,22 @@ void removeMinLossVCVertex(BucketGraph* G, unordered_map<int, bool>* vc, std::ve
         if (!(G->getVertex(*neighbour)->getActive())) { continue; }
         (*gain)[*neighbour]++;
     }
+    std::cout << cp::dye("Removed " + std::to_string(u_index), 'r') << " from vc" << std::endl;
 }
 
 void addRandomUncoveredEdgeMaxGainEndpointVertex(BucketGraph* G, unordered_map<int, bool>* vc, std::vector<int>* gain, std::vector<int>* loss)
 {
+    std::cout << "Adding to vc..." << std::endl;
     int v = G->getRandomConnectedVertex(10);
     Vertex* vertex = G->getVertex(v);
+    std::cout << cp::dye("Chose edge adjacent to vertex: " + std::to_string(v), 'y') << std::endl;
 
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> distr(0, vertex->getAdj()->size());
     int rnd = (int) distr(gen);
-    int neighbour = vertex->getAdj()->at(rnd);
+    //int neighbour = vertex->getAdj()->at(rnd);
+    int neighbour = G->getNeighbours(v)->at(rnd);   // TODO: slow getNeighbours
     Vertex* neighbourVertex = G->getVertex(neighbour);
 
     // TODO: break ties by age
@@ -315,6 +334,7 @@ void addRandomUncoveredEdgeMaxGainEndpointVertex(BucketGraph* G, unordered_map<i
         G->setInactive(v);
         vc->insert({v, true});
         (*gain)[v] = 0;
+        std::cout << cp::dye("Added " + std::to_string(v), 'g') << " to vc" << std::endl;
     }
     else
     {
@@ -326,6 +346,7 @@ void addRandomUncoveredEdgeMaxGainEndpointVertex(BucketGraph* G, unordered_map<i
         G->setInactive(neighbour);
         vc->insert({neighbour, true});
         (*gain)[neighbour] = 0;
+        std::cout << cp::dye("Added " + std::to_string(neighbour), 'g') << " to vc" << std::endl;
     }
 }
 
@@ -334,6 +355,9 @@ void addRandomUncoveredEdgeMaxGainEndpointVertex(BucketGraph* G, unordered_map<i
 */
 unordered_map<int, bool>* fastVC(BucketGraph* G, unordered_map<int, bool>* vc, int timeout)
 {
+    if (vc == nullptr) { throw invalid_argument("fastVC: passed vc is nullptr"); }
+    //if (vc->empty()) { throw invalid_argument("fastVC: passed vc is empty"); }
+
     int n = G->getTotalNumVertices();
     std::vector<int> gain = std::vector<int>(n);
     std::vector<int> loss = std::vector<int>(n);
@@ -341,16 +365,17 @@ unordered_map<int, bool>* fastVC(BucketGraph* G, unordered_map<int, bool>* vc, i
     unordered_map<int, bool>* currentVC = new unordered_map<int, bool>(*vc);
     initGainLoss(G, currentVC, &gain, &loss);
     auto startFastVC = std::chrono::high_resolution_clock::now();
-    while (true)
+    while (true && bestVC->size() > 0)
     {
         auto currentFastVC = std::chrono::high_resolution_clock::now();
-        int fastVC = std::chrono::duration_cast<std::chrono::microseconds>(currentFastVC - startFastVC).count() / 1000;
-        if (fastVC >= timeout) { break; }
+        int fastVCDur = std::chrono::duration_cast<std::chrono::microseconds>(currentFastVC - startFastVC).count() / 1000;
+        if (fastVCDur >= timeout) { break; }
         // we found an improved vc! time to overwrite our previous best solution and search further
         if (G->getMaxDegree() <= 0)
         {
+            //std::cout << cp::dye("Found " + std::to_string(v), 'g') << " to vc" << std::endl;
             // TODO: check that this is overridden by VALUE!
-            delete bestVC;
+            delete bestVC;  // TODO: disgusting heap allocation
             bestVC = new unordered_map<int, bool>(*currentVC);
             removeMinLossVCVertex(G, currentVC, &gain, &loss);
         }
@@ -615,7 +640,7 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
             auto endHeuristicWrapper = std::chrono::high_resolution_clock::now();
             double heuristicWrapperDuration = (std::chrono::duration_cast<std::chrono::microseconds>(endHeuristicWrapper - startHeuristicWrapper).count() /  1000) / (double) 1000;
 
-            auto localSearchVC = fastVC(G, heuristicVC, MAX_TIME_BUDGET);
+            auto localSearchVC = fastVC(bucketGraph, heuristicVC, MAX_TIME_BUDGET);
 
             double currentDuration = (std::chrono::duration_cast<std::chrono::microseconds>(endHeuristicWrapper - startGraph).count() /  1000) / (double) 1000;
             auto startPrintSolution = std::chrono::high_resolution_clock::now();
@@ -626,7 +651,7 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
                 if(currentDuration < MAX_TIME_BUDGET - 5)
                 {
                     printing_sol = true;
-                    bucketGraph->printVertices(heuristicVC);
+                    bucketGraph->printVertices(localSearchVC);
                     cout << "#recursive steps: " << heuristicNumRecursions << endl;
                 }
                 else
