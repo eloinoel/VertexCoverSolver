@@ -23,7 +23,13 @@ public:
 private:
 
 public:
-    SATSolver(){solver();};
+    SATSolver(){};
+//    SATSolver(){solver();};
+
+    string solver();
+
+    void writeOutputSolutionToOutput(string output);
+
 private:
     string eraseLeadingTrailingWhitespacesFromString(string str);
 
@@ -39,11 +45,10 @@ private:
 
     void createOpbFile(string file_name, vector<pair<string, string>> edges);
 
-    void writeOutputSolutionToOutput(string output);
 
     string getSolution(string outFile);
 
-    void solver();
+
 };
 
 
