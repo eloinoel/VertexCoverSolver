@@ -203,7 +203,7 @@ public:
     inline intrusive::list<Bucket>* getBucketQueue() { return &bucketQueue; };
     inline Bucket* getBucket(int degree) { return bucketReferences[degree]; };
     int getMaxDegreeVertex();
-    int getRandomMaxDegreeVertex(int cap = -1);
+    int getRandomMaxDegreeVertex(int randomRangeCap = -1);
     /* returns min degree vertex of degree > 0 and -1 if doesn't exist */
     int getMinDegreeVertex();
     /* heuristic from paper which generally worsens performance a bit but reduces number of recursive steps */

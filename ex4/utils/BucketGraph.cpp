@@ -664,6 +664,9 @@ std::vector<std::string>* BucketGraph::getStringsFromVertexIndices(std::unordere
 
 void BucketGraph::printVertices(std::vector<int>* vertices)
 {
+    if(vertices == nullptr)
+        throw std::invalid_argument("printVertices: nullptr");
+        
     for (int i = 0; i < (int) vertices->size(); ++i)
     {
         std::cout << vertexReferences[vertices->at(i)]->strName << "\n";
@@ -672,6 +675,9 @@ void BucketGraph::printVertices(std::vector<int>* vertices)
 
 void BucketGraph::printVertices(std::unordered_map<int, bool>* vertices)
 {
+    if(vertices == nullptr)
+        throw std::invalid_argument("printVertices: nullptr");
+
     for (auto it = vertices->begin(); it != vertices->end(); ++it)
     {
         std::cout << vertexReferences[it->first]->strName << "\n";
@@ -962,7 +968,7 @@ int BucketGraph::getMaxDegreeVertex()
     return bucketQueue.back().vertices.front().index;
 }
 
-int BucketGraph::getRandomMaxDegreeVertex(int cap)
+int BucketGraph::getRandomMaxDegreeVertex(int randomRangeCap)
 {
     if(bucketQueue.empty())
         return -1;
@@ -976,9 +982,9 @@ int BucketGraph::getRandomMaxDegreeVertex(int cap)
     auto startRandomNrCalc = std::chrono::high_resolution_clock::now();
     //choose random vertex
     int maxRange = bucket->size() - 1;
-    if(cap > 0 && cap < maxRange)
-        maxRange = cap;
-
+    if(randomRangeCap > 0 && randomRangeCap < maxRange)
+        maxRange = randomRangeCap;
+ 
     std::random_device rd; // obtain a random number from hardware
     std::mt19937 gen(rd()); // seed the generator
     std::uniform_int_distribution<> distr(0, maxRange); // define the range
