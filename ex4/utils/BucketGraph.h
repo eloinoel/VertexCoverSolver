@@ -20,6 +20,7 @@ class Reductions;
 class Reduction;
 
 using namespace boost::intrusive;
+using namespace boost;
 
 class BucketVertex : public list_base_hook<>
 {
@@ -35,14 +36,14 @@ class Bucket : public list_base_hook<>
 {
 public:
     int degree;
-    list<BucketVertex> vertices;
-    boost::intrusive::list<BucketVertex>::const_iterator stable_iterator;
+    intrusive::list<BucketVertex> vertices;
+    intrusive::list<BucketVertex>::const_iterator stable_iterator;
 
 public:
     Bucket(int _degree, std::vector<BucketVertex*>& _vertices)
      : degree(_degree)
     {
-        vertices = list<BucketVertex>();
+        vertices = intrusive::list<BucketVertex>();
         for (BucketVertex* vertex : _vertices)
         {
             vertices.push_back(*vertex);
@@ -83,7 +84,7 @@ public:
     *   Whenever the element, the iterator points to is deleted, the iterator is incremented
     *   When a new element is inserted into the bucket during iteration, the iterator will iterate over it later
     */
-    inline boost::intrusive::list<BucketVertex>::const_iterator* getStableIterator()
+    inline intrusive::list<BucketVertex>::const_iterator* getStableIterator()
     {
         stable_iterator = vertices.iterator_to(*vertices.begin());
         return &stable_iterator;
@@ -135,12 +136,15 @@ class BucketGraph
 public:
     // Size n
     std::vector<int>* dominationHelper;
+
+    bool LP_INITIALISED = false;
+
 private:
     /* each index represents a vertex, that maps to a node object that may be contained in the activeList */
     std::vector<Vertex*> vertexReferences;
 
     /* doubly linked list, that acts as a list of active vertices, O(1) access, deletion and insertion */
-    list<Vertex> activeList;
+    intrusive::list<Vertex> activeList;
 
     int numEdges;
     int numVertices;
@@ -150,7 +154,7 @@ private:
     /* each index represents a degree, that maps to a Bucket object that may be contained in the bucketQueue */
     std::vector<Bucket*> bucketReferences;
     /* priority queue of buckets that contain vertices of a certain degree (buckets are ordered after their degree ascendingly from front() to back()) */
-    list<Bucket> bucketQueue;
+    intrusive::list<Bucket> bucketQueue;
 
     /* used for reading in data, maps from original vertex name from input data to index and degree */
     std::unordered_map<std::string, std::pair<int, int>> originalVertexNames;
@@ -160,8 +164,8 @@ private:
     std::vector<int> pairU;
     std::vector<int> pairV;
     std::vector<int> dist;
-    std::vector<int>* unmatched;
-    std::vector<int>* next_unmatched;
+    std::vector<int>* unmatched = nullptr;
+    std::vector<int>* next_unmatched = nullptr;
     int NIL;
     int currentLPBound;
     bool didInitialMatchingCalculation = false;
@@ -172,7 +176,7 @@ public:
     inline BucketGraph() {  }
 
     /* creates and initialises a graph from standard input */
-    static BucketGraph* readStandardInput(bool initLP = true, bool initDominationHelper = true);
+    static BucketGraph* readStandardInput(bool initReductionDataStructures = true);
     std::vector<std::string>* getStringsFromVertexIndices(std::vector<int>* vertices);
     std::vector<std::string>* getStringsFromVertexIndices(std::unordered_map<int, bool>* vertices);
     /* creates a graph from the current graph and resets its data structures */
@@ -180,6 +184,7 @@ public:
 
     bool vertexHasEdgeTo(int vertex, int secondVertex); //O(1)
     int getNumConnectedVertices();
+    int getTotalNumVertices();
     int getNumVertices();
     int getNumEdges();
 
@@ -193,15 +198,20 @@ public:
     int getNthActiveNeighbour(int vertex, int n);
     std::pair<int, int>* getFirstTwoActiveNeighbours(int vertex);
 
+    bool containsConnectedVertex();
     int getMaxDegree();
-    inline list<Bucket>* getBucketQueue() { return &bucketQueue; };
+    inline intrusive::list<Bucket>* getBucketQueue() { return &bucketQueue; };
     inline Bucket* getBucket(int degree) { return bucketReferences[degree]; };
     int getMaxDegreeVertex();
+    int getRandomMaxDegreeVertex(int randomRangeCap = -1);
+    int getRandomConnectedVertex(int randomRangeCap = -1);
+    /* returns min degree vertex of degree > 0 and -1 if doesn't exist */
+    int getMinDegreeVertex();
     /* heuristic from paper which generally worsens performance a bit but reduces number of recursive steps */
     int getMaxDegreeVertexMinimisingNeighbourEdges();
     int getVertexDegree(int vertexIndex);
-    list<BucketVertex>* getVerticesOfDegree(int degree);
-    inline list<Vertex>* getActiveList() { return &activeList; }
+    intrusive::list<BucketVertex>* getVerticesOfDegree(int degree);
+    inline intrusive::list<Vertex>* getActiveList() { return &activeList; }
     /* returns -1 if no vertex of degree */
     int getFirstVertexOfDegree(int degree);
     inline Vertex* getVertex(int index) { if(index < (int) vertexReferences.size()) return vertexReferences[index]; else return nullptr; }
@@ -211,6 +221,7 @@ public:
     void printBucketQueue();
     void printBucketSizes();
     void printVertices(std::vector<int>* vertices);
+    void printVertices(std::unordered_map<int, bool>* vertices);
     std::vector<std::string>* getEdgesToConsoleString();
     std::vector<std::string>* getOriginalEdgesToConsoleString();
     int getOriginalEdgeCount();
@@ -224,6 +235,8 @@ public:
 
     /* apply initial data reduction rules to graph */
     void preprocess(int* k);
+    /* apply initial data reduction rules to graph and possibly omit certain rules, 0: deg1, 1: deg2, 2: domination, 3: LP, 4: unconfined etc. */
+    void preprocess(int* k, std::vector<bool>& rulesToApply);
     /* apply data reduction rules to graph, returns true if no vertex cover can be found for this k */
     bool reduce(int* k);
     /* vc is not nullptr, if deleted vertices should be appended to vc*/

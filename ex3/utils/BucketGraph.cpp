@@ -1061,6 +1061,11 @@ int BucketGraph::getNumConnectedVertices()
     return numVertices;
 }
 
+int BucketGraph::getTotalNumVertices()
+{
+    return vertexReferences.size();
+}
+
 int BucketGraph::getNumVertices()
 {
     return numVertices;
@@ -1298,7 +1303,6 @@ void BucketGraph::unreduce(int* k, int previousK, std::unordered_map<int, bool>*
         if (rule->deletedVertices != nullptr) delete rule->deletedVertices;
         reductions->appliedRules->pop_back();
         delete rule;
-        //TODO: delete debug at the end
         if(*k > previousK)
         {
             throw std::invalid_argument("unreduce error: " + std::to_string(*k) + " > " + std::to_string(previousK) + ", stop coding garbage");

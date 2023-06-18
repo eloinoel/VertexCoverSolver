@@ -142,7 +142,7 @@ vector<pair<string, string>> SATSolver::readStandardInput()
             indexToNames[vertexIndex] = vertex1;
             vertexIndex++;
         }
-//        cout << vertex0 << " " << vertex1 << "\n";
+
         //save edges
         pair<string, string> edge_pair = pair<string, string>({vertex0, vertex1});
         edgeCount++;
@@ -225,7 +225,6 @@ string SATSolver::getSolution(string outFile)
 
 void SATSolver::writeOutputSolutionToOutput(string output)
 {
-
     stringstream ss(output);
     string s;
     vector<string> v;
@@ -302,16 +301,9 @@ string SATSolver::solver() {
 
     string solverSolution = getSolution(outFileName);
 
-//    cout << "The solver solution is: " << solverSolution << "\n";
 
     if (solverSolution == "-1") {
         raise(SIGINT);
-
-//        ofstream out("time.txt");
-//
-//        out << "Command terminated by signal 9" << "\n";
-//
-//        out.close();
         return "-1";
     }
 
