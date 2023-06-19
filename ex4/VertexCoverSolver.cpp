@@ -680,6 +680,7 @@ void writeSolutionToConsole(vector<string>* vc)
 
 /* SIG INT PRINTING */
 BucketGraph* bucketGraph = nullptr;
+bool printReductionDiff = false;
 bool interrupted_by_sig = false;
 bool printing_sol = false;
 unordered_map<int, bool>* heuristicVC = nullptr;
@@ -689,7 +690,7 @@ void my_sig_handler(sig_atomic_t s)
 {
     interrupted_by_sig = true;
     //print original edges if timeout in data reduction for (b) on exercise sheet
-    if(bucketGraph != nullptr && !printing_sol)
+    if(printReductionDiff && bucketGraph != nullptr && !printing_sol)
     {
         printing_sol = true;
         std::vector<std::string>* str = bucketGraph->getOriginalEdgesToConsoleString();
@@ -751,29 +752,31 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
             heuristicVC = maxHeuristicSolver(bucketGraph, &heuristicNumRecursions, false, false);
             //see if we can find a better initial solution 
             //heuristicVC = chooseSmallestHeuristicSolution(bucketGraph, &heuristicNumRecursions, &heuristicVC, true, true, NUM_RANDOM_SOLUTION_GENERATIONS, HEURISTIC_SOLVER_TIME_CAP);
-            chooseSmallestHeuristicSolution(bucketGraph, &heuristicNumRecursions, &heuristicVC, true, true, NUM_RANDOM_SOLUTION_GENERATIONS, HEURISTIC_SOLVER_TIME_CAP);
+            heuristicVC = chooseSmallestHeuristicSolution(bucketGraph, &heuristicNumRecursions, &heuristicVC, true, true, NUM_RANDOM_SOLUTION_GENERATIONS, HEURISTIC_SOLVER_TIME_CAP);
             auto endHeuristicWrapper = std::chrono::high_resolution_clock::now();
             double heuristicWrapperDuration = (std::chrono::duration_cast<std::chrono::microseconds>(endHeuristicWrapper - startHeuristicWrapper).count() /  1000) / (double) 1000;
 
             //auto localSearchVC = fastVC(bucketGraph, heuristicVC, MAX_TIME_BUDGET);
 
-            double currentDuration = (std::chrono::duration_cast<std::chrono::microseconds>(endHeuristicWrapper - startGraph).count() /  1000) / (double) 1000;
+
             //set graph to state that it is in when vc vertices are inactive --> for fastVC() method
             //std::cout << "before setInactive" << std::endl;
             for(auto it = heuristicVC->begin(); it != heuristicVC->end(); ++it)
             {
                 bucketGraph->setInactive(it->first);
             }
+            double currentDuration = (std::chrono::duration_cast<std::chrono::microseconds>(endHeuristicWrapper - startGraph).count() /  1000) / (double) 1000;
             //std::cout << "before fastVC" << std::endl;
             // TODO: find suitable timout value for localSearch
-            auto localSearchVC = fastVC(bucketGraph, heuristicVC, &heuristicNumRecursions, /* 5 */MAX_TIME_BUDGET - currentDuration - PRINT_TIME);
+            const int LOCAL_SEARCH_TIME_CAP = MAX_TIME_BUDGET - currentDuration - 3;
+            auto localSearchVC = fastVC(bucketGraph, heuristicVC, &heuristicNumRecursions, /* 5 */LOCAL_SEARCH_TIME_CAP);
             int localSearchVCSize = localSearchVC->size();
             int heuristicVCSize = heuristicVC->size();
             delete heuristicVC;
             heuristicVC = localSearchVC;
 
-            currentDuration = (std::chrono::duration_cast<std::chrono::microseconds>(endHeuristicWrapper - startGraph).count() /  1000) / (double) 1000;
             auto startPrintSolution = std::chrono::high_resolution_clock::now();
+            currentDuration = (std::chrono::duration_cast<std::chrono::microseconds>(startPrintSolution - startGraph).count() /  1000) / (double) 1000;
 
             //cout << "before print" << endl;
             if(!interrupted_by_sig)
@@ -784,7 +787,8 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
                     printing_sol = true;
                     bucketGraph->printVertices(heuristicVC);
                     cout << "#recursive steps: " << heuristicNumRecursions << endl;
-                    cout << "#solution size: " << localSearchVCSize << endl;    // TODO: remove print of solution size
+                    //cout << "#recursive steps: " << currentDuration<< endl;
+                    //cout << "#solution size: " << localSearchVCSize << endl;
                     //cout << "#recursive steps: " << 1000000 + localSearchVCSize - heuristicVCSize/* vcMax->size() - vcMaxRandom->size() */ << endl;
                 }
                 else
@@ -796,56 +800,6 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
             auto endPrintSolution = std::chrono::high_resolution_clock::now();
             double printDuration = (std::chrono::duration_cast<std::chrono::microseconds>(endPrintSolution - startPrintSolution).count() /  1000) / (double) 1000;
             //std::cout << "Total duration: " << graphConstructionDuration + heuristicWrapperDuration + printDuration << " seconds, Graph construction:" << graphConstructionDuration << " seconds, HeuristicWrapper: " << heuristicWrapperDuration << " seconds, Print solution: " << printDuration << "\n";
-
-            /*
-            auto startHeuristic = std::chrono::high_resolution_clock::now();
-            unordered_map<int, bool>* vcMax = maxHeuristicSolver(G, &numRecursions, false);
-            auto endHeuristic = std::chrono::high_resolution_clock::now();
-
-            auto startPreprocess = std::chrono::high_resolution_clock::now();
-            unordered_map<int, bool>* vcMaxPreprocess = maxHeuristicSolver(G, &numRecursions, true);
-            auto endPreprocess = std::chrono::high_resolution_clock::now();
-
-            auto startRandomHeuristic = std::chrono::high_resolution_clock::now();
-            unordered_map<int, bool>* vcMaxRandom = maxHeuristicSolver(G, &numRecursions, false, true);
-            auto endRandomHeuristic = std::chrono::high_resolution_clock::now(); */
-
-
-            //unordered_map<int, bool>* vcMin = minHeuristicSolver(G, &numRecursions);
-            //vector<int>* vc = heuristicSolver(G, &numRecursions);
-
-            //unordered_map<int, bool>* bestVC = vcMax;
-            /* if(vcMaxNoPreprocess->size() < bestVC->size())
-            {
-                bestVC = vcMaxNoPreprocess;
-            } */
-            /* if(vcMaxRandom->size() < bestVC->size())
-            {
-                bestVC = vcMaxRandom;
-            } */
-            //cout << "before print vertices" << endl;
-            /* auto startPrintSolution = std::chrono::high_resolution_clock::now();
-            G->printVertices(bestVC);
-            auto endPrintSolution = std::chrono::high_resolution_clock::now();
-
-            double Graph = (std::chrono::duration_cast<std::chrono::microseconds>(endGraph - startGraph).count() /  1000) / (double) 1000;
-            double Heur = (std::chrono::duration_cast<std::chrono::microseconds>(endHeuristic - startHeuristic).count() /  1000) / (double) 1000;
-            double HeurRandom = (std::chrono::duration_cast<std::chrono::microseconds>(endRandomHeuristic - startRandomHeuristic).count() /  1000) / (double) 1000;
-            double HeurPreprocess = (std::chrono::duration_cast<std::chrono::microseconds>(endPreprocess - startPreprocess).count() /  1000) / (double) 1000;
-            double Print = (std::chrono::duration_cast<std::chrono::microseconds>(endPrintSolution - startPrintSolution).count() /  1000) / (double) 1000;
-            std::cout << "Computed heuristic solution in " << Graph + Heur + HeurRandom + HeurPreprocess + Print << " seconds (Graph construction: " << Graph << " + Heuristic solving: " << Heur + HeurRandom + HeurPreprocess<< " + Printing solution: " << Print << ")" << '\n';
-            std::cout << "Heuristic: " << Heur << " seconds, Preprocess + Heuristic: " << HeurPreprocess << " seconds, Random Heuristic: " << HeurRandom << " seconds" << '\n'; */
-            //double HeurInt = (std::chrono::duration_cast<std::chrono::microseconds>(endHeuristic - startHeuristic).count() /  1000);
-            //double GraphInt = (std::chrono::duration_cast<std::chrono::microseconds>(endGraph - startGraph).count() /  1000);
-            //double PrintInt = (std::chrono::duration_cast<std::chrono::microseconds>(endPrintSolution - startPrintSolution).count() /  1000);
-            //cout << "#recursive steps: " << /* GraphInt + HeurInt +  */PrintInt << endl;
-            //cout << "#recursive steps: " << 1000000 + vcMax->size() - vcMaxNoPreprocess->size() << endl;
-            //cout << "#recursive steps: " << 1000000 + vcMax->size() - vcMaxRandom->size() << endl;
-            //cout << vcMax->size() << endl;
-            //cout << vcMaxNoPreprocess->size() << endl;
-            //cout << "#recursive steps: " << numRecursions << endl;
-            /* if (printVCSize)
-                cout << "VC size: " << vcMax->size() << endl; */
         }
     }
     else if(version == 1)
@@ -1041,9 +995,9 @@ int main(int argc, char* argv[]) {
     std::ios::sync_with_stdio(false); //By default, cin/cout waste time synchronizing themselves with the C library’s stdio buffers, so that you can freely intermix calls to scanf/printf with operations on cin/cout
 	try
 	{
+        signal(SIGINT, my_sig_handler); //catches SIGINT to output anything
         chooseImplementationAndOutput(0, false, false, false, false, true, false);
         //chooseImplementationAndOutput(1, true, false, false, true, true, false); //print alot
-        //signal(SIGINT, my_sig_handler); //catches SIGINT to output anything
         //chooseImplementationAndOutput(5, false, false, false, false, true, false);
 //        chooseImplementationAndOutput(6, false, false, false, false, true, false);
     }
