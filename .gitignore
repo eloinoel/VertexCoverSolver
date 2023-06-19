@@ -408,5 +408,6 @@ FodyWeavers.xsd
 
 *.csv
 *.txt
+vc-data-students/*
 
 
