@@ -760,17 +760,18 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
             double currentDuration = (std::chrono::duration_cast<std::chrono::microseconds>(endHeuristicWrapper - startGraph).count() /  1000) / (double) 1000;
             //set graph to state that it is in when vc vertices are inactive --> for fastVC() method
             //std::cout << "before setInactive" << std::endl;
-            for(auto it = heuristicVC->begin(); it != heuristicVC->end(); ++it)
+            /* for(auto it = heuristicVC->begin(); it != heuristicVC->end(); ++it)
             {
                 bucketGraph->setInactive(it->first);
             }
             //std::cout << "before fastVC" << std::endl;
             // TODO: find suitable timout value for localSearch
-            auto localSearchVC = fastVC(bucketGraph, heuristicVC, &heuristicNumRecursions, /* 5 */MAX_TIME_BUDGET - currentDuration - PRINT_TIME);
+            auto localSearchVC = fastVC(bucketGraph, heuristicVC, &heuristicNumRecursions, 5MAX_TIME_BUDGET - currentDuration - PRINT_TIME);
             int localSearchVCSize = localSearchVC->size();
-            int heuristicVCSize = heuristicVC->size();
-            delete heuristicVC;
-            heuristicVC = localSearchVC;
+            int heuristicVCSize = heuristicVC->size(); */
+            int localSearchVCSize = heuristicVC->size();
+            /* delete heuristicVC;
+            heuristicVC = localSearchVC; */
 
             currentDuration = (std::chrono::duration_cast<std::chrono::microseconds>(endHeuristicWrapper - startGraph).count() /  1000) / (double) 1000;
             auto startPrintSolution = std::chrono::high_resolution_clock::now();
