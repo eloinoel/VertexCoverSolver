@@ -67,6 +67,7 @@ endif()
 #set(BOOST_ROOT "../boost_1_82_0")
 set(BOOST_ROOT "../../boost_1_65_0")#set(BOOST_ROOT "../../boost_1_65_0")
 include_directories(${INCLUDE_DIRECTORIES} ${BOOST_ROOT} include)
+#find_package(Boost REQUIRED COMPONENTS system)
 
 # Create an executable
 add_executable(VertexCoverSolver VertexCoverSolver.cpp utils/BucketGraph.cpp utils/Reductions.cpp utils/SATSolver.cpp)

@@ -10,6 +10,7 @@
 
 *.zip
 */AbgabeFiles/
+*/Abgabe04/
 
 # User-specific files
 *.rsuser
@@ -407,14 +408,5 @@ FodyWeavers.xsd
 
 *.csv
 *.txt
-vc-data-students/benchmark-fast.sh
-vc-data-students/verifier.py
-vc-data-students/verifier.py
-ex4/solvers/input.opb
-vc-data-students/benchmark-fast.sh
-vc-data-students/verifier.py
-vc-data-students/benchmark-fast.sh
-vc-data-students/verifier.py
-*.dimacs
-*.solution
-vc-data-students/benchmark-fast.sh
+
+
