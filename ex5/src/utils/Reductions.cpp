@@ -430,33 +430,6 @@ RULE_APPLICATION_RESULT Reductions::rule_Unconfined(BucketGraph* G, int* k, bool
     return INAPPLICABLE;
 }
 
-void Reductions::initRuleCounter()
-{
-    rule_0 = 0;
-    rule_1 = 0;
-    rule_2 = 0;
-    rule_High = 0;
-    rule_LPF = 0;
-    rule_Dom = 0;
-}
-
-void Reductions::printCounters()
-{
-    std::string r0 =  "Rule 0 = " + std::to_string(rule_0);
-    std::cout << ColorPrint::dye(r0, 'r') << '\n' ;
-    std::string r1 =  "Rule 1 = " + std::to_string(rule_1);
-    std::cout << ColorPrint::dye(r1, 'r') << '\n' ;
-    std::string r2 =  "Rule 2 = " + std::to_string(rule_2);
-    std::cout << ColorPrint::dye(r2, 'r') << '\n' ;
-    std::string rH =  "Rule High Degree = " + std::to_string(rule_High);
-    std::cout << ColorPrint::dye(rH, 'r') << '\n' ;
-    std::string rD =  "Rule Domination = " + std::to_string(rule_Dom);
-    std::cout << ColorPrint::dye(rD, 'r') << '\n' ;
-    std::string rL =  "Rule LP-Flow = " + std::to_string(rule_LPF);
-    std::cout << ColorPrint::dye(rL, 'r') << '\n' ;
-    std::cout << '\n' ;
-}
-
 void Reductions::printReductionRules()
 {
     if(appliedRules->empty())
@@ -472,53 +445,8 @@ void Reductions::printReductionRules()
             deleteV += std::to_string(reductionR->deletedVertices->at(j)) + ", ";
         }
         std::cout << ColorPrint::dye(deleteV, 'c') << '\n' ;
-
-//        if(reductionR->rule == DEGREE_TWO)
-//        {
-//            std::string savedAdj = "Saved Adjacency List: ";
-//            for (int k = 0; k < (int) reductionR->savedAdjacency->size(); ++k)
-//            {
-//                savedAdj += std::to_string(reductionR->savedAdjacency->at(k)) + ", ";
-//            }
-//            std::cout << ColorPrint::dye(savedAdj, 'c') << '\n';
-//        }
-//        std::cout << '\n';
     }
 
-}
-
-void Reductions::printDominationSets()
-{
-//    if(!isThereDomination) {
-//        std::cout << "No Domination Possible!" << '\n';
-//        return;
-//    }
-
-    bool printDebug = true;
-
-    int cnt = 0;
-
-    // Take first out of sorted Dominator
-    std::vector<int>* dominationSet;
-    int maxSubsetIdx = (int)dominationSets->size();
-    std::cout << "There are " << maxSubsetIdx << " dominators" << '\n';
-
-    while(cnt < maxSubsetIdx) {
-        dominationSet = dominationSets->at(cnt);
-
-        std::string enterPrint = "Domination Vertex Nr: "; //+ std::to_string(cnt);
-        enterPrint += std::to_string(dominationSet->back());
-        enterPrint += " dominating " + std::to_string((int) dominationSet->size()-1);
-        std::cout << ColorPrint::dye(enterPrint, 'r') << '\n';
-
-        std::string iterPrint;
-        for (int i = 0; i < (int) dominationSet->size() - 1; ++i) {
-//            std::cout << i  << ", ";
-            iterPrint += std::to_string(dominationSet->at(i)) + ", ";
-        }
-        std::cout << ColorPrint::dye(iterPrint, 'c') << '\n';
-        cnt++;
-    }
 }
 
 bool Reductions::isDominated(BucketGraph* G, int dom, std::vector<bool>* pendingDeletions, bool printDebug)
@@ -538,7 +466,6 @@ bool Reductions::isDominated(BucketGraph* G, int dom, std::vector<bool>* pending
     for (int i = 0; i < (int) neighbour->size(); ++i) {
         int n = neighbour->at(i);
         if(G->isActive(n) && G->dominationHelper->at(n) == 0 && !pendingDeletions->at(n))
-//        if(G->isActive(n) && !G->dominationHelperBool->at(n))
         {
             if (printDebug)
             {
@@ -711,21 +638,6 @@ void Reductions::freeReductions()
         }
         delete appliedRules;
         appliedRules = NULL;
-    }
-
-    if(dominationSets)
-    {
-        for(int i = 0; i < (int) dominationSets->size(); ++i)
-        {
-            auto entry = dominationSets->at(i);
-            if(entry) 
-            { 
-                delete entry;
-                entry = NULL;
-            }
-        }
-        delete dominationSets;
-        dominationSets = NULL;
     }
 }
 

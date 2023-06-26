@@ -121,7 +121,7 @@ bool outOfTime(std::chrono::time_point<std::chrono::high_resolution_clock> start
 * call with nullptr as @currentSmallestVC if want to generate simple and fast max heuristic solution at beginning
 //TODO: possible optimisation to only calculate preprocessing once at beginning and copy graph and then just add reduction vertices to solutions
 */
-unordered_map<int, bool>* chooseSmallestHeuristicSolution(BucketGraph* G, int* numRec, unordered_map<int, bool>** currentSmallestVC, bool applyReductions = true, bool includeRandomsWithReductions = true, int numRandomSolverCalls = 20, int timeoutSoftCap = 20)
+unordered_map<int, bool>* chooseSmallestHeuristicSolution(BucketGraph* G, int* numRec, unordered_map<int, bool>** currentSmallestVC, bool applyReductions = true, bool includeRandomsWithReductions = true, int numRandomSolverCalls = 20, int timeoutSoftCap = 20, bool printBestSolution = false)
 {
     int best_solution = 0; //0: maxHeuristic, 1: with preprocessing, 2: randomised, 3: randomised with preprocessing
     auto startTime = std::chrono::high_resolution_clock::now();
@@ -133,7 +133,13 @@ unordered_map<int, bool>* chooseSmallestHeuristicSolution(BucketGraph* G, int* n
 
     //cout << "maxHeuristicSolver size: " << (*currentSmallestVC)->size() << ", addr: " << *currentSmallestVC << endl;
 
-    if(outOfTime(startTime, timeoutSoftCap)) { return *currentSmallestVC; }
+    if(outOfTime(startTime, timeoutSoftCap)) {
+        if(printBestSolution)
+        {
+            cout << "#recursive steps: " << best_solution << endl;
+        }
+        return *currentSmallestVC;
+    }
 
     //preprocessing on
     int vcMaxPreprocessingNumRec = 0;
@@ -157,7 +163,13 @@ unordered_map<int, bool>* chooseSmallestHeuristicSolution(BucketGraph* G, int* n
 
     //cout << "after Preprocessing size: " << (*currentSmallestVC)->size() << ", addr: " << *currentSmallestVC << endl;
 
-    if(outOfTime(startTime, timeoutSoftCap)) { return *currentSmallestVC; }
+    if(outOfTime(startTime, timeoutSoftCap)) {
+        if(printBestSolution)
+        {
+            cout << "#recursive steps: " << best_solution << endl;
+        }
+        return *currentSmallestVC;
+    }
 
     //selecting random max degree vertices
     int vcMaxRandomNumRec;
@@ -197,12 +209,20 @@ unordered_map<int, bool>* chooseSmallestHeuristicSolution(BucketGraph* G, int* n
                 delete vcMaxRandom;
             }
 
-            if(outOfTime(startTime, timeoutSoftCap)) { return *currentSmallestVC; }
+            if(outOfTime(startTime, timeoutSoftCap)) {
+                if(printBestSolution)
+                {
+                    cout << "#recursive steps: " << best_solution << endl;
+                }
+                return *currentSmallestVC;
+            }
         }
     }
     //cout << "after random size: " << (*currentSmallestVC)->size() << ", addr: " << *currentSmallestVC << endl;
-    //cout << "#recursive steps: " << best_solution << endl;
-
+    if(printBestSolution)
+    {
+        cout << "#recursive steps: " << best_solution << endl;
+    }
     return *currentSmallestVC;
 }
 
@@ -699,6 +719,9 @@ void my_sig_handler(sig_atomic_t s)
             cout << str->at(i);
         }
         cout << "#difference: " << 0 << '\n';
+        //free pointers
+        //if(str) { delete str; }
+        //if(bucketGraph) { bucketGraph->freeGraph(); }
     }
 
     //timeout at computing heuristic solution, output last best solution
@@ -707,6 +730,9 @@ void my_sig_handler(sig_atomic_t s)
         printing_sol = true;
         bucketGraph->printVertices(heuristicVC);
         cout << "#recursive steps: " << heuristicNumRecursions << endl;
+        //free pointers
+        //if(heuristicVC) { delete heuristicVC; }
+        //if(bucketGraph) { bucketGraph->freeGraph(); }
     }
 
     exit(0);
@@ -755,7 +781,6 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
             heuristicVC = chooseSmallestHeuristicSolution(bucketGraph, &heuristicNumRecursions, &heuristicVC, true, true, NUM_RANDOM_SOLUTION_GENERATIONS, HEURISTIC_SOLVER_TIME_CAP);
             auto endHeuristicWrapper = std::chrono::high_resolution_clock::now();
             double heuristicWrapperDuration = (std::chrono::duration_cast<std::chrono::microseconds>(endHeuristicWrapper - startHeuristicWrapper).count() /  1000) / (double) 1000;
-
             //auto localSearchVC = fastVC(bucketGraph, heuristicVC, MAX_TIME_BUDGET);
 
 
@@ -801,6 +826,10 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
             double printDuration = (std::chrono::duration_cast<std::chrono::microseconds>(endPrintSolution - startPrintSolution).count() /  1000) / (double) 1000;
             //std::cout << "Total duration: " << graphConstructionDuration + heuristicWrapperDuration + printDuration << " seconds, Graph construction:" << graphConstructionDuration << " seconds, HeuristicWrapper: " << heuristicWrapperDuration << " seconds, Print solution: " << printDuration << "\n";
         }
+
+        //free pointers
+        //if(bucketGraph) { bucketGraph->freeGraph(); }
+        //if(heuristicVC) { delete heuristicVC; heuristicVC = NULL; }
     }
     else if(version == 1)
     {
@@ -813,11 +842,12 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
             //G->printActiveList();
             //G->printBucketQueue();
         }
+        unordered_map<int, bool>* vc = nullptr;
 
         if(printVC)
         {
             int numRecursiveSteps = 0;
-            unordered_map<int, bool>* vc = vcSolverRecursive(G, &numRecursiveSteps);
+            vc = vcSolverRecursive(G, &numRecursiveSteps);
             //writeSolutionToConsole(G->getStringsFromVertexIndices(vc));
             G->printVertices(vc);
             cout << "#recursive steps: " << numRecursiveSteps << endl;
@@ -834,9 +864,13 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
             cout << "#recursive steps: " << bound << endl;
         }
 
+        //free pointers
+        //if(vc) { delete vc; }
+        //if(G) { G->freeGraph(); }
     }
     else if(version == 5)
     {
+        printReductionDiff = true;
         bucketGraph = BucketGraph::readStandardInput();
         if (bucketGraph == nullptr)
             throw invalid_argument("Error constructing graph from input file.");
@@ -865,6 +899,11 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
         {
             cout << "Select correct version please.";
         }
+        bucketGraph->freeGraph();
+
+        //free pointers
+        //if(vc) { delete vc; }
+        //if(bucketGraph) { bucketGraph->freeGraph(); }
     }
     else if(version == 6)
     {
@@ -979,6 +1018,7 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
             }
         }
 
+        //TODO: free all pointers
         delete vc;
     }
     else
