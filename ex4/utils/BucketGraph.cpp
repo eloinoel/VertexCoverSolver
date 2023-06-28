@@ -1256,6 +1256,7 @@ void BucketGraph::preprocess(int* k)
         if(reductions->rule_DegreeOne(this, k, false) == APPLICABLE) continue;
         if(reductions->rule_DegreeTwo(this, k, false) == APPLICABLE) continue;
         if(reductions->rule_Domination(this, k, false) == APPLICABLE) continue;
+        if(reductions->rule_Unconfined(this, k, false) == APPLICABLE) continue;
         if(reductions->rule_LPFlow(this, k, false) == APPLICABLE) continue;
         return;
     }
@@ -1265,8 +1266,8 @@ void BucketGraph::preprocess(int* k)
  * 0: deg1,
  * 1: deg2,
  * 2: domination,
- * 3: LP,
- * 4: unconfined etc.
+ * 3: unconfined,
+ * 4: LP
 */
 void BucketGraph::preprocess(int* k, std::vector<bool>& rulesToApply)
 {
@@ -1275,7 +1276,8 @@ void BucketGraph::preprocess(int* k, std::vector<bool>& rulesToApply)
         if(rulesToApply[0] && reductions->rule_DegreeOne(this, k, false) == APPLICABLE) continue;
         if(rulesToApply[1] && reductions->rule_DegreeTwo(this, k, false) == APPLICABLE) continue;
         if(rulesToApply[2] && reductions->rule_Domination(this, k, false) == APPLICABLE) continue;
-        if(rulesToApply[3] && reductions->rule_LPFlow(this, k, false) == APPLICABLE) continue;
+        if(rulesToApply[3] && reductions->rule_Unconfined(this, k, false) == APPLICABLE) continue;
+        if(rulesToApply[4] && reductions->rule_LPFlow(this, k, false) == APPLICABLE) continue;
         return;
     }
 }
@@ -1288,47 +1290,87 @@ void BucketGraph::preprocessSAT(int* k, std::vector<bool>& rulesToApply)
         if(rulesToApply[0] && reductions->rule_DegreeOne(this, k, false) == APPLICABLE) continue;
         if(rulesToApply[1] && reductions->rule_DegreeTwo_Secure(this, k) == APPLICABLE) continue;
         if(rulesToApply[2] && reductions->rule_Domination(this, k, false) == APPLICABLE) continue;
-        if(rulesToApply[3] && reductions->rule_LPFlow(this, k, false) == APPLICABLE) continue;
+        if(rulesToApply[3] && reductions->rule_Unconfined(this, k, false) == APPLICABLE) continue;
+        if(rulesToApply[4] && reductions->rule_LPFlow(this, k, false) == APPLICABLE) continue;
         return;
     }
 }
 
-bool BucketGraph::reduce(int* k)
+bool BucketGraph::dynamicReduce(int* k, int depth)
 {
+    std::vector<bool> reductions;
+    if(depth % 25 == 0)
+    {
+        // + unconfined
+        reductions = std::vector<bool>{true, true, false, true, true, true, true};
+    }
+    else if(depth % 10 == 0)
+    {
+        // + LP
+        reductions = std::vector<bool>{true, true, false, false, true, true, true};
+    }
+    else
+    {
+        // deg1 + deg2 + highDeg + buss
+        reductions = std::vector<bool>{true, true, false, false, false, true, true};
+    }
+    return reduce(k, &reductions);
+}
+
+/*
+ * 0: deg1,
+ * 1: deg2,
+ * 2: domination,
+ * 3: unconfined,
+ * 4: LP,
+ * 5: highDeg,
+ * 6: Buss
+*/
+bool BucketGraph::reduce(int* k, std::vector<bool>* rulesToApply)
+{
+    if(rulesToApply == nullptr) {
+        rulesToApply = new std::vector{true, true, true, true, true, true, true};
+    }
     //initialisise
     RULE_APPLICATION_RESULT degreeTwoResult = INAPPLICABLE;
     RULE_APPLICATION_RESULT highDegreeResult = INAPPLICABLE;
     RULE_APPLICATION_RESULT degreeZeroResult = INAPPLICABLE;
     RULE_APPLICATION_RESULT degreeOneResult = INAPPLICABLE;
     RULE_APPLICATION_RESULT dominationResult = INAPPLICABLE;
+    RULE_APPLICATION_RESULT unconfinedResult = INAPPLICABLE;
     RULE_APPLICATION_RESULT LPFlowResult = INAPPLICABLE;
     while(true)
     {
         //std::cout << "highdeg " << '\n';
-        highDegreeResult = reductions->rule_HighDegree(this, k);
+        if(rulesToApply->at(5)) { highDegreeResult = reductions->rule_HighDegree(this, k); }
         if(highDegreeResult == APPLICABLE) continue;
         if(highDegreeResult == INSUFFICIENT_BUDGET) return true;
 
-        if(reductions->rule_Buss(this, k, getNumConnectedVertices(), getNumEdges()) == APPLICABLE) return true;
+        if(rulesToApply->at(6) && reductions->rule_Buss(this, k, getNumConnectedVertices(), getNumEdges()) == APPLICABLE) return true;
 
-        degreeOneResult = reductions->rule_DegreeOne(this, k, true);
+        if(rulesToApply->at(0)) { degreeOneResult = reductions->rule_DegreeOne(this, k, true); }
         if(degreeOneResult == APPLICABLE) continue;
         if(degreeOneResult == INSUFFICIENT_BUDGET) return true;
 
         //std::cout << "deg2 " << '\n';
-        degreeTwoResult = reductions->rule_DegreeTwo(this, k, true);
+        if(rulesToApply->at(1)) { degreeTwoResult = reductions->rule_DegreeTwo(this, k, true); }
         if(degreeTwoResult == APPLICABLE) continue;
         if(degreeTwoResult == INSUFFICIENT_BUDGET) return true;
 
-        dominationResult = reductions->rule_Domination(this, k, true);
+        if(rulesToApply->at(2)) { dominationResult = reductions->rule_Domination(this, k, true); }
         if(dominationResult == APPLICABLE) continue;
         if(dominationResult == INSUFFICIENT_BUDGET) return true;
 
-        LPFlowResult = reductions->rule_LPFlow(this, k, true);
+        if(rulesToApply->at(3)) { unconfinedResult = reductions->rule_Unconfined(this, k, true); }
+        if(unconfinedResult == APPLICABLE) continue;
+        if(unconfinedResult == INSUFFICIENT_BUDGET) return true;
+
+        if(rulesToApply->at(4)) { LPFlowResult = reductions->rule_LPFlow(this, k, true); }
         if(LPFlowResult == APPLICABLE) continue;
         if(LPFlowResult == INSUFFICIENT_BUDGET) return true;
         return false;
     }
+    delete rulesToApply;
     return false;
 }
 

@@ -6,6 +6,7 @@
 #include "boost/intrusive/list.hpp"
 
 using namespace boost::intrusive;
+typedef ColorPrint cp;
 
 RULE_APPLICATION_RESULT Reductions::rule_HighDegree(BucketGraph* G, int* k)
 {
@@ -363,70 +364,133 @@ RULE_APPLICATION_RESULT Reductions::rule_Domination_BE(BucketGraph* G, int* k, b
 
 RULE_APPLICATION_RESULT Reductions::rule_Unconfined(BucketGraph* G, int* k, bool checkBudget)
 {
-    /* list<int> S;
-    list<int> neighbours;
-    list<int> uniqueNeighbours;
-    // TODO: concurrent modification issue, when setting verts inactive?
-    // TODO: maybe iterate over vertexreferences
-    for (auto vertex = G->getActiveList()->begin(); vertex != G->getActiveList()->end(); ++vertex)
-    {
-        // How to get neighbourhood of S fast? ---> keep track of it
-        // how to check neighbourhood intersection fast? ---> for loop with counter & vertexHasEdgeTo check
+    bool applied = false;
+    std::vector<bool> inS = std::vector<bool>(G->getTotalNumVertices());
+    std::vector<bool> inSNeighbours = std::vector<bool>(G->getTotalNumVertices());
+    for(int i=0; i<(int) inS.size(); i++) { inS[i] = false; inSNeighbours[i] = false; }
 
+    std::vector<int> SNeighbours = std::vector<int>();
+
+    Reduction* reduction = new Reduction(RULE::DEGREE_ONE, 0, nullptr, new std::vector<int>());
+    for (int v = 0; v<G->getTotalNumVertices(); v++)
+    {
+        //std::cout << cp::dye("getting vertex", 'y') << std::endl;
+        Vertex* vertex = G->getVertex(v);
+        //std::cout << cp::dye("checking if vertex " + std::to_string(vertex->getIndex()) + " is unconfined", 'y') << std::endl;
+        //if (vertex->getDegree() == 0) { continue; }
+        if(vertex == nullptr || !vertex->getActive()) { /* std::cout << cp::dye("vertex " + std::to_string(vertex->getIndex()) + " is nullptr or inactive", 'r') << std::endl; */ continue; }
+        //std::cout << cp::dye("vertex " + std::to_string(vertex->getIndex()) + " is active", 'g') << std::endl;
         // S and neighbours of S list, that are kept up to date
-        S = list<int>();
-        neighbours = list<int>();
-        uniqueNeighbours = list<int>();
-        S.push_back(vertex->getIndex());
+        for(int i=0; i<(int) inS.size(); i++) { inS[i] = false; inSNeighbours[i] = false; }
+        SNeighbours.clear();
+        inS[vertex->getIndex()] = true;
         for (auto neighbour = vertex->adj->begin(); neighbour != vertex->adj->end(); ++neighbour)
         {
-            neighbours.push_back(*neighbour);
+            if(!G->isActive(*neighbour)) { continue; }
+            inSNeighbours[*neighbour] = true;
+            SNeighbours.push_back(*neighbour);
         }
+        //G->print();
+        //std::cout << cp::dye("checking if vertex " + std::to_string(vertex->getIndex()) + " is unconfined", 'b') << std::endl;
+
+        //int index = vertex->getIndex();
         // search continuation loop
         while(true)
         {
-            int best = -1;
-            int bestUniqueNeighboursSize = -1;
-            uniqueNeighbours.clear();
-            // find best neighbour
-            for (auto u = neighbours.begin(); u != neighbours.end(); ++u)
+            //G->print();
+            /* std::cout << "neighbours: {";
+            for (int j=0; j<(int) SNeighbours.size(); j++)
             {
-                if(!u->getActive()) { continue; }
+                std::cout << SNeighbours[j] << ", ";
+            }
+            std::cout << "}" << std::endl; */
+
+            int best = -1;
+            int bestOutsideNeighboursSize = -1;
+            // find best neighbour
+            for (auto u = SNeighbours.begin(); u != SNeighbours.end(); ++u)
+            {
+                if(!G->getVertex(*u)->getActive()) { continue; }
+                if(inS[*u]) { continue; }
                 bool valid = true;
-                int SNeighbours = 0;
-                for (auto it=u->adj->begin(); it != u->adj->end(); ++it)
+                int sharedNeighbours = 0;
+                int outsideNeighboursSize = 0;
+                for (auto it=G->getVertex(*u)->adj->begin(); it != G->getVertex(*u)->adj->end(); ++it)
                 {
-                    if(!u->getActive()) { continue; }
-                    if(it->is_linked(neighbours))
+                    if(!G->getVertex(*u)->getActive()) { continue; }
+                    if(!inSNeighbours[*it] && !inS[*it])
                     {
-                        uniqueNeighbours.push_back(it->index);
+                        outsideNeighboursSize++;
                     }
                     // if u has more than one neighbour in S, u does not fit the criteria
-                    if (it->is_linked(S)) { // TODO: check if is_linked works
-                        SNeighbours++;
-                        if(SNeighbours > 1) { valid = false; break; }
+                    if (inS[*it]) {
+                        sharedNeighbours++;
+                        if(sharedNeighbours > 1) { /* std::cout << cp::dye("vertex is invalid!", 'r') << std::endl; */ valid = false; break; }
                     }
                 }
+
                 if(!valid) { continue; }
-                // TODO: update best/bestNeighbourhoodSize if u is better than the current best
-                if(best != -1 || uniqueNeighbours.size() < bestUniqueNeighboursSize) { continue; }
-                best = u->index;
-                bestUniqueNeighboursSize = uniqueNeighbours.size();
+                // update best/bestNeighbourhoodSize if u is better than the current best
+                //std::cout << cp::dye("Checking best=" + std::to_string(best) + " with " + std::to_string(bestUniqueNeighboursSize) + " vs. u=" + std::to_string(*u) + " with " + std::to_string(uniqueNeighbours.size()), 'y') << std::endl;
+                if(best != -1 && outsideNeighboursSize >= bestOutsideNeighboursSize) { continue; }
+                best = *u;
+                bestOutsideNeighboursSize = outsideNeighboursSize;
             }
+
+            //std::cout << cp::dye("Best neighbour: " + std::to_string(best), 'y') << std::endl;
+
             // if no expansion vertex found, vertex "vertex" is not unconfined (continue with next vertex)
-            if(best == -1) { break; }
-            if(bestUniqueNeighboursSize == 0)
+            if(best == -1) { /* std::cout << cp::dye("vertex is not unconfined", 'r') << std::endl; */ break; }
+            if(bestOutsideNeighboursSize == 0)
             {
-                // TODO: delete vertex and take it into the vc
+                applied = true;
+                //std::cout << cp::dye("vertex is unconfined", 'g') << std::endl;
+                reduction->deletedVCVertices->push_back(vertex->getIndex());
+                reduction->kDecrement++;
+                (*k) = (*k) - 1;
+                G->setInactive(vertex->getIndex());
                 break;
             }
-            if(bestUniqueNeighboursSize > 0)
+            if(bestOutsideNeighboursSize > 0)
             {
-                // TODO: push vertex neighbours into S and add non-intersecting neighbourhood to neighbourhood
+                //std::cout << cp::dye("continuing search", 'y') << std::endl;
+                // remove u from neighbours and add it to S
+                inSNeighbours[best] = false;
+                inS[best] = true;
+                for (int f=0; f<(int) SNeighbours.size(); f++)
+                {
+                    if(SNeighbours[f] == best) { SNeighbours.erase(SNeighbours.begin()+f); break; }
+                }
+                // push u's neighbours into S and add non-intersecting neighbourhood to neighbours
+                for(auto it=G->getVertex(best)->adj->begin(); it != G->getVertex(best)->adj->end(); ++it)
+                {
+                    inSNeighbours[*it] = false;
+                    inS[*it] = true;
+                }
+                for(auto it=G->getVertex(best)->adj->begin(); it != G->getVertex(best)->adj->end(); ++it)
+                {
+                    for(auto itt=G->getVertex(*it)->adj->begin(); itt != G->getVertex(*it)->adj->end(); ++itt)
+                    {
+                        if(!inSNeighbours[*itt] && !inS[*itt]) { inSNeighbours[*itt] = true; SNeighbours.push_back(*itt); }
+                    }
+                }
+                continue;
             }
+            //std::cout << cp::dye("vertex is not unconfined", 'r') << std::endl;
+            break;
         }
-    } */
-    // TODO: if there were any applications return APPLICABLE
+    }
+    //G->print();
+    //std::cout << cp::dye("checking if applied", 'r') << std::endl;
+    // if there were any applications return APPLICABLE
+    if (applied) {
+        //std::cout << cp::dye("was applied", 'g') << std::endl;
+        appliedRules->push_back(reduction);
+        return APPLICABLE;
+    }
+    //std::cout << cp::dye("wasn't applied", 'r') << std::endl;
+    delete reduction->deletedVCVertices;
+    delete reduction;
     return INAPPLICABLE;
 }
 

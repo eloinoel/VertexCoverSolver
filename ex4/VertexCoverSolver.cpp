@@ -512,9 +512,8 @@ unordered_map<int, bool>* vcVertexBranchingRecursive(BucketGraph* G, int k, int 
 	}
     int previousK = k;
     bool cut = false;
-    //if(depth /* % 10 */ == 0) { cut = G->reduce(&k); }
     //std::cout << "> cutting through data reductions " << '\n';
-    cut = G->reduce(&k);
+    cut = G->dynamicReduce(&k, depth);
     if(cut)
     {
         //std::cout << "> cutting through data reductions " << '\n';
@@ -740,7 +739,7 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
 		if(printVC)
         {
             const int MAX_TIME_BUDGET = 60;
-            const int INITIAL_SOLUTION_GENERATION_TIME_CAP = 20; //in seconds
+            const int INITIAL_SOLUTION_GENERATION_TIME_CAP = 40;//20; //in seconds
             const int HEURISTIC_SOLVER_TIME_CAP = INITIAL_SOLUTION_GENERATION_TIME_CAP - graphConstructionDuration;
             const int NUM_RANDOM_SOLUTION_GENERATIONS = 30;
             const int PRINT_TIME = 5;
@@ -752,30 +751,27 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
             //cout << "before heuristic solver" << endl;
             heuristicVC = maxHeuristicSolver(bucketGraph, &heuristicNumRecursions, false, false);
             //see if we can find a better initial solution 
-            //heuristicVC = chooseSmallestHeuristicSolution(bucketGraph, &heuristicNumRecursions, &heuristicVC, true, true, NUM_RANDOM_SOLUTION_GENERATIONS, HEURISTIC_SOLVER_TIME_CAP);
             heuristicVC = chooseSmallestHeuristicSolution(bucketGraph, &heuristicNumRecursions, &heuristicVC, true, true, NUM_RANDOM_SOLUTION_GENERATIONS, HEURISTIC_SOLVER_TIME_CAP);
             auto endHeuristicWrapper = std::chrono::high_resolution_clock::now();
             double heuristicWrapperDuration = (std::chrono::duration_cast<std::chrono::microseconds>(endHeuristicWrapper - startHeuristicWrapper).count() /  1000) / (double) 1000;
 
-            //auto localSearchVC = fastVC(bucketGraph, heuristicVC, MAX_TIME_BUDGET);
-
 
             //set graph to state that it is in when vc vertices are inactive --> for fastVC() method
             //std::cout << "before setInactive" << std::endl;
-            /* for(auto it = heuristicVC->begin(); it != heuristicVC->end(); ++it)
+            for(auto it = heuristicVC->begin(); it != heuristicVC->end(); ++it)
             {
                 bucketGraph->setInactive(it->first);
-            }*/
+            }
             double currentDuration = (std::chrono::duration_cast<std::chrono::microseconds>(endHeuristicWrapper - startGraph).count() /  1000) / (double) 1000;
             //std::cout << "before fastVC" << std::endl;
             // TODO: find suitable timout value for localSearch
-            /*const int LOCAL_SEARCH_TIME_CAP = MAX_TIME_BUDGET - currentDuration - 3;
-            auto localSearchVC = fastVC(bucketGraph, heuristicVC, &heuristicNumRecursions, 5LOCAL_SEARCH_TIME_CAP);
+            const int LOCAL_SEARCH_TIME_CAP = MAX_TIME_BUDGET - currentDuration - 5;
+            auto localSearchVC = fastVC(bucketGraph, heuristicVC, &heuristicNumRecursions, LOCAL_SEARCH_TIME_CAP);
             int localSearchVCSize = localSearchVC->size();
-            int heuristicVCSize = heuristicVC->size(); */
-            int localSearchVCSize = heuristicVC->size();
-            /* delete heuristicVC;
-            heuristicVC = localSearchVC; */
+            int heuristicVCSize = heuristicVC->size();
+            //int localSearchVCSize = heuristicVC->size();
+            delete heuristicVC;
+            heuristicVC = localSearchVC;
 
             auto startPrintSolution = std::chrono::high_resolution_clock::now();
             currentDuration = (std::chrono::duration_cast<std::chrono::microseconds>(startPrintSolution - startGraph).count() /  1000) / (double) 1000;
@@ -826,7 +822,7 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
 
             if(printVCSize)
             {
-                cout << "vc size: " << vc->size() << endl;
+                cout << "#vc size: " << vc->size() << endl;
             }
         }
 
@@ -870,7 +866,7 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
     }
     else if(version == 6)
     {
-        bool preprocess = true;
+        bool preprocess = false;//true;
         bool vcImplementation = false;
 
         SATSolver SATSolver;
@@ -997,11 +993,12 @@ int main(int argc, char* argv[]) {
     std::ios::sync_with_stdio(false); //By default, cin/cout waste time synchronizing themselves with the C library’s stdio buffers, so that you can freely intermix calls to scanf/printf with operations on cin/cout
 	try
 	{
-        signal(SIGINT, my_sig_handler); //catches SIGINT to output anything
-        chooseImplementationAndOutput(0, false, false, false, false, true, false);
+        //signal(SIGINT, my_sig_handler); //catches SIGINT to output anything
+        //chooseImplementationAndOutput(0, false, false, false, false, true, false);
+        chooseImplementationAndOutput(1, false, false, false, true, true, false); //without print
         //chooseImplementationAndOutput(1, true, false, false, true, true, false); //print alot
         //chooseImplementationAndOutput(5, false, false, false, false, true, false);
-//        chooseImplementationAndOutput(6, false, false, false, false, true, false);
+        //chooseImplementationAndOutput(6, false, false, false, false, true, false);
     }
 	catch (const exception& e)
 	{
