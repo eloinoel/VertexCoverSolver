@@ -55,14 +55,8 @@ scp ./VertexCoverSolver algeng-ss23-team6@aba01.akt.tu-berlin.de:./local/src
 
 # execute gprof profiling
 
-cmake -D DCMAKE_CXX_FLAGS="-pg" DCMAKE_EXE_LINKER_FLAGS="-pg" DCMAKE_SHARED_LINKER_FLAGS="-pg" . -B build
+cmake . -B build -DCMAKE_CXX_FLAGS=-pg -DCMAKE_EXE_LINKER_FLAGS=-pg -DCMAKE_SHARED_LINKER_FLAGS=-pg
 
 cd ..; cmake --build build; cd logs; ../build/bin/VertexCoverSolver < ./../../vc-data-students/1-random/000600_000000003600.dimacs
 
 gprof ../build/bin/VertexCoverSolver gmon.out > results.txt
-
-# gprof call graph
-1. copy results.txt into gprof2dot.py directory
-2. python3 gprof2dot.py -w results.txt > call_graph.dot
-view dot file in viewer --> xdot call_graph.dot
-convert dot file to png --> dot -Tpng call_graph.dot -o call_graph.png
