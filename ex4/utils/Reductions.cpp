@@ -3,6 +3,7 @@
 #include "BucketGraph.h"
 #include <iostream>
 #include <chrono>
+#include <random>
 #include "boost/intrusive/list.hpp"
 
 using namespace boost::intrusive;
@@ -88,8 +89,8 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeTwo(BucketGraph* G, int* k, bool 
 
         auto it = degTwoBucket->begin();
 
-        std::pair<int, int>* neighbours = G->getFirstTwoActiveNeighbours(it->index); //should always return valid vertices
-        if(neighbours->first == -1 || neighbours->second == -1)
+        std::pair<int, int> neighbours = G->getFirstTwoActiveNeighbours(it->index); //should always return valid vertices
+        if(neighbours.first == -1 || neighbours.second == -1)
         {
             G->print();
             throw std::invalid_argument("rule_DegreeTwo: deg2 vertex " + std::to_string(it->index) + " doesn't have two active neighbours\n");
@@ -102,16 +103,16 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeTwo(BucketGraph* G, int* k, bool 
         Reduction* delVer = new Reduction(RULE::DEGREE_TWO, 0, new std::vector<int>(), new std::vector<int>());
 
         //if no merge, take neighbours, otherwise case destinction whether merged vertex is in vc
-        delVer->deletedVCVertices->push_back(neighbours->first);
-        delVer->deletedVCVertices->push_back(neighbours->second);
+        delVer->deletedVCVertices->push_back(neighbours.first);
+        delVer->deletedVCVertices->push_back(neighbours.second);
         delVer->deletedVertices->push_back(it->index);
 
-        //std::cout << it->index  << ", " << neighbours->first << ", " << neighbours->second << '\n';
+        //std::cout << it->index  << ", " << neighbours.first << ", " << neighbours.second << '\n';
 
         delVer->mergeVertexInfo = nullptr;
 
         // CASE The neighbours know each other, take them into vc
-        if(G->vertexHasEdgeTo(neighbours->first, neighbours->second))
+        if(G->vertexHasEdgeTo(neighbours.first, neighbours.second))
         {
             //std::cout << " before nomerge" << '\n';
             delVer->kDecrement = 2;
@@ -132,7 +133,7 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeTwo(BucketGraph* G, int* k, bool 
             //G->printBucketQueue();
             //std::cout << " before  merge " << '\n';
             delVer->kDecrement = 1;
-            delVer->mergeVertexInfo = G->merge(it->index, neighbours->first, neighbours->second); //sets merged vertices inactive
+            delVer->mergeVertexInfo = G->merge(it->index, neighbours.first, neighbours.second); //sets merged vertices inactive
             (*k) = (*k) - 1;
             //std::cout << " | merging into " << std::get<0>(*delVer->mergeVertexInfo) << '\n';
             //G->print();
@@ -164,30 +165,30 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeTwo_Secure(BucketGraph* G, int* k
 //        std::cout << "Degree 2 vertex: " << it->index << '\n';
 
 //        std::pair<int, int> neighbours = G->getActiveTwoNeighbours(it->index);
-        std::pair<int, int>* neighbours = G->getFirstTwoActiveNeighbours(it->index);
+        std::pair<int, int> neighbours = G->getFirstTwoActiveNeighbours(it->index);
 
-        if(alreadyInactive[it->index] == 1 || alreadyInactive[neighbours->first] == 1 || alreadyInactive[neighbours->second] == 1)
+        if(alreadyInactive[it->index] == 1 || alreadyInactive[neighbours.first] == 1 || alreadyInactive[neighbours.second] == 1)
         {
 //            std::cout << "Nope not this vertex: " << it->index << '\n';
-//            std::cout << neighbours->first << ", " << neighbours->second << '\n';
+//            std::cout << neighbours.first << ", " << neighbours.second << '\n';
             continue;
         }
 //
 //        std::cout << "degree of deg2 vertex: " << it->index << '\n';
-        if(!G->isActive(neighbours->first) || !G->isActive(neighbours->second)) {
+        if(!G->isActive(neighbours.first) || !G->isActive(neighbours.second)) {
             continue;
         }
 
-//        std::cout << neighbours->first << ", " << neighbours->second << '\n';
+//        std::cout << neighbours.first << ", " << neighbours.second << '\n';
 //
 //
 //        // CASE The neighbours know each other, take them into vc
-        if(G->vertexHasEdgeTo(neighbours->first, neighbours->second))
+        if(G->vertexHasEdgeTo(neighbours.first, neighbours.second))
         {
 //            std::cout << "Neighbours know each other! " << '\n';
 
-            int n1 = neighbours->first;
-            int n2 = neighbours->second;
+            int n1 = neighbours.first;
+            int n2 = neighbours.second;
             tempDeleted.push_back(n1);
             tempDeleted.push_back(n2);
             tempDeleted.push_back(it->index);
@@ -195,8 +196,8 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeTwo_Secure(BucketGraph* G, int* k
             cnt++;
 
             alreadyInactive[it->index] = 1;
-            alreadyInactive[neighbours->first] = 1;
-            alreadyInactive[neighbours->second] = 1;
+            alreadyInactive[neighbours.first] = 1;
+            alreadyInactive[neighbours.second] = 1;
 
         }
 //        std::cout << "---------" << '\n';
@@ -362,8 +363,9 @@ RULE_APPLICATION_RESULT Reductions::rule_Domination_BE(BucketGraph* G, int* k, b
     }
 }
 
-RULE_APPLICATION_RESULT Reductions::rule_Unconfined(BucketGraph* G, int* k, bool checkBudget)
+/* RULE_APPLICATION_RESULT Reductions::rule_Unconfined(BucketGraph* G, int* k, bool checkBudget)
 {
+    int numAttempts = 10;
     bool applied = false;
     std::vector<bool> inS = std::vector<bool>(G->getTotalNumVertices());
     std::vector<bool> inSNeighbours = std::vector<bool>(G->getTotalNumVertices());
@@ -372,14 +374,15 @@ RULE_APPLICATION_RESULT Reductions::rule_Unconfined(BucketGraph* G, int* k, bool
     std::vector<int> SNeighbours = std::vector<int>();
 
     Reduction* reduction = new Reduction(RULE::DEGREE_ONE, 0, nullptr, new std::vector<int>());
-    for (int v = 0; v<G->getTotalNumVertices(); v++)
+    for (int i = 0; i<numAttempts && i<(int) inS.size(); i++)
     {
-        //std::cout << cp::dye("getting vertex", 'y') << std::endl;
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<> distr(0, G->getTotalNumVertices()-1);
+        int v = (int) distr(gen);
+        if(!G->isActive(v)) { continue; }
         Vertex* vertex = G->getVertex(v);
-        //std::cout << cp::dye("checking if vertex " + std::to_string(vertex->getIndex()) + " is unconfined", 'y') << std::endl;
-        //if (vertex->getDegree() == 0) { continue; }
-        if(vertex == nullptr || !vertex->getActive()) { /* std::cout << cp::dye("vertex " + std::to_string(vertex->getIndex()) + " is nullptr or inactive", 'r') << std::endl; */ continue; }
-        //std::cout << cp::dye("vertex " + std::to_string(vertex->getIndex()) + " is active", 'g') << std::endl;
+
         // S and neighbours of S list, that are kept up to date
         for(int i=0; i<(int) inS.size(); i++) { inS[i] = false; inSNeighbours[i] = false; }
         SNeighbours.clear();
@@ -390,21 +393,10 @@ RULE_APPLICATION_RESULT Reductions::rule_Unconfined(BucketGraph* G, int* k, bool
             inSNeighbours[*neighbour] = true;
             SNeighbours.push_back(*neighbour);
         }
-        //G->print();
-        //std::cout << cp::dye("checking if vertex " + std::to_string(vertex->getIndex()) + " is unconfined", 'b') << std::endl;
 
-        //int index = vertex->getIndex();
         // search continuation loop
         while(true)
         {
-            //G->print();
-            /* std::cout << "neighbours: {";
-            for (int j=0; j<(int) SNeighbours.size(); j++)
-            {
-                std::cout << SNeighbours[j] << ", ";
-            }
-            std::cout << "}" << std::endl; */
-
             int best = -1;
             int bestOutsideNeighboursSize = -1;
             // find best neighbour
@@ -425,7 +417,7 @@ RULE_APPLICATION_RESULT Reductions::rule_Unconfined(BucketGraph* G, int* k, bool
                     // if u has more than one neighbour in S, u does not fit the criteria
                     if (inS[*it]) {
                         sharedNeighbours++;
-                        if(sharedNeighbours > 1) { /* std::cout << cp::dye("vertex is invalid!", 'r') << std::endl; */ valid = false; break; }
+                        if(sharedNeighbours > 1) { valid = false; break; }
                     }
                 }
 
@@ -437,12 +429,17 @@ RULE_APPLICATION_RESULT Reductions::rule_Unconfined(BucketGraph* G, int* k, bool
                 bestOutsideNeighboursSize = outsideNeighboursSize;
             }
 
-            //std::cout << cp::dye("Best neighbour: " + std::to_string(best), 'y') << std::endl;
-
             // if no expansion vertex found, vertex "vertex" is not unconfined (continue with next vertex)
-            if(best == -1) { /* std::cout << cp::dye("vertex is not unconfined", 'r') << std::endl; */ break; }
+            if(best == -1) { break; }
             if(bestOutsideNeighboursSize == 0)
             {
+                if((*k) <= 0 && checkBudget) {
+                    (*k) = (*k) + reduction->kDecrement;
+                    G->setActive(reduction->deletedVCVertices);
+                    delete reduction->deletedVCVertices;
+                    delete reduction;
+                    return INSUFFICIENT_BUDGET;
+                }
                 applied = true;
                 //std::cout << cp::dye("vertex is unconfined", 'g') << std::endl;
                 reduction->deletedVCVertices->push_back(vertex->getIndex());
@@ -492,7 +489,297 @@ RULE_APPLICATION_RESULT Reductions::rule_Unconfined(BucketGraph* G, int* k, bool
     delete reduction->deletedVCVertices;
     delete reduction;
     return INAPPLICABLE;
+} */
+
+RULE_APPLICATION_RESULT Reductions::rule_Unconfined(BucketGraph* G, int* k, bool checkBudget)
+{
+    bool applied = false;
+    std::vector<bool> inS = std::vector<bool>(G->getTotalNumVertices());
+    std::vector<bool> inSNeighbours = std::vector<bool>(G->getTotalNumVertices());
+    for(int i=0; i<(int) inS.size(); i++) { inS[i] = false; inSNeighbours[i] = false; }
+
+    std::vector<int> SNeighbours = std::vector<int>();
+
+    Reduction* reduction = new Reduction(RULE::DEGREE_ONE, 0, nullptr, new std::vector<int>());
+    auto bucketQueue = G->getBucketQueue();
+    //G->printBucketQueue();
+    /* auto bucket = bucketQueue->begin();
+    ++bucket;
+    for (; G->getBucketQueue()->size() > 0 && bucket != bucketQueue->end() && bucket->degree <= G->getMaxDegree(); ++bucket) { */
+    for(auto b = G->getStableBucketQueueIterator(); (*b)->degree != bucketQueue->end()->degree; (*b) = ++(*b))
+    {
+        //std::cout << "Degree: " << (*b)->degree << std::endl;
+        Bucket* bucket = G->getBucket((*b)->degree);
+        //std::cout << "Degree: " << bucket->degree << std::endl;
+        if(bucket->degree <= 0) { continue; }
+        //std::cout << "Number of vertices: " << (*bucket).vertices.size() << std::endl;
+        //auto v = (*bucket).getStableIterator();
+        //std::cout << "Beginning vertex: " << (*v)->index << std::endl;
+        //std::cout << "Last vertex: " << (------(*bucket).vertices.end())->index << std::endl;
+        for(auto v = bucket->getStableIterator(); (*v)->index != (*bucket).vertices.end()->index; (*v) = ++(*v))
+        {
+            //std::cout << "Vertex: " << (*v)->index << std::endl;
+            //std::cout << cp::dye("getting vertex", 'y') << std::endl;
+            Vertex* vertex = G->getVertex((*v)->index);
+            //std::cout << "Got vertex: " << (*v)->index << std::endl;
+            //std::cout << cp::dye("checking if vertex " + std::to_string(vertex->getIndex()) + " is unconfined", 'y') << std::endl;
+            if(vertex == nullptr || !vertex->getActive()) { continue; }
+            //std::cout << cp::dye("vertex " + std::to_string(vertex->getIndex()) + " is active", 'g') << std::endl;
+            // S and neighbours of S list, that are kept up to date
+            for(int i=0; i<(int) inS.size(); i++) { inS[i] = false; inSNeighbours[i] = false; }
+            SNeighbours.clear();
+            inS[vertex->getIndex()] = true;
+            for (auto neighbour = vertex->adj->begin(); neighbour != vertex->adj->end(); ++neighbour)
+            {
+                if(!G->isActive(*neighbour)) { continue; }
+                inSNeighbours[*neighbour] = true;
+                SNeighbours.push_back(*neighbour);
+            }
+            //G->print();
+            //std::cout << cp::dye("checking if vertex " + std::to_string(vertex->getIndex()) + " is unconfined", 'b') << std::endl;
+
+            //int index = vertex->getIndex();
+            // search continuation loop
+            while(true)
+            {
+                int best = -1;
+                int bestOutsideNeighboursSize = -1;
+                // find best neighbour
+                int off = 0;
+                for (auto u = SNeighbours.begin(); u != SNeighbours.end(); ++u)
+                //for (int i = 0; i < (int) SNeighbours.size(); ++i)
+                {
+                    if(!G->getVertex(*u)->getActive()) { continue; }
+                    if(inS[*u]) { continue; }
+                    bool valid = true;
+                    int sharedNeighbours = 0;
+                    int outsideNeighboursSize = 0;
+                    for (auto it=G->getVertex(*u)->adj->begin(); it != G->getVertex(*u)->adj->end(); ++it)
+                    {
+                        if(!G->getVertex(*u)->getActive()) { continue; }
+                        if(!inSNeighbours[*it] && !inS[*it])
+                        {
+                            outsideNeighboursSize++;
+                        }
+                        // if u has more than one neighbour in S, u does not fit the criteria
+                        if (inS[*it]) {
+                            sharedNeighbours++;
+                            if(sharedNeighbours > 1) {
+                                valid = false;
+                                break;
+                            }
+                        }
+                    }
+
+                    if(!valid) { continue; }
+                    // update best/bestNeighbourhoodSize if u is better than the current best
+                    //std::cout << cp::dye("Checking best=" + std::to_string(best) + " with " + std::to_string(bestUniqueNeighboursSize) + " vs. u=" + std::to_string(*u) + " with " + std::to_string(uniqueNeighbours.size()), 'y') << std::endl;
+                    if(best != -1 && outsideNeighboursSize >= bestOutsideNeighboursSize) { continue; }
+                    best = *u;
+                    bestOutsideNeighboursSize = outsideNeighboursSize;
+                }
+
+                //std::cout << cp::dye("Best neighbour: " + std::to_string(best), 'y') << std::endl;
+
+                // if no expansion vertex found, vertex "vertex" is not unconfined (continue with next vertex)
+                if(best == -1) { break; }
+                if(bestOutsideNeighboursSize == 0)
+                {
+                    if((*k) <= 0 && checkBudget) {
+                        (*k) = (*k) + reduction->kDecrement;
+                        G->setActive(reduction->deletedVCVertices);
+                        delete reduction->deletedVCVertices;
+                        delete reduction;
+                        return INSUFFICIENT_BUDGET;
+                    }
+                    applied = true;
+                    //std::cout << cp::dye("vertex is unconfined", 'g') << std::endl;
+                    reduction->deletedVCVertices->push_back(vertex->getIndex());
+                    reduction->kDecrement++;
+                    (*k) = (*k) - 1;
+                    G->setInactive(vertex->getIndex());
+                    break;
+                }
+                if(bestOutsideNeighboursSize > 0)
+                {
+                    //std::cout << cp::dye("continuing search", 'y') << std::endl;
+                    // remove u from neighbours and add it to S
+                    inSNeighbours[best] = false;
+                    inS[best] = true;
+                    for (int f=0; f<(int) SNeighbours.size(); f++)
+                    {
+                        if(SNeighbours[f] == best) { SNeighbours.erase(SNeighbours.begin()+f); break; }
+                    }
+                    // push u's neighbours into S and add non-intersecting neighbourhood to neighbours
+                    for(auto it=G->getVertex(best)->adj->begin(); it != G->getVertex(best)->adj->end(); ++it)
+                    {
+                        inSNeighbours[*it] = false;
+                        inS[*it] = true;
+                    }
+                    for(auto it=G->getVertex(best)->adj->begin(); it != G->getVertex(best)->adj->end(); ++it)
+                    {
+                        for(auto itt=G->getVertex(*it)->adj->begin(); itt != G->getVertex(*it)->adj->end(); ++itt)
+                        {
+                            if(!inSNeighbours[*itt] && !inS[*itt]) { inSNeighbours[*itt] = true; SNeighbours.push_back(*itt); }
+                        }
+                    }
+                    continue;
+                }
+                //std::cout << cp::dye("vertex is not unconfined", 'r') << std::endl;
+                break;
+            }
+        }
+    }
+    //G->print();
+    //std::cout << cp::dye("checking if applied", 'r') << std::endl;
+    // if there were any applications return APPLICABLE
+    if (applied) {
+        //std::cout << cp::dye("was applied", 'g') << std::endl;
+        appliedRules->push_back(reduction);
+        return APPLICABLE;
+    }
+    //std::cout << cp::dye("wasn't applied", 'r') << std::endl;
+    delete reduction->deletedVCVertices;
+    delete reduction;
+    return INAPPLICABLE;
 }
+
+// current best version:
+/* RULE_APPLICATION_RESULT Reductions::rule_Unconfined(BucketGraph* G, int* k, bool checkBudget)
+{
+    bool applied = false;
+    std::vector<bool> inS = std::vector<bool>(G->getTotalNumVertices());
+    std::vector<bool> inSNeighbours = std::vector<bool>(G->getTotalNumVertices());
+    for(int i=0; i<(int) inS.size(); i++) { inS[i] = false; inSNeighbours[i] = false; }
+
+    std::vector<int> SNeighbours = std::vector<int>();
+
+    Reduction* reduction = new Reduction(RULE::DEGREE_ONE, 0, nullptr, new std::vector<int>());
+    for (int v = 0; v<G->getTotalNumVertices(); v++)
+    {
+        //std::cout << cp::dye("getting vertex", 'y') << std::endl;
+        Vertex* vertex = G->getVertex(v);
+        //std::cout << cp::dye("checking if vertex " + std::to_string(vertex->getIndex()) + " is unconfined", 'y') << std::endl;
+        //if (vertex->getDegree() == 0) { continue; }
+        if(vertex == nullptr || !vertex->getActive()) { continue; }
+        //std::cout << cp::dye("vertex " + std::to_string(vertex->getIndex()) + " is active", 'g') << std::endl;
+        // S and neighbours of S list, that are kept up to date
+        for(int i=0; i<(int) inS.size(); i++) { inS[i] = false; inSNeighbours[i] = false; }
+        SNeighbours.clear();
+        inS[vertex->getIndex()] = true;
+        for (auto neighbour = vertex->adj->begin(); neighbour != vertex->adj->end(); ++neighbour)
+        {
+            if(!G->isActive(*neighbour)) { continue; }
+            inSNeighbours[*neighbour] = true;
+            SNeighbours.push_back(*neighbour);
+        }
+        //G->print();
+        //std::cout << cp::dye("checking if vertex " + std::to_string(vertex->getIndex()) + " is unconfined", 'b') << std::endl;
+
+        //int index = vertex->getIndex();
+        // search continuation loop
+        while(true)
+        {
+            int best = -1;
+            int bestOutsideNeighboursSize = -1;
+            // find best neighbour
+            int off = 0;
+            for (auto u = SNeighbours.begin(); u != SNeighbours.end(); ++u)
+            //for (int i = 0; i < (int) SNeighbours.size(); ++i)
+            {
+                if(!G->getVertex(*u)->getActive()) { continue; }
+                if(inS[*u]) { continue; }
+                bool valid = true;
+                int sharedNeighbours = 0;
+                int outsideNeighboursSize = 0;
+                for (auto it=G->getVertex(*u)->adj->begin(); it != G->getVertex(*u)->adj->end(); ++it)
+                {
+                    if(!G->getVertex(*u)->getActive()) { continue; }
+                    if(!inSNeighbours[*it] && !inS[*it])
+                    {
+                        outsideNeighboursSize++;
+                    }
+                    // if u has more than one neighbour in S, u does not fit the criteria
+                    if (inS[*it]) {
+                        sharedNeighbours++;
+                        if(sharedNeighbours > 1) {
+                            valid = false;
+                            break;
+                        }
+                    }
+                }
+
+                if(!valid) { continue; }
+                // update best/bestNeighbourhoodSize if u is better than the current best
+                //std::cout << cp::dye("Checking best=" + std::to_string(best) + " with " + std::to_string(bestUniqueNeighboursSize) + " vs. u=" + std::to_string(*u) + " with " + std::to_string(uniqueNeighbours.size()), 'y') << std::endl;
+                if(best != -1 && outsideNeighboursSize >= bestOutsideNeighboursSize) { continue; }
+                best = *u;
+                bestOutsideNeighboursSize = outsideNeighboursSize;
+            }
+
+            //std::cout << cp::dye("Best neighbour: " + std::to_string(best), 'y') << std::endl;
+
+            // if no expansion vertex found, vertex "vertex" is not unconfined (continue with next vertex)
+            if(best == -1) { break; }
+            if(bestOutsideNeighboursSize == 0)
+            {
+                if((*k) <= 0 && checkBudget) {
+                    (*k) = (*k) + reduction->kDecrement;
+                    G->setActive(reduction->deletedVCVertices);
+                    delete reduction->deletedVCVertices;
+                    delete reduction;
+                    return INSUFFICIENT_BUDGET;
+                }
+                applied = true;
+                //std::cout << cp::dye("vertex is unconfined", 'g') << std::endl;
+                reduction->deletedVCVertices->push_back(vertex->getIndex());
+                reduction->kDecrement++;
+                (*k) = (*k) - 1;
+                G->setInactive(vertex->getIndex());
+                break;
+            }
+            if(bestOutsideNeighboursSize > 0)
+            {
+                //std::cout << cp::dye("continuing search", 'y') << std::endl;
+                // remove u from neighbours and add it to S
+                inSNeighbours[best] = false;
+                inS[best] = true;
+                for (int f=0; f<(int) SNeighbours.size(); f++)
+                {
+                    if(SNeighbours[f] == best) { SNeighbours.erase(SNeighbours.begin()+f); break; }
+                }
+                // push u's neighbours into S and add non-intersecting neighbourhood to neighbours
+                for(auto it=G->getVertex(best)->adj->begin(); it != G->getVertex(best)->adj->end(); ++it)
+                {
+                    inSNeighbours[*it] = false;
+                    inS[*it] = true;
+                }
+                for(auto it=G->getVertex(best)->adj->begin(); it != G->getVertex(best)->adj->end(); ++it)
+                {
+                    for(auto itt=G->getVertex(*it)->adj->begin(); itt != G->getVertex(*it)->adj->end(); ++itt)
+                    {
+                        if(!inSNeighbours[*itt] && !inS[*itt]) { inSNeighbours[*itt] = true; SNeighbours.push_back(*itt); }
+                    }
+                }
+                continue;
+            }
+            //std::cout << cp::dye("vertex is not unconfined", 'r') << std::endl;
+            break;
+        }
+    }
+    //G->print();
+    //std::cout << cp::dye("checking if applied", 'r') << std::endl;
+    // if there were any applications return APPLICABLE
+    if (applied) {
+        //std::cout << cp::dye("was applied", 'g') << std::endl;
+        appliedRules->push_back(reduction);
+        return APPLICABLE;
+    }
+    //std::cout << cp::dye("wasn't applied", 'r') << std::endl;
+    delete reduction->deletedVCVertices;
+    delete reduction;
+    return INAPPLICABLE;
+} */
 
 void Reductions::initRuleCounter()
 {

@@ -865,8 +865,8 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
         }
 
         //free pointers
-        //if(vc) { delete vc; }
-        //if(G) { G->freeGraph(); }
+        if(vc) { delete vc; }
+        if(G) { delete G; }
     }
     else if(version == 5)
     {

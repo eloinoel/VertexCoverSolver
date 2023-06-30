@@ -37,10 +37,11 @@ class Bucket : public list_base_hook<>
 public:
     int degree;
     intrusive::list<BucketVertex> vertices;
+private:
     intrusive::list<BucketVertex>::const_iterator stable_iterator;
 
 public:
-    Bucket(int _degree, std::vector<BucketVertex*>& _vertices)
+    Bucket(int _degree, std::vector<BucketVertex*> _vertices)
      : degree(_degree)
     {
         vertices = intrusive::list<BucketVertex>();
@@ -155,15 +156,17 @@ private:
     std::vector<Bucket*> bucketReferences;
     /* priority queue of buckets that contain vertices of a certain degree (buckets are ordered after their degree ascendingly from front() to back()) */
     intrusive::list<Bucket> bucketQueue;
+    /* used to realize iteration over bucketQueue while concurrently modifying it */
+    intrusive::list<Bucket>::const_iterator stable_bucketQueue_iterator;
 
     /* used for reading in data, maps from original vertex name from input data to index and degree */
     std::unordered_map<std::string, std::pair<int, int>> originalVertexNames;
     std::vector<std::pair<std::string, std::string>> edges;
 
     /* Current Matching */
-    std::vector<int> pairU;
-    std::vector<int> pairV;
-    std::vector<int> dist;
+    std::vector<int>* pairU;
+    std::vector<int>* pairV;
+    std::vector<int>* dist;
     std::vector<int>* unmatched = nullptr;
     std::vector<int>* next_unmatched = nullptr;
     int NIL;
@@ -174,6 +177,7 @@ private:
 //functions
 public:
     inline BucketGraph() {  }
+    ~BucketGraph() { freeGraph(); }
 
     /* creates and initialises a graph from standard input */
     static BucketGraph* readStandardInput(bool initReductionDataStructures = true);
@@ -197,7 +201,7 @@ public:
     std::vector<int>* getNeighbours(int vertexIndex);
     /* specify n starting with 0 */
     int getNthActiveNeighbour(int vertex, int n);
-    std::pair<int, int>* getFirstTwoActiveNeighbours(int vertex);
+    std::pair<int, int> getFirstTwoActiveNeighbours(int vertex);
 
     bool containsConnectedVertex();
     int getMaxDegree();
@@ -216,6 +220,16 @@ public:
     /* returns -1 if no vertex of degree */
     int getFirstVertexOfDegree(int degree);
     inline Vertex* getVertex(int index) { if(index < (int) vertexReferences.size()) return vertexReferences[index]; else return nullptr; }
+
+    /*  The stable iterator allows for deletion from-, and insertion into the bucketQueue, while iterating through it
+    *   Whenever the element, the iterator points to is deleted, the iterator is incremented
+    *   When a new element is inserted into the bucket during iteration, the iterator will iterate over it later
+    */
+    inline intrusive::list<Bucket>::const_iterator* getStableBucketQueueIterator()
+    {
+        stable_bucketQueue_iterator = bucketQueue.iterator_to(*bucketQueue.begin());
+        return &stable_bucketQueue_iterator;
+    }
 
     void print();
     void printActiveList();
@@ -254,15 +268,15 @@ public:
     void getBipartMatchingFlowComponents(std::vector<int>* L, std::vector<int>* R);
     void setBipartMatchingFlowComponentsInactive(std::vector<int>* L, std::vector<int>* R, int k, double maxExecTime);
     int hopcroftKarpMatchingSize();
-    inline void resetMatching() { void initMatching(); };
+    inline void resetMatching() { void freeMatching(); void initMatching(); };
     inline void throwMatchingInconsistency() {
-        for(int i=0; i<(int)pairU.size(); i++)
+        for(int i=0; i<(int)pairU->size(); i++)
         {
-            if(pairU[i] == NIL) continue;
+            if(pairU->at(i) == NIL) continue;
             if(vertexReferences[i]->degree == 0) {
                 throw std::invalid_argument("Vertex of degree 0 is matched");
             }
-            if(i != pairV[pairU[i]]) {
+            if(i != pairV->at(pairU->at(i))) {
                 throw std::invalid_argument("Vertex of matching is not symmetric");
             }
         }
@@ -288,6 +302,8 @@ private:
     void initBucketQueue(); //--|
     void initMatching();
     bool isAdjMapConsistent();
+
+    void freeMatching();
 
     void initDominationHelper(){ dominationHelper = new std::vector<int> (getNumVertices(), 0); };
     void clearDominationHelper(){ delete dominationHelper; }
