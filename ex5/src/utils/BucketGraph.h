@@ -37,10 +37,11 @@ class Bucket : public list_base_hook<>
 public:
     int degree;
     intrusive::list<BucketVertex> vertices;
+private:
     intrusive::list<BucketVertex>::const_iterator stable_iterator;
 
 public:
-    Bucket(int _degree, std::vector<BucketVertex*>& _vertices)
+    Bucket(int _degree, std::vector<BucketVertex*> _vertices)
      : degree(_degree)
     {
         vertices = intrusive::list<BucketVertex>();
@@ -138,6 +139,7 @@ public:
     std::vector<int>* dominationHelper;
 
     bool LP_INITIALISED = false;
+    bool UNCONFINED_INITIALISED = false;
 
 private:
     /* each index represents a vertex, that maps to a node object that may be contained in the activeList */
@@ -149,21 +151,24 @@ private:
     int numEdges;
     int numVertices;
 
+    Reductions* reductions;
+
     /* each index represents a degree, that maps to a Bucket object that may be contained in the bucketQueue */
     std::vector<Bucket*> bucketReferences;
     /* priority queue of buckets that contain vertices of a certain degree (buckets are ordered after their degree ascendingly from front() to back()) */
     intrusive::list<Bucket> bucketQueue;
-
-    Reductions* reductions;
+    /* used to realize iteration over bucketQueue while concurrently modifying it */
+    intrusive::list<Bucket>::const_iterator stable_bucketQueue_inc_iterator;
+    intrusive::list<Bucket>::const_iterator stable_bucketQueue_dec_iterator;
 
     /* used for reading in data, maps from original vertex name from input data to index and degree */
     std::unordered_map<std::string, std::pair<int, int>> originalVertexNames;
     std::vector<std::pair<std::string, std::string>> edges;
 
     /* Current Matching */
-    std::vector<int> pairU;
-    std::vector<int> pairV;
-    std::vector<int> dist;
+    std::vector<int>* pairU;
+    std::vector<int>* pairV;
+    std::vector<int>* dist;
     std::vector<int>* unmatched = nullptr;
     std::vector<int>* next_unmatched = nullptr;
     int NIL;
@@ -171,9 +176,13 @@ private:
     bool didInitialMatchingCalculation = false;
     int nv;
 
+    /* Unconfined */
+    std::vector<bool>* mayBeUnconfined;
+
 //functions
 public:
-    inline BucketGraph() { }
+    inline BucketGraph() {  }
+    ~BucketGraph() { freeGraph(); }
 
     /* creates and initialises a graph from standard input */
     static BucketGraph* readStandardInput(bool initReductionDataStructures = true);
@@ -197,7 +206,7 @@ public:
     std::vector<int>* getNeighbours(int vertexIndex);
     /* specify n starting with 0 */
     int getNthActiveNeighbour(int vertex, int n);
-    std::pair<int, int>* getFirstTwoActiveNeighbours(int vertex);
+    std::pair<int, int> getFirstTwoActiveNeighbours(int vertex);
 
     bool containsConnectedVertex();
     int getMaxDegree();
@@ -217,6 +226,24 @@ public:
     int getFirstVertexOfDegree(int degree);
     inline Vertex* getVertex(int index) { if(index < (int) vertexReferences.size()) return vertexReferences[index]; else return nullptr; }
 
+    /*  The stable iterator allows for deletion from-, and insertion into the bucketQueue, while iterating through it
+    *   Whenever the element, the iterator points to is deleted, the iterator is incremented/decremented
+    *   When a new element is inserted into the bucket during iteration, the iterator will iterate over it later
+    *   USAGE: Whenever you want to use the stable iterator, call getStableBucketQueue[Inc/Dec]Iterator,
+    *   depending on which way you want to iterate through the bucketQueue Inc -> incrementing, Dec -> decrementing
+    *   NOTE: please only iterate the stable iterator in one loop at a time. i.e. nesting loops that each use the same type of stable iterator will not function properly
+    */
+    inline intrusive::list<Bucket>::const_iterator* getStableBucketQueueIncIterator()
+    {
+        stable_bucketQueue_inc_iterator = bucketQueue.iterator_to(*bucketQueue.begin());
+        return &stable_bucketQueue_inc_iterator;
+    }
+    inline intrusive::list<Bucket>::const_iterator* getStableBucketQueueDecIterator()
+    {
+        stable_bucketQueue_dec_iterator = --bucketQueue.iterator_to(*bucketQueue.end());
+        return &stable_bucketQueue_dec_iterator;
+    }
+
     void print();
     void printActiveList();
     void printBucketQueue();
@@ -235,12 +262,14 @@ public:
     void resetLPBoundDataStructures();
 
     /* apply initial data reduction rules to graph */
-    void preprocess(int* k);
+    void preprocess(int* k, bool printDebug = false);
     /* apply initial data reduction rules to graph and possibly omit certain rules, 0: deg1, 1: deg2, 2: domination, 3: LP, 4: unconfined etc. */
     void preprocess(int* k, std::vector<bool>& rulesToApply);
 
+    /* apply data reduction rules to graph depending on search depth, returns true if no vertex cover can be found for this k */
+    bool dynamicReduce(int* k, int depth, bool printDebug = false);
     /* apply data reduction rules to graph, returns true if no vertex cover can be found for this k */
-    bool reduce(int* k);
+    bool reduce(int* k, std::vector<bool>* rulesToApply = nullptr, bool printDebug = false);
     /* vc is not nullptr, if deleted vertices should be appended to vc*/
     void unreduce(int* k, int previousK, std::unordered_map<int, bool>* vc = nullptr);
     /* merge three vertices into one for degree 2 rule, returns vertex that was merged into and its previous adjacency list */
@@ -252,19 +281,24 @@ public:
     void getBipartMatchingFlowComponents(std::vector<int>* L, std::vector<int>* R);
     void setBipartMatchingFlowComponentsInactive(std::vector<int>* L, std::vector<int>* R, int k, double maxExecTime);
     int hopcroftKarpMatchingSize();
-    inline void resetMatching() { void initMatching(); };
+    inline void resetMatching() { void freeMatching(); void initMatching(); };
     inline void throwMatchingInconsistency() {
-        for(int i=0; i<(int)pairU.size(); i++)
+        for(int i=0; i<(int)pairU->size(); i++)
         {
-            if(pairU[i] == NIL) continue;
+            if(pairU->at(i) == NIL) continue;
             if(vertexReferences[i]->degree == 0) {
                 throw std::invalid_argument("Vertex of degree 0 is matched");
             }
-            if(i != pairV[pairU[i]]) {
+            if(i != pairV->at(pairU->at(i))) {
                 throw std::invalid_argument("Vertex of matching is not symmetric");
             }
         }
     }
+
+    inline bool isVertexScheduledForUnconfined(int vertexIndex) { return (*mayBeUnconfined)[vertexIndex]; }
+    inline void scheduleForUnconfined(int vertexIndex) { (*mayBeUnconfined)[vertexIndex] = true; }
+    inline void unscheduleForUnconfined(int vertexIndex) { (*mayBeUnconfined)[vertexIndex] = false; }
+    void scheduleComponentForUnconfined(int vertexIndex);
 
     /* apply data reduction rules that can immediately be taken into the vertex cover*/
     void preprocessSAT(int* k, std::vector<bool>& rulesToApply);
@@ -285,7 +319,11 @@ private:
     void initAdjMap();      //----> should be called in this order
     void initBucketQueue(); //--|
     void initMatching();
+    void initUnconfined();
     bool isAdjMapConsistent();
+
+    void freeMatching();
+    void freeUnconfined();
 
     void initDominationHelper(){ dominationHelper = new std::vector<int> (getNumVertices(), 0); };
     void clearDominationHelper(){ delete dominationHelper; }
@@ -318,7 +356,6 @@ private:
     bool vertexCanBeAddedToClique(int vertex, std::vector<int>* clique);
 
     //int getLPBound();
-    int getLPCycleBound();  // TODO: this is still trash
 };
 
 #endif
