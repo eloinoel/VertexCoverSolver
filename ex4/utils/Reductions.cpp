@@ -50,7 +50,7 @@ RULE_APPLICATION_RESULT Reductions::rule_Buss(BucketGraph* G, int* k, int numVer
     return INAPPLICABLE;
 }
 
-RULE_APPLICATION_RESULT Reductions::rule_DegreeOne(BucketGraph* G, int* k, bool checkBudget)
+RULE_APPLICATION_RESULT Reductions::rule_DegreeOne(BucketGraph* G, int* k, bool checkBudget, bool printDebug)
 {
     list<BucketVertex>* degOneBucket = G->getVerticesOfDegree(1);
 
@@ -60,6 +60,7 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeOne(BucketGraph* G, int* k, bool 
     appliedRules->push_back(reduction);
 
     //std::cout << "DEGONE Culling vertices: {";
+    auto startDeg1 = std::chrono::high_resolution_clock::now();
     while(!degOneBucket->empty())
     {
         if(*k == 0 && checkBudget) return INSUFFICIENT_BUDGET; //cannot delete more vertices, no possible vertex cover exists
@@ -71,17 +72,24 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeOne(BucketGraph* G, int* k, bool 
         G->setInactive(neighbourToDelete);
         //std::cout << neighbourToDelete << ", ";
     }
-    //std::cout << "}" << '\n';
+    auto stopDeg1 = std::chrono::high_resolution_clock::now();
+    double Deg1 = (std::chrono::duration_cast<std::chrono::microseconds>(stopDeg1 - startDeg1).count() /  1000) / (double) 1000;
+    if (printDebug)
+        std::cout << "#Reduced " << reduction->deletedVCVertices->size() << " Deg1 neighbour vertices in " << Deg1 << " seconds" << std::endl;
+
     return APPLICABLE;
 }
 
-RULE_APPLICATION_RESULT Reductions::rule_DegreeTwo(BucketGraph* G, int* k, bool checkBudget)
+RULE_APPLICATION_RESULT Reductions::rule_DegreeTwo(BucketGraph* G, int* k, bool checkBudget, bool printDebug)
 {
     list<BucketVertex>* degTwoBucket = G->getVerticesOfDegree(2);
 
     if(degTwoBucket == nullptr || degTwoBucket->empty()) return INAPPLICABLE;
 
     //std::cout << "DEGTWO Culling vertices: " << '\n';
+    int numberOfReducedVertices = 0;
+    int numberOfReducedVCVertices = 0;
+    auto startDeg2 = std::chrono::high_resolution_clock::now();
     while(!degTwoBucket->empty())
     {
         //std::cout << "start of while loop" << '\n';
@@ -125,6 +133,8 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeTwo(BucketGraph* G, int* k, bool 
             //std::cout << " after setting inactive" << '\n';
             //G->print();
             (*k) = (*k) - 2;
+            numberOfReducedVertices++;
+            numberOfReducedVCVertices += 2;
         }
         // CASE Neighbours don't know each other => setInactive or do that in addReducedVertices?
         else
@@ -135,6 +145,8 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeTwo(BucketGraph* G, int* k, bool 
             delVer->kDecrement = 1;
             delVer->mergeVertexInfo = G->merge(it->index, neighbours.first, neighbours.second); //sets merged vertices inactive
             (*k) = (*k) - 1;
+            numberOfReducedVertices++;
+            numberOfReducedVCVertices++;
             //std::cout << " | merging into " << std::get<0>(*delVer->mergeVertexInfo) << '\n';
             //G->print();
             //G->printBucketQueue();
@@ -142,6 +154,11 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeTwo(BucketGraph* G, int* k, bool 
         appliedRules->push_back(delVer);
         //std::cout << "---------" << '\n';
     }
+    auto stopDeg2 = std::chrono::high_resolution_clock::now();
+    double Deg2 = (std::chrono::duration_cast<std::chrono::microseconds>(stopDeg2 - startDeg2).count() /  1000) / (double) 1000;
+    if (printDebug)
+        std::cout << "#Reduced " << numberOfReducedVertices << " Deg2 vertices in " << Deg2 << " seconds" << std::endl;
+
     //std::cout << "----end----" << '\n';
     return APPLICABLE;
 }
@@ -225,21 +242,23 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeTwo_Secure(BucketGraph* G, int* k
 //    return INAPPLICABLE;
 }
 
-RULE_APPLICATION_RESULT Reductions::rule_LPFlow(BucketGraph* G, int* k, bool checkBudget)
+RULE_APPLICATION_RESULT Reductions::rule_LPFlow(BucketGraph* G, int* k, bool checkBudget, bool printDebug)
 {
     if(!G->LP_INITIALISED)
         throw std::invalid_argument("LP data structures not initialised");
     std::vector<int>* delVertices = new std::vector<int>();
     std::vector<int>* delVCVertices = new std::vector<int>();
-    //auto startHop = std::chrono::high_resolution_clock::now();
+    auto startHop = std::chrono::high_resolution_clock::now();
     G->hopcroftKarpMatchingSize();
-    //auto stopHop = std::chrono::high_resolution_clock::now();
-    //auto startCom = std::chrono::high_resolution_clock::now();
-    G->setBipartMatchingFlowComponentsInactive(delVertices, delVCVertices, *k, 0.5);
-    /* auto stopCom = std::chrono::high_resolution_clock::now();
-    double Hop = (std::chrono::duration_cast<std::chrono::microseconds>(stopHop - startHop).count() /  1000) / (double) 1000;
-    double Com = (std::chrono::duration_cast<std::chrono::microseconds>(stopCom - startCom).count() /  1000) / (double) 1000; */
-    //std::cout << "Computed flow reduction with vc_verts=" << delVCVertices->size() << ", verts=" << delVertices->size() << ", k=" << *k << " in " << Hop + Ed + Com << " seconds (HopcroftKarp: " << Hop << " + EdmondsKarp: " << Ed << " + Connected Components: " << Com << ")" << '\n';
+    auto stopHop = std::chrono::high_resolution_clock::now();
+    auto startCom = std::chrono::high_resolution_clock::now();
+    G->setBipartMatchingFlowComponentsInactive(delVertices, delVCVertices, *k, INT32_MAX/* 0.5 */);
+    auto stopCom = std::chrono::high_resolution_clock::now();
+    double Hop = (std::chrono::duration_cast<std::chrono::microseconds>(stopHop - startHop).count() / 1000) / (double) 1000;
+    double Com = (std::chrono::duration_cast<std::chrono::microseconds>(stopCom - startCom).count() / 1000) / (double) 1000;
+    if (printDebug)
+        std::cout << "#Reduced " << delVertices->size() + delVCVertices->size() << " LP vertices (" << delVCVertices->size() << " VC / " << delVertices->size() << " non-VC) in " << Hop + Com << " seconds (HopcroftKarp: " << Hop << " + Connected Components: " << Com << ")" << '\n';
+
     Reduction* reduction = new Reduction(RULE::LPFLOW, delVCVertices->size(), delVertices, delVCVertices);
     appliedRules->push_back(reduction);
     *k = *k - delVCVertices->size();
@@ -491,8 +510,209 @@ RULE_APPLICATION_RESULT Reductions::rule_Domination_BE(BucketGraph* G, int* k, b
     return INAPPLICABLE;
 } */
 
-RULE_APPLICATION_RESULT Reductions::rule_Unconfined(BucketGraph* G, int* k, bool checkBudget)
+RULE_APPLICATION_RESULT Reductions::rule_Unconfined(BucketGraph* G, int* k, bool checkBudget, bool printDebug)
 {
+    auto startUnconfined = std::chrono::high_resolution_clock::now();
+    int numCheckedVertices = 0;
+
+    bool applied = false;
+
+    std::unordered_map<int, bool> S = std::unordered_map<int, bool>();
+    std::unordered_map<int, bool> SNeighbours = std::unordered_map<int, bool>();
+
+    Reduction* reduction = new Reduction(RULE::DEGREE_ONE, 0, nullptr, new std::vector<int>());
+    auto bucketQueue = G->getBucketQueue();
+    //G->printBucketQueue();
+    //for(auto b = G->getStableBucketQueueIncIterator(); (*b)->degree != bucketQueue->end()->degree; (*b) = ++(*b))
+    for(auto b = G->getStableBucketQueueDecIterator(); (*b)->degree > 0 && (*b)->degree != bucketQueue->end()->degree; (*b) = --(*b))
+    {
+        //std::cout << "Degree: " << (*b)->degree << std::endl;
+        Bucket* bucket = G->getBucket((*b)->degree);
+        //std::cout << "Degree: " << bucket->degree << std::endl;
+        if(bucket->degree <= 0) { continue; }
+        //std::cout << "Number of vertices: " << (*bucket).vertices.size() << std::endl;
+        for(auto v = bucket->getStableIterator(); (*v)->index != (*bucket).vertices.end()->index; (*v) = ++(*v))
+        {
+            //if(!G->isVertexScheduledForUnconfined((*v)->index)) { continue; }
+            //std::cout << "Vertex: " << (*v)->index << std::endl;
+            Vertex* vertex = G->getVertex((*v)->index);
+            //std::cout << "Got vertex: " << (*v)->index << std::endl;
+            //std::cout << cp::dye("checking if vertex " + std::to_string(vertex->getIndex()) + " is unconfined", 'y') << std::endl;
+            if(vertex == nullptr || !vertex->getActive()) { continue; }
+            numCheckedVertices++;
+
+            //std::cout << cp::dye("vertex " + std::to_string(vertex->getIndex()) + " is active", 'g') << std::endl;
+            // S and neighbours of S, that are kept up to date
+            S.clear();
+            SNeighbours.clear();
+            S.insert(std::pair<int, bool>(vertex->getIndex(), true));
+            for (auto neighbour = vertex->adj->begin(); neighbour != vertex->adj->end(); ++neighbour)
+            {
+                if(!G->isActive(*neighbour)) { continue; }
+                SNeighbours.insert(std::pair<int, bool>(*neighbour, true));
+            }
+            /* G->print();
+            std::cout << cp::dye("finished initialisation with S={", 'b');
+            for(auto l=S.begin(); l!=S.end(); ++l)
+            {
+                std::cout << cp::dye(std::to_string(l->first)+", ", 'y');
+            }
+            std::cout << cp::dye("}", 'b');
+            std::cout << cp::dye(" and SN={", 'b');
+            for(auto l=SNeighbours.begin(); l!=SNeighbours.end(); ++l)
+            {
+                std::cout << cp::dye(std::to_string(l->first)+", ", 'y');
+            }
+            std::cout << cp::dye("}", 'b') << std::endl; */
+
+            // search continuation loop
+            while(true)
+            {
+                int best = -1;
+                int bestOutsideNeighbour = -1;
+                // find best neighbour
+                int off = 0;
+                for (auto u = SNeighbours.begin(); u != SNeighbours.end(); ++u)
+                {
+                    /* if(!G->getVertex(u->first)->getActive()) { continue; }
+                    if(S.find(u->first) != S.end()) { continue; } */
+                    bool valid = true;
+                    int sharedNeighbours = 0;
+                    int outsideNeighbour = -1;
+                    //int outsideNeighboursSize = 0;
+                    for (auto it=G->getVertex(u->first)->adj->begin(); it != G->getVertex(u->first)->adj->end(); ++it)
+                    {
+                        if(!G->getVertex(*it)->getActive()) { continue; }
+                        // if u has more than one neighbour in S, u does not fit the criteria
+                        if (S.find(*it) != S.end()) {
+                            sharedNeighbours++;
+                            //std::cout << cp::dye("vertex "+std::to_string(u->first)+" has S neighbour: "+std::to_string(*it), 'y') << std::endl;
+                            if(sharedNeighbours > 1) {
+                                //std::cout << cp::dye("vertex shares multiple neighbours", 'r') << std::endl;
+                                // TODO: remove vertex from neighbourhood
+                                //SNeighbours.erase()
+                                valid = false;
+                                break;
+                            }
+                        }
+                        //if(!inSNeighbours[*it] && !inS[*it])
+                        if(SNeighbours.find(*it) == SNeighbours.end() && S.find(*it) == S.end())
+                        {
+                            //std::cout << cp::dye("vertex has neighbour: "+std::to_string(*it), 'y') << std::endl;
+                            if(outsideNeighbour != -1) { valid = false; break; }
+                            outsideNeighbour = *it;
+                        }
+                    }
+
+                    if(!valid) { continue; }
+                    // update best/bestNeighbourhoodSize if u is better than the current best
+                    //std::cout << cp::dye("Checking best=" + std::to_string(best) + " with o=" + std::to_string(bestOutsideNeighbour) + " vs. u=" + std::to_string(u->first) + " with o=" + std::to_string(outsideNeighbour), 'y') << std::endl;
+                    //if(outsideNeighbour == -1) { break; }
+                    if(bestOutsideNeighbour != -1 && outsideNeighbour != -1) { continue; }
+                    bestOutsideNeighbour = outsideNeighbour;
+                    best = u->first;
+                    if(bestOutsideNeighbour != -1) { continue; }
+                    break;
+                }
+
+                //std::cout << cp::dye("Best neighbour: " + std::to_string(best), 'y') << std::endl;
+
+                // if no expansion vertex found, vertex "vertex" is not unconfined (continue with next vertex)
+                if(best == -1) {
+                    //std::cout << cp::dye("vertex is not unconfined", 'r') << std::endl;
+                    break;
+                }
+                if(bestOutsideNeighbour == -1)
+                {
+                    //G->unscheduleForUnconfined(vertex->getIndex());     // TODO: test if doing it here or at the end for all deleted vertices performs better
+                    if((*k) <= 0 && checkBudget) {
+                        if (printDebug)
+                        {
+                            auto endUnconfined = std::chrono::high_resolution_clock::now();
+                            double unconfinedDuration = (std::chrono::duration_cast<std::chrono::microseconds>(endUnconfined - startUnconfined).count() /  1000) / (double) 1000;
+                            std::cout << "#INSUFFICIENT BUDGET k=" << reduction->deletedVCVertices->size() << " for unconfined rule in " << unconfinedDuration << " seconds" << " (checked " << numCheckedVertices << " vertices)" << std::endl;
+                        }
+                        (*k) = (*k) + reduction->kDecrement;
+                        G->setActive(reduction->deletedVCVertices);
+                        delete reduction->deletedVCVertices;
+                        delete reduction;
+                        return INSUFFICIENT_BUDGET;
+                    }
+                    applied = true;
+                    //std::cout << cp::dye("vertex is unconfined", 'g') << std::endl;
+                    reduction->deletedVCVertices->push_back(vertex->getIndex());
+                    reduction->kDecrement++;
+                    (*k) = (*k) - 1;
+                    G->setInactive(vertex->getIndex());
+                    break;
+                }
+                if(bestOutsideNeighbour != -1)
+                {
+                    // remove u from neighbours and add it to S
+                    //SNeighbours.erase(best);
+                    //S.insert(std::pair<int, bool>(best, true));
+                    // add u's outside neighbour to S
+                    S.insert(std::pair<int, bool>(bestOutsideNeighbour, true));
+                    // add non-intersecting outsideNeighbour neighbourhood to neighbours
+                    for(auto it=G->getVertex(bestOutsideNeighbour)->adj->begin(); it != G->getVertex(bestOutsideNeighbour)->adj->end(); ++it)
+                    {
+                        if(!G->isActive(*it) || S.find(*it) != S.end()) { continue; }
+                        if(SNeighbours.find(*it) == SNeighbours.end())
+                        {
+                            SNeighbours.insert(std::pair<int, bool>(*it, true));
+                        }
+                        else
+                        {
+                            SNeighbours.erase(*it);
+                        }
+                    }
+                    /* std::cout << cp::dye("continuing search with S={", 'y');
+                    for(auto l=S.begin(); l!=S.end(); ++l)
+                    {
+                        std::cout << cp::dye(std::to_string(l->first)+", ", 'y');
+                    }
+                    std::cout << cp::dye("}", 'y');
+                    std::cout << cp::dye(" and SN={", 'y');
+                    for(auto l=SNeighbours.begin(); l!=SNeighbours.end(); ++l)
+                    {
+                        std::cout << cp::dye(std::to_string(l->first)+", ", 'y');
+                    }
+                    std::cout << cp::dye("}", 'y') << std::endl; */
+                    continue;
+                }
+                //std::cout << cp::dye("vertex is not unconfined", 'r') << std::endl;
+                break;
+            }
+        }
+    }
+    //G->print();
+    //std::cout << cp::dye("checking if applied", 'r') << std::endl;
+    auto endUnconfined = std::chrono::high_resolution_clock::now();
+    double unconfinedDuration = (std::chrono::duration_cast<std::chrono::microseconds>(endUnconfined - startUnconfined).count() /  1000) / (double) 1000;
+    if (printDebug)
+        std::cout << "#Reduced " << reduction->deletedVCVertices->size() << " unconfined vertices in " << unconfinedDuration << " seconds" << " (checked " << numCheckedVertices << " vertices)" << std::endl;
+    // if there were any applications return APPLICABLE
+    if (applied) {
+        //std::cout << cp::dye("was applied", 'g') << std::endl;
+        appliedRules->push_back(reduction);
+        /* std::cout << cp::dye("reduced unconfined vertices U={", 'g');
+        for(int l=0; l<(int)reduction->deletedVCVertices->size();l++)
+        {
+            std::cout << cp::dye(std::to_string(reduction->deletedVCVertices->at(l))+", ", 'g');
+        }
+        std::cout << cp::dye("}", 'g') << std::endl; */
+        return APPLICABLE;
+    }
+    //std::cout << cp::dye("wasn't applied", 'r') << std::endl;
+    delete reduction->deletedVCVertices;
+    delete reduction;
+    return INAPPLICABLE;
+}
+
+/* RULE_APPLICATION_RESULT Reductions::rule_Unconfined(BucketGraph* G, int* k, bool checkBudget)
+{
+    auto startUnconfined = std::chrono::high_resolution_clock::now();
+
     bool applied = false;
     std::vector<bool> inS = std::vector<bool>(G->getTotalNumVertices());
     std::vector<bool> inSNeighbours = std::vector<bool>(G->getTotalNumVertices());
@@ -503,10 +723,8 @@ RULE_APPLICATION_RESULT Reductions::rule_Unconfined(BucketGraph* G, int* k, bool
     Reduction* reduction = new Reduction(RULE::DEGREE_ONE, 0, nullptr, new std::vector<int>());
     auto bucketQueue = G->getBucketQueue();
     //G->printBucketQueue();
-    /* auto bucket = bucketQueue->begin();
-    ++bucket;
-    for (; G->getBucketQueue()->size() > 0 && bucket != bucketQueue->end() && bucket->degree <= G->getMaxDegree(); ++bucket) { */
-    for(auto b = G->getStableBucketQueueIterator(); (*b)->degree != bucketQueue->end()->degree; (*b) = ++(*b))
+    //for(auto b = G->getStableBucketQueueIncIterator(); (*b)->degree != bucketQueue->end()->degree; (*b) = ++(*b))
+    for(auto b = G->getStableBucketQueueDecIterator(); (*b)->degree > 0 && (*b)->degree != bucketQueue->end()->degree; (*b) = --(*b))
     {
         //std::cout << "Degree: " << (*b)->degree << std::endl;
         Bucket* bucket = G->getBucket((*b)->degree);
@@ -632,143 +850,9 @@ RULE_APPLICATION_RESULT Reductions::rule_Unconfined(BucketGraph* G, int* k, bool
     }
     //G->print();
     //std::cout << cp::dye("checking if applied", 'r') << std::endl;
-    // if there were any applications return APPLICABLE
-    if (applied) {
-        //std::cout << cp::dye("was applied", 'g') << std::endl;
-        appliedRules->push_back(reduction);
-        return APPLICABLE;
-    }
-    //std::cout << cp::dye("wasn't applied", 'r') << std::endl;
-    delete reduction->deletedVCVertices;
-    delete reduction;
-    return INAPPLICABLE;
-}
-
-// current best version:
-/* RULE_APPLICATION_RESULT Reductions::rule_Unconfined(BucketGraph* G, int* k, bool checkBudget)
-{
-    bool applied = false;
-    std::vector<bool> inS = std::vector<bool>(G->getTotalNumVertices());
-    std::vector<bool> inSNeighbours = std::vector<bool>(G->getTotalNumVertices());
-    for(int i=0; i<(int) inS.size(); i++) { inS[i] = false; inSNeighbours[i] = false; }
-
-    std::vector<int> SNeighbours = std::vector<int>();
-
-    Reduction* reduction = new Reduction(RULE::DEGREE_ONE, 0, nullptr, new std::vector<int>());
-    for (int v = 0; v<G->getTotalNumVertices(); v++)
-    {
-        //std::cout << cp::dye("getting vertex", 'y') << std::endl;
-        Vertex* vertex = G->getVertex(v);
-        //std::cout << cp::dye("checking if vertex " + std::to_string(vertex->getIndex()) + " is unconfined", 'y') << std::endl;
-        //if (vertex->getDegree() == 0) { continue; }
-        if(vertex == nullptr || !vertex->getActive()) { continue; }
-        //std::cout << cp::dye("vertex " + std::to_string(vertex->getIndex()) + " is active", 'g') << std::endl;
-        // S and neighbours of S list, that are kept up to date
-        for(int i=0; i<(int) inS.size(); i++) { inS[i] = false; inSNeighbours[i] = false; }
-        SNeighbours.clear();
-        inS[vertex->getIndex()] = true;
-        for (auto neighbour = vertex->adj->begin(); neighbour != vertex->adj->end(); ++neighbour)
-        {
-            if(!G->isActive(*neighbour)) { continue; }
-            inSNeighbours[*neighbour] = true;
-            SNeighbours.push_back(*neighbour);
-        }
-        //G->print();
-        //std::cout << cp::dye("checking if vertex " + std::to_string(vertex->getIndex()) + " is unconfined", 'b') << std::endl;
-
-        //int index = vertex->getIndex();
-        // search continuation loop
-        while(true)
-        {
-            int best = -1;
-            int bestOutsideNeighboursSize = -1;
-            // find best neighbour
-            int off = 0;
-            for (auto u = SNeighbours.begin(); u != SNeighbours.end(); ++u)
-            //for (int i = 0; i < (int) SNeighbours.size(); ++i)
-            {
-                if(!G->getVertex(*u)->getActive()) { continue; }
-                if(inS[*u]) { continue; }
-                bool valid = true;
-                int sharedNeighbours = 0;
-                int outsideNeighboursSize = 0;
-                for (auto it=G->getVertex(*u)->adj->begin(); it != G->getVertex(*u)->adj->end(); ++it)
-                {
-                    if(!G->getVertex(*u)->getActive()) { continue; }
-                    if(!inSNeighbours[*it] && !inS[*it])
-                    {
-                        outsideNeighboursSize++;
-                    }
-                    // if u has more than one neighbour in S, u does not fit the criteria
-                    if (inS[*it]) {
-                        sharedNeighbours++;
-                        if(sharedNeighbours > 1) {
-                            valid = false;
-                            break;
-                        }
-                    }
-                }
-
-                if(!valid) { continue; }
-                // update best/bestNeighbourhoodSize if u is better than the current best
-                //std::cout << cp::dye("Checking best=" + std::to_string(best) + " with " + std::to_string(bestUniqueNeighboursSize) + " vs. u=" + std::to_string(*u) + " with " + std::to_string(uniqueNeighbours.size()), 'y') << std::endl;
-                if(best != -1 && outsideNeighboursSize >= bestOutsideNeighboursSize) { continue; }
-                best = *u;
-                bestOutsideNeighboursSize = outsideNeighboursSize;
-            }
-
-            //std::cout << cp::dye("Best neighbour: " + std::to_string(best), 'y') << std::endl;
-
-            // if no expansion vertex found, vertex "vertex" is not unconfined (continue with next vertex)
-            if(best == -1) { break; }
-            if(bestOutsideNeighboursSize == 0)
-            {
-                if((*k) <= 0 && checkBudget) {
-                    (*k) = (*k) + reduction->kDecrement;
-                    G->setActive(reduction->deletedVCVertices);
-                    delete reduction->deletedVCVertices;
-                    delete reduction;
-                    return INSUFFICIENT_BUDGET;
-                }
-                applied = true;
-                //std::cout << cp::dye("vertex is unconfined", 'g') << std::endl;
-                reduction->deletedVCVertices->push_back(vertex->getIndex());
-                reduction->kDecrement++;
-                (*k) = (*k) - 1;
-                G->setInactive(vertex->getIndex());
-                break;
-            }
-            if(bestOutsideNeighboursSize > 0)
-            {
-                //std::cout << cp::dye("continuing search", 'y') << std::endl;
-                // remove u from neighbours and add it to S
-                inSNeighbours[best] = false;
-                inS[best] = true;
-                for (int f=0; f<(int) SNeighbours.size(); f++)
-                {
-                    if(SNeighbours[f] == best) { SNeighbours.erase(SNeighbours.begin()+f); break; }
-                }
-                // push u's neighbours into S and add non-intersecting neighbourhood to neighbours
-                for(auto it=G->getVertex(best)->adj->begin(); it != G->getVertex(best)->adj->end(); ++it)
-                {
-                    inSNeighbours[*it] = false;
-                    inS[*it] = true;
-                }
-                for(auto it=G->getVertex(best)->adj->begin(); it != G->getVertex(best)->adj->end(); ++it)
-                {
-                    for(auto itt=G->getVertex(*it)->adj->begin(); itt != G->getVertex(*it)->adj->end(); ++itt)
-                    {
-                        if(!inSNeighbours[*itt] && !inS[*itt]) { inSNeighbours[*itt] = true; SNeighbours.push_back(*itt); }
-                    }
-                }
-                continue;
-            }
-            //std::cout << cp::dye("vertex is not unconfined", 'r') << std::endl;
-            break;
-        }
-    }
-    //G->print();
-    //std::cout << cp::dye("checking if applied", 'r') << std::endl;
+    auto endUnconfined = std::chrono::high_resolution_clock::now();
+    double unconfinedDuration = (std::chrono::duration_cast<std::chrono::microseconds>(endUnconfined - startUnconfined).count() /  1000) / (double) 1000;
+    std::cout << "Reduced " << reduction->deletedVCVertices->size() << " unconfined vertices in " << unconfinedDuration << " seconds" << std::endl;
     // if there were any applications return APPLICABLE
     if (applied) {
         //std::cout << cp::dye("was applied", 'g') << std::endl;

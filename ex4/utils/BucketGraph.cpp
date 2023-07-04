@@ -138,6 +138,7 @@ BucketGraph* BucketGraph::readStandardInput(bool initReductionDataStructures)
     if(initReductionDataStructures)
     {
         G->initMatching(); // LP Bound matching fields
+        G->initUnconfined(); // Unconfined optimisation fields
         G->reductions = new Reductions();
 
         G->initDominationHelper(); // Domination
@@ -337,7 +338,8 @@ void BucketGraph::initBucketQueue()
         deg++;
     }
     // init stable iterator
-    stable_bucketQueue_iterator = bucketQueue.iterator_to(*bucketQueue.begin());
+    stable_bucketQueue_inc_iterator = bucketQueue.iterator_to(*bucketQueue.begin());
+    stable_bucketQueue_dec_iterator = bucketQueue.iterator_to(*bucketQueue.end());
 }
 
 void BucketGraph::initMatching()
@@ -362,6 +364,16 @@ void BucketGraph::initMatching()
     LP_INITIALISED = true;
 }
 
+void BucketGraph::initUnconfined()
+{
+    mayBeUnconfined = new std::vector<bool>(vertexReferences.size());
+    for(int i=0; i<(int)mayBeUnconfined->size(); i++)
+    {
+        (*mayBeUnconfined)[i] = true;
+    }
+    UNCONFINED_INITIALISED = true;
+}
+
 void BucketGraph::freeMatching()
 {
     delete pairU;
@@ -373,6 +385,12 @@ void BucketGraph::freeMatching()
     // number of vertices helper variable (only for clarity)
     nv = -1;
     LP_INITIALISED = false;
+}
+
+void BucketGraph::freeUnconfined()
+{
+    delete mayBeUnconfined;
+    UNCONFINED_INITIALISED = false;
 }
 
 bool BucketGraph::isAdjMapConsistent()
@@ -460,6 +478,12 @@ void BucketGraph::freeGraph()
     if(LP_INITIALISED)
     {
         freeMatching();
+    }
+
+    //free Unconfined stuff
+    if(UNCONFINED_INITIALISED)
+    {
+        freeUnconfined();
     }
 
     //free clique stuff
@@ -768,7 +792,8 @@ void BucketGraph::removeFromBucketQueue(int vertex)
     int degree = vertexReferences[vertex]->degree;
     bucketReferences[degree]->remove(vertexReferences[vertex]->bucketVertex);
     if(bucketReferences[degree]->vertices.size() == 0) {
-        if(degree == stable_bucketQueue_iterator->degree) { ++stable_bucketQueue_iterator; }
+        if(degree == stable_bucketQueue_inc_iterator->degree) { ++stable_bucketQueue_inc_iterator; }
+        if(degree == stable_bucketQueue_dec_iterator->degree) { --stable_bucketQueue_dec_iterator; }
         bucketQueue.erase(bucketQueue.iterator_to(*bucketReferences[degree]));
     }
 }
@@ -815,7 +840,8 @@ void BucketGraph::moveToBiggerBucket(int degree, int vertex)
     next_bucket++;
     //list_node<hook_defaults::void_pointer>* next_bucket = nullptr; 
     if(previousBucket->vertices.size() == 0) {
-        if(previous_bucket_it->degree == stable_bucketQueue_iterator->degree) { ++stable_bucketQueue_iterator; }
+        if(previous_bucket_it->degree == stable_bucketQueue_inc_iterator->degree) { ++stable_bucketQueue_inc_iterator; }
+        if(previous_bucket_it->degree == stable_bucketQueue_dec_iterator->degree) { --stable_bucketQueue_dec_iterator; }
         bucketQueue.erase(previous_bucket_it);
     }
 
@@ -873,7 +899,8 @@ void BucketGraph::moveToSmallerBucket(int degree, int vertex)
 
     //list_node<hook_defaults::void_pointer>* next_bucket = nullptr; 
     if(curBucket->vertices.size() == 0) {
-        if(cur_bucket_it->degree == stable_bucketQueue_iterator->degree) { ++stable_bucketQueue_iterator; }
+        if(cur_bucket_it->degree == stable_bucketQueue_inc_iterator->degree) { ++stable_bucketQueue_inc_iterator; }
+        if(cur_bucket_it->degree == stable_bucketQueue_dec_iterator->degree) { --stable_bucketQueue_dec_iterator; }
         bucketQueue.erase(cur_bucket_it);
     }
 
@@ -957,26 +984,34 @@ void BucketGraph::setInactive(int vertexIndex)
 
     //std::cout << "setInactive: after updating neighbours" << '\n';
     // update matching
-    if(!LP_INITIALISED) { return; }
-    //std::cout << "Checking edge (" << vertexIndex << ", " << (*pairU)[vertexIndex] << "), when deleting " << vertexIndex;
-    if((*pairU)[vertexIndex] != NIL) {
-        //std::cout << " --> Decrementing";
-        //unmatched.push_back((*pairU)[vertexIndex]);
-        currentLPBound--;
+    if(LP_INITIALISED)
+    {
+        //std::cout << "Checking edge (" << vertexIndex << ", " << (*pairU)[vertexIndex] << "), when deleting " << vertexIndex;
+        if((*pairU)[vertexIndex] != NIL) {
+            //std::cout << " --> Decrementing";
+            //unmatched.push_back((*pairU)[vertexIndex]);
+            currentLPBound--;
+        }
+        //std::cout << '\n';
+        //std::cout << "Checking edge (" << pairV[vertexIndex] << ", " << vertexIndex << "), when deleting " << vertexIndex;
+        if((*pairV)[vertexIndex] != NIL) {
+            //std::cout << " --> Decrementing";
+            unmatched->push_back((*pairV)[vertexIndex]);
+            currentLPBound--;
+        }
+        //std::cout << '\n';
+        (*dist)[vertexIndex] = INT32_MAX;
+        if((*pairU)[vertexIndex] != NIL) { (*pairV)[(*pairU)[vertexIndex]] = NIL; }
+        if((*pairV)[vertexIndex] != NIL) { (*pairU)[(*pairV)[vertexIndex]] = NIL; }
+        (*pairU)[vertexIndex] = NIL;
+        (*pairV)[vertexIndex] = NIL;
     }
-    //std::cout << '\n';
-    //std::cout << "Checking edge (" << pairV[vertexIndex] << ", " << vertexIndex << "), when deleting " << vertexIndex;
-    if((*pairV)[vertexIndex] != NIL) {
-        //std::cout << " --> Decrementing";
-        unmatched->push_back((*pairV)[vertexIndex]);
-        currentLPBound--;
+
+    if(UNCONFINED_INITIALISED)
+    {
+        // This is a O(m+n) runtime risk // TODO: so remove probably
+        //scheduleComponentForUnconfined(v->index);
     }
-    //std::cout << '\n';
-    (*dist)[vertexIndex] = INT32_MAX;
-    if((*pairU)[vertexIndex] != NIL) { (*pairV)[(*pairU)[vertexIndex]] = NIL; }
-    if((*pairV)[vertexIndex] != NIL) { (*pairU)[(*pairV)[vertexIndex]] = NIL; }
-    (*pairU)[vertexIndex] = NIL;
-    (*pairV)[vertexIndex] = NIL;
 }
 
 void BucketGraph::setActive(std::vector<int>* vertexIndices)
@@ -1318,15 +1353,15 @@ int BucketGraph::bruteForceCalculateNumEdges()
 /*----------------------------------------------------------*/
 /*-------------------   Data Reduction   -------------------*/
 /*----------------------------------------------------------*/
-void BucketGraph::preprocess(int* k)
+void BucketGraph::preprocess(int* k, bool printDebug)
 {
     while(true)
     {
-        if(reductions->rule_DegreeOne(this, k, false) == APPLICABLE) continue;
-        if(reductions->rule_DegreeTwo(this, k, false) == APPLICABLE) continue;
-        if(reductions->rule_LPFlow(this, k, false) == APPLICABLE) continue;
-        //if(reductions->rule_Domination(this, k, false) == APPLICABLE) continue;
-        if(reductions->rule_Unconfined(this, k, false) == APPLICABLE) continue;
+        if(reductions->rule_DegreeOne(this, k, false, printDebug) == APPLICABLE) continue;
+        if(reductions->rule_DegreeTwo(this, k, false, printDebug) == APPLICABLE) continue;
+        if(reductions->rule_Domination(this, k, false) == APPLICABLE) continue;
+        //if(reductions->rule_Unconfined(this, k, false, printDebug) == APPLICABLE) continue;
+        if(reductions->rule_LPFlow(this, k, false, printDebug) == APPLICABLE) continue;
         return;
     }
 }
@@ -1365,13 +1400,13 @@ void BucketGraph::preprocessSAT(int* k, std::vector<bool>& rulesToApply)
     }
 }
 
-bool BucketGraph::dynamicReduce(int* k, int depth)
+bool BucketGraph::dynamicReduce(int* k, int depth, bool printDebug)
 {
     std::vector<bool> reductions;
     if(depth % 25 == 0)
     {
         // + unconfined
-        reductions = std::vector<bool>{true, true, false, true, true && LP_INITIALISED, true, true};
+        reductions = std::vector<bool>{true, true, true, false && true && UNCONFINED_INITIALISED, true && LP_INITIALISED, true, true};
     }
     else if(depth % 10 == 0)
     {
@@ -1383,7 +1418,7 @@ bool BucketGraph::dynamicReduce(int* k, int depth)
         // deg1 + deg2 + highDeg + buss
         reductions = std::vector<bool>{true, true, false, false, false, true, true};
     }
-    return reduce(k, &reductions);
+    return reduce(k, &reductions, printDebug);
 }
 
 /*
@@ -1395,7 +1430,7 @@ bool BucketGraph::dynamicReduce(int* k, int depth)
  * 5: highDeg,
  * 6: Buss
 */
-bool BucketGraph::reduce(int* k, std::vector<bool>* rulesToApply)
+bool BucketGraph::reduce(int* k, std::vector<bool>* rulesToApply, bool printDebug)
 {
     if(rulesToApply == nullptr) {
         rulesToApply = new std::vector{true, true, true, true, true, true, true};
@@ -1417,12 +1452,12 @@ bool BucketGraph::reduce(int* k, std::vector<bool>* rulesToApply)
 
         if(rulesToApply->at(6) && reductions->rule_Buss(this, k, getNumConnectedVertices(), getNumEdges()) == APPLICABLE) return true;
 
-        if(rulesToApply->at(0)) { degreeOneResult = reductions->rule_DegreeOne(this, k, true); }
+        if(rulesToApply->at(0)) { degreeOneResult = reductions->rule_DegreeOne(this, k, true, printDebug); }
         if(degreeOneResult == APPLICABLE) continue;
         if(degreeOneResult == INSUFFICIENT_BUDGET) return true;
 
         //std::cout << "deg2 " << '\n';
-        if(rulesToApply->at(1)) { degreeTwoResult = reductions->rule_DegreeTwo(this, k, true); }
+        if(rulesToApply->at(1)) { degreeTwoResult = reductions->rule_DegreeTwo(this, k, true, printDebug); }
         if(degreeTwoResult == APPLICABLE) continue;
         if(degreeTwoResult == INSUFFICIENT_BUDGET) return true;
 
@@ -1430,11 +1465,11 @@ bool BucketGraph::reduce(int* k, std::vector<bool>* rulesToApply)
         if(dominationResult == APPLICABLE) continue;
         if(dominationResult == INSUFFICIENT_BUDGET) return true;
 
-        if(rulesToApply->at(3)) { unconfinedResult = reductions->rule_Unconfined(this, k, true); }
+        if(rulesToApply->at(3)) { unconfinedResult = reductions->rule_Unconfined(this, k, true, printDebug); }
         if(unconfinedResult == APPLICABLE) continue;
         if(unconfinedResult == INSUFFICIENT_BUDGET) return true;
 
-        if(rulesToApply->at(4)) { LPFlowResult = reductions->rule_LPFlow(this, k, true); }
+        if(rulesToApply->at(4)) { LPFlowResult = reductions->rule_LPFlow(this, k, true, printDebug); }
         if(LPFlowResult == APPLICABLE) continue;
         if(LPFlowResult == INSUFFICIENT_BUDGET) return true;
         return false;
@@ -2174,6 +2209,35 @@ void BucketGraph::setBipartMatchingFlowComponentsInactive(std::vector<int>* L, s
         auto current = std::chrono::high_resolution_clock::now();
         if(std::chrono::duration_cast<std::chrono::microseconds>(current - start).count() / (double) 1000000 > maxExecTime) { return; }
     }
+}
+
+void BucketGraph::scheduleComponentForUnconfined(int vertexIndex)
+{
+    std::queue<int> Q = std::queue<int>();
+    // init Queue with neighbours of deleted vertex
+    for(auto v = vertexReferences[vertexIndex]->adj->begin(); v != vertexReferences[vertexIndex]->adj->end(); ++v)
+    {
+        if(!vertexReferences[*v]->isActive) { continue; }
+        if(isVertexScheduledForUnconfined(*v)) { continue; }
+        Q.push(*v);
+    }
+    while(!Q.empty())
+    {
+        int u = Q.front();
+        Q.pop();
+        if (!isVertexScheduledForUnconfined(u))
+        {
+            scheduleForUnconfined(u);
+            for (auto v = vertexReferences[u]->adj->begin(); v != vertexReferences[u]->adj->end(); ++v)
+            {
+                if(!vertexReferences[*v]->isActive) { continue; }
+                if(isVertexScheduledForUnconfined(*v)) { continue; }
+                Q.push(*v);
+            }
+        }
+    }
+    // TODO:
+    unscheduleForUnconfined(vertexIndex);
 }
 
 /*----------------------------------------------------------*/

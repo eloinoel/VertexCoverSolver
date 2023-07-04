@@ -92,18 +92,18 @@ public:
     RULE_APPLICATION_RESULT rule_HighDegree(BucketGraph* G, int* k);
     /* only call if rule_HighDegree and rule_DegreeZero return false, returns true if no vertex cover of size k exists in graph */
     RULE_APPLICATION_RESULT rule_Buss(BucketGraph* G, int* k, int numVertices, int numEdges);
-    RULE_APPLICATION_RESULT rule_DegreeOne(BucketGraph* G, int* k, bool checkBudget);
+    RULE_APPLICATION_RESULT rule_DegreeOne(BucketGraph* G, int* k, bool checkBudget, bool printDebug = false);
 
-    RULE_APPLICATION_RESULT rule_DegreeTwo(BucketGraph* G, int* k, bool checkBudget);
+    RULE_APPLICATION_RESULT rule_DegreeTwo(BucketGraph* G, int* k, bool checkBudget, bool printDebug = false);
     RULE_APPLICATION_RESULT rule_DegreeTwo_Secure(BucketGraph* G, int* k);
 
-    RULE_APPLICATION_RESULT rule_LPFlow(BucketGraph* G, int* k, bool checkBudget);
+    RULE_APPLICATION_RESULT rule_LPFlow(BucketGraph* G, int* k, bool checkBudget, bool printDebug = false);
     
     RULE_APPLICATION_RESULT rule_Domination(BucketGraph* G, int* k, bool checkBudget);
 
     RULE_APPLICATION_RESULT rule_Domination_BE(BucketGraph* G, int* k, bool checkBudget);
 
-    RULE_APPLICATION_RESULT rule_Unconfined(BucketGraph* G, int* k, bool checkBudget);
+    RULE_APPLICATION_RESULT rule_Unconfined(BucketGraph* G, int* k, bool checkBudget, bool printDebug = false);
 };
 
 #endif
