@@ -407,7 +407,6 @@ FodyWeavers.xsd
 *.sln.iml
 
 *.csv
-*.txt
 vc-data-students/*
 
 
