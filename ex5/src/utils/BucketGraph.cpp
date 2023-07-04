@@ -366,11 +366,11 @@ void BucketGraph::initMatching()
 
 void BucketGraph::initUnconfined()
 {
-    mayBeUnconfined = new std::vector<bool>(vertexReferences.size());
+    /* mayBeUnconfined = new std::vector<bool>(vertexReferences.size());
     for(int i=0; i<(int)mayBeUnconfined->size(); i++)
     {
         (*mayBeUnconfined)[i] = true;
-    }
+    } */
     UNCONFINED_INITIALISED = true;
 }
 
@@ -1359,8 +1359,8 @@ void BucketGraph::preprocess(int* k, bool printDebug)
     {
         if(reductions->rule_DegreeOne(this, k, false, printDebug) == APPLICABLE) continue;
         if(reductions->rule_DegreeTwo(this, k, false, printDebug) == APPLICABLE) continue;
-        if(reductions->rule_Domination(this, k, false) == APPLICABLE) continue;
-        //if(reductions->rule_Unconfined(this, k, false, printDebug) == APPLICABLE) continue;
+        //if(reductions->rule_Domination(this, k, false) == APPLICABLE) continue;
+        if(reductions->rule_Unconfined(this, k, false, printDebug) == APPLICABLE) continue;
         if(reductions->rule_LPFlow(this, k, false, printDebug) == APPLICABLE) continue;
         return;
     }
@@ -1418,6 +1418,7 @@ bool BucketGraph::dynamicReduce(int* k, int depth, bool printDebug)
         // deg1 + deg2 + highDeg + buss
         reductions = std::vector<bool>{true, true, false, false, false, true, true};
     }
+    //reductions = std::vector<bool>{true, true, false, true, true, true, true};
     return reduce(k, &reductions, printDebug);
 }
 

@@ -1,0 +1,24 @@
+c Using COMiniSatPS SAT solver by Chanseok Oh (2016)
+c Parsing PB file...
+c Converting 933 PB-constraints to clauses...
+c ============================[  Problem Statistics ]============================
+c |  Number of variables:           290                                         |
+c |  Number of clauses:            1023                                         |
+c ===============================================================================
+o 136
+c *** Interrupted ***
+c [1mSATISFIABLE: Best solution found: 136[0m
+c _______________________________________________________________________________
+c 
+c restarts               : 8050
+c conflicts              : 2784071        (15700 /sec)
+c decisions              : 3535667        (0.00 % random) (19939 /sec)
+c propagations           : 332845815      (1877005 /sec)
+c conflict literals      : 67990851       (35.02 % deleted)
+c =======================[ UWrMaxSat resources usage ]===========================
+c Memory used            : 52.92 MB
+c CPU time               : 177.328 s
+c OptExp Enc: Srt/BDD/Add: 114 0 0
+c _______________________________________________________________________________
+v -x1 x2 x3 x4 x52 x80 x113 x123 x129 x189 x195 -x5 x73 -x102 x105 -x106 x166 -x182 x185 x188 -x24 x31 x57 -x133 x159 x6 x9 x11 x33 x61 x66 -x78 -x89 -x116 x169 x20 x97 x104 x171 x7 x8 -x12 -x39 -x42 -x120 x177 x30 x34 -x51 x69 x99 x143 x193 -x23 x28 -x48 x81 x90 x91 -x10 x17 x26 x150 x158 x18 x53 x127 x135 x163 x196 x49 x115 x146 -x151 x181 x13 x14 -x15 x41 x100 x142 -x152 -x153 x191 -x200 x32 x38 x62 x82 x117 x137 x16 x46 x58 x63 x139 x148 x156 x174 x176 x178 x43 x98 -x112 x124 x149 -x198 -x44 -x50 -x67 -x107 x128 x138 -x167 -x19 x85 x109 x186 x75 -x145 x21 -x22 x55 x95 -x180 x37 x71 x187 x25 x45 x134 x119 -x155 x161 -x168 x27 x35 -x179 -x36 x70 x126 -x192 -x29 x64 x83 -x84 x157 x162 x165 -x76 -x96 x118 x47 x170 -x190 x199 x108 x132 -x154 x144 x54 -x183 x79 x111 x122 -x74 -x136 -x77 -x130 -x175 -x40 x60 x87 x88 x101 -x147 -x172 x184 x131 x160 x92 x72 x93 x121 -x164 x68 -x56 -x103 x140 -x59 x125 x114 -x141 -x65 x94 x110 -x173 -x194 -x86 -x197
+s SATISFIABLE
