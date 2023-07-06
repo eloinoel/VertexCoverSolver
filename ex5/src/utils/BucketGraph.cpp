@@ -1913,6 +1913,71 @@ void BucketGraph::unmerge(Reduction* mergeRule)
     delete mergeRule->mergeVertexInfo;
 }
 
+bool BucketGraph::addEdgeToVertex(int vertex, int edge)
+{
+    if(vertex >= (int) vertexReferences.size() || edge >= (int) vertexReferences.size() || vertex < 0 || edge < 0 || vertex == edge)
+        throw std::invalid_argument("addEdgeToVertex: vertex " + std::to_string(vertex) + " or edge " + std::to_string(edge) +  " invalid\n");
+    if(!isActive(vertex) || !isActive(edge))
+        throw std::invalid_argument("addEdgeToVertex: vertex " + std::to_string(vertex) + " or edge " + std::to_string(edge) +  " inactive\n");
+    if(vertexHasEdgeTo(vertex, edge)) { return false; }
+
+    //add edge to vertex adj list
+    vertexReferences[vertex]->adj->push_back(edge);
+    vertexReferences[vertex]->adj_map->insert({edge, true});
+    vertexReferences[vertex]->degree++;
+    moveToBiggerBucket(vertexReferences[vertex]->degree-1, vertex);
+
+    //add vertex to adj list of @edge
+    vertexReferences[edge]->adj->push_back(vertex);
+    vertexReferences[edge]->adj_map->insert({vertex, true});
+    vertexReferences[edge]->degree++;
+    moveToBiggerBucket(vertexReferences[edge]->degree-1, edge);
+
+    numEdges++;
+    return true;
+}
+
+void BucketGraph::removeEdgeFromVertex(int vertex, int edge)
+{
+    if(vertex >= (int) vertexReferences.size() || edge >= (int) vertexReferences.size() || vertex < 0 || edge < 0 || vertex == edge)
+        throw std::invalid_argument("deletEdgeFromVertex: vertex " + std::to_string(vertex) + " or edge " + std::to_string(edge) +  " invalid.\n");
+    if(!isActive(vertex) || !isActive(edge))
+        throw std::invalid_argument("deleteEdgeFromVertex: vertex " + std::to_string(vertex) + " or edge " + std::to_string(edge) +  " inactive.\n");
+    if(!vertexHasEdgeTo(vertex, edge))
+        throw std::invalid_argument("deleteEdgeFromVertex: vertex " + std::to_string(vertex) + " doesn't have edge " + std::to_string(edge) +  " to delete.\n");
+
+    //delete edge from vertex adj list
+    std::vector<int>* vertex_adj = vertexReferences[vertex]->adj;
+    for(int i = (int) vertex_adj->size() - 1; i >= 0; --i) //TODO: inefficient with vectors, delete from data structure
+    {
+        if(vertex_adj->at(i) == edge)
+        {
+            vertex_adj->erase(vertex_adj->begin() + i);
+            break;
+        }
+    }
+    vertexReferences[vertex]->adj_map->erase(vertexReferences[vertex]->adj_map->find(edge));
+    vertexReferences[vertex]->degree--;
+    moveToSmallerBucket(vertexReferences[vertex]->degree+1, vertex);
+
+    //delete vertex from adj list of @edge
+    std::vector<int>* edge_adj = vertexReferences[edge]->adj;
+    for(int i = (int) edge_adj->size() - 1; i >= 0; --i) //TODO: inefficient with vectors, delete from data structure
+    {
+        if(edge_adj->at(i) == vertex)
+        {
+            edge_adj->erase(edge_adj->begin() + i);
+            break;
+        }
+    }
+    vertexReferences[edge]->adj_map->erase(vertexReferences[edge]->adj_map->find(vertex));
+    vertexReferences[edge]->degree--;
+    moveToSmallerBucket(vertexReferences[edge]->degree+1, edge);
+
+    numEdges--;
+    return;
+}
+
 
 
 
