@@ -242,6 +242,179 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeTwo_Secure(BucketGraph* G, int* k
 //    return INAPPLICABLE;
 }
 
+//bool isIndependentSet(BucketGraph* G, std::vector<int>* abc)
+//{
+//    int a = abc->at(0);
+//    int b = abc->at(1);
+//    int c = abc->at(2);
+//
+//    std::vector<int>* nA = G->getNeighbours(a);
+//    std::vector<int>* nB = G->getNeighbours(b);
+////    std::vector<int>* nC = G->getNeighbours(c);
+//
+//    for (int i = 0; i < (int)nA->size(); ++i) {
+//        if(nA->at(i) == b || nA->at(i) == c)
+//            return false;
+//    }
+//
+//    for (int i = 0; i < (int)nB->size(); ++i) {
+//        if(nB->at(i) == c)
+//            return false;
+//    }
+//
+////    for (int i = 0; i < (int)nB->size(); ++i) {
+////        if(nB->at(i) == a || nB->at(i) == c)
+////            return false;
+////    }
+//
+////    for (int i = 0; i < (int)nC->size(); ++i) {
+////        if(nC->at(i) == a || nC->at(i) == b)
+////            return false;
+////    }
+//
+//    return true;
+//}
+
+bool Reductions::isIndependent(int u, std::vector<int>* neighbors)
+{
+    for (int i = 0; i < (int)neighbors->size(); ++i) {
+        if(neighbors->at(i) == u)
+            return false;
+    }
+
+    return true;
+}
+
+RULE_APPLICATION_RESULT Reductions::rule_DegreeThree_Independent(BucketGraph* G, int* k)
+{
+    list<BucketVertex>* degThreeBucket = G->getVerticesOfDegree(3);
+
+    if(degThreeBucket == nullptr || degThreeBucket->empty()) return INAPPLICABLE;
+
+    int cnt = 0;
+//    std::vector<int> tempVC;
+    std::vector<int> tempDeleted;
+    std::unordered_map<int, int> alreadyInactive;
+    std::vector<std::vector<int>>* tempNeighbours;
+    std::vector<std::vector<int>>* tempAddedEdges;
+//
+    for(auto it = degThreeBucket->begin(); it != degThreeBucket->end(); it++)
+    {
+//        std::cout << "start of while loop" << '\n';
+        if(!G->isActive(it->index))
+            continue;
+//        std::cout << "Degree 3 vertex: " << it->index << '\n';
+
+        std::vector<int>* neighbours = G->getNeighbours(it->index);
+
+//        if(!isIndependentSet(G, neighbours))
+//        {
+//            continue;
+//        }
+
+        int a = neighbours->at(0);
+        int b = neighbours->at(1);
+        int c = neighbours->at(2);
+
+        std::vector<int>* nA = G->getNeighbours(a);
+        std::vector<int>* nB = G->getNeighbours(b);
+        std::vector<int>* nC = G->getNeighbours(c);
+
+        // TODO: change when getNeighbours returns map
+        if(!G->vertexHasEdgeTo(a, b))
+            continue;
+        if(!G->vertexHasEdgeTo(a, c))
+            continue;
+        if(!G->vertexHasEdgeTo(b, c))
+            continue;
+
+        if(alreadyInactive[it->index] == 1 || alreadyInactive[a] == 1 || alreadyInactive[b] == 1 || alreadyInactive[c] == 1)
+        {
+//            std::cout << "Nope not this vertex: " << it->index << '\n';
+//            std::cout << neighbours.at(0) << ", " << neighbours.at(1) << ", " << neighbours.at(2) << '\n';
+            continue;
+        }
+
+//        std::cout << "degree of deg3 vertex: " << it->index << '\n';
+        if(!G->isActive(a) || !G->isActive(b) || !G->isActive(c)) {
+            continue;
+        }
+
+        std::vector<int> addedEdgesToA;
+        std::vector<int> addedEdgesToB;
+        std::vector<int> addedEdgesToC;
+
+        // Edges {a, b} {b, c}
+        G->addEdgeToVertex(a,b);
+        G->addEdgeToVertex(b,c);
+        addedEdgesToA.push_back(b);
+//        addedEdgesToB.push_back(a);
+        addedEdgesToB.push_back(c);
+//        addedEdgesToC.push_back(b);
+
+        // Edges {a, N(b)}
+        for (int i = 0; i < (int)nB->size(); ++i) {
+            if(G->addEdgeToVertex(a, nB->at(i)))
+                addedEdgesToA.push_back(nB->at(i))
+        }
+
+        // Edges {b, N(c)}
+        for (int i = 0; i < (int)nC->size(); ++i) {
+            if(G->addEdgeToVertex(b, nC->at(i)))
+                addedEdgesToB.push_back(nC->at(i))
+        }
+
+        // Edges {c, N(a)}
+        for (int i = 0; i < (int)nA->size(); ++i) {
+            if(G->addEdgeToVertex(c, nA->at(i)))
+                addedEdgesToC.push_back(nA->at(i))
+        }
+
+        alreadyInactive[it->index] = 1;
+        alreadyInactive[a] = 1;
+        alreadyInactive[b] = 1;
+        alreadyInactive[c] = 1;
+
+        tempDeleted.push_back(it->index);
+        tempNeighbours->push_back(a);
+        tempNeighbours->push_back(b);
+        tempNeighbours->push_back(c);
+        tempAddedEdges->push_back(addedEdgesToA);
+        tempAddedEdges->push_back(addedEdgesToB);
+        tempAddedEdges->push_back(addedEdgesToC);
+        cnt++;
+
+//        std::cout << neighbours.at(0) << ", " << neighbours.at(1) << ", " << neighbours.at(2) << '\n';
+
+//        std::cout << "---------" << '\n';
+    }
+
+    if(tempDeleted.empty() || cnt == 0) {
+        return INAPPLICABLE;
+    }
+//    std::cout << "I have " << cnt<< " elements\n";
+
+    for (int i = 0; i < cnt; ++i) {
+//        std::cout << "I deleted Vertex: " << tempDeleted.at(3*i) << tempDeleted.at(3*i+1) << tempDeleted.at(3*i+2) << '\n';
+        Reduction* delVer = new Reduction(RULE::DEGREE_THREE_IND, 0, new std::vector<int>(), new std::vector<int>());
+
+        delVer->deletedVertices->push_back(tempDeleted.at(tempDeleted.at(0)));
+        delVer->deletedVCVertices->push_back(tempNeighbours.at(3*i + 0));
+        delVer->deletedVCVertices->push_back(tempNeighbours.at(3*i + 1));
+        delVer->deletedVCVertices->push_back(tempNeighbours.at(3*i + 2));
+        delVer->addedEdges->push_back(tempAddedEdges.at(3*i + 0));
+        delVer->addedEdges->push_back(tempAddedEdges.at(3*i + 1));
+        delVer->addedEdges->push_back(tempAddedEdges.at(3*i + 2));
+//        G->setInactive(delVer->deletedVCVertices);
+        G->setInactive(delVer->deletedVertices);
+
+        appliedRules->push_back(delVer);
+    }
+
+    return APPLICABLE;
+//    return INAPPLICABLE;
+}
+
 RULE_APPLICATION_RESULT Reductions::rule_LPFlow(BucketGraph* G, int* k, bool checkBudget, bool printDebug)
 {
     if(!G->LP_INITIALISED)
