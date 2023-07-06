@@ -295,7 +295,7 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeThree_Independent(BucketGraph* G,
 //    std::vector<int> tempVC;
     std::vector<int> tempDeleted;
     std::unordered_map<int, int> alreadyInactive;
-    std::vector<std::vector<int>>* tempNeighbours;
+    std::vector<int>* tempNeighbours;
     std::vector<std::vector<int>>* tempAddedEdges;
 //
     for(auto it = degThreeBucket->begin(); it != degThreeBucket->end(); it++)
@@ -340,9 +340,9 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeThree_Independent(BucketGraph* G,
             continue;
         }
 
-        std::vector<int> addedEdgesToA;
-        std::vector<int> addedEdgesToB;
-        std::vector<int> addedEdgesToC;
+        std::vector<int> addedEdgesToA = {};
+        std::vector<int> addedEdgesToB = {};
+        std::vector<int> addedEdgesToC = {};
 
         // Edges {a, b} {b, c}
         G->addEdgeToVertex(a,b);
@@ -355,19 +355,19 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeThree_Independent(BucketGraph* G,
         // Edges {a, N(b)}
         for (int i = 0; i < (int)nB->size(); ++i) {
             if(G->addEdgeToVertex(a, nB->at(i)))
-                addedEdgesToA.push_back(nB->at(i))
+                addedEdgesToA.push_back(nB->at(i));
         }
 
         // Edges {b, N(c)}
         for (int i = 0; i < (int)nC->size(); ++i) {
             if(G->addEdgeToVertex(b, nC->at(i)))
-                addedEdgesToB.push_back(nC->at(i))
+                addedEdgesToB.push_back(nC->at(i));
         }
 
         // Edges {c, N(a)}
         for (int i = 0; i < (int)nA->size(); ++i) {
             if(G->addEdgeToVertex(c, nA->at(i)))
-                addedEdgesToC.push_back(nA->at(i))
+                addedEdgesToC.push_back(nA->at(i));
         }
 
         alreadyInactive[it->index] = 1;
@@ -398,13 +398,13 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeThree_Independent(BucketGraph* G,
 //        std::cout << "I deleted Vertex: " << tempDeleted.at(3*i) << tempDeleted.at(3*i+1) << tempDeleted.at(3*i+2) << '\n';
         Reduction* delVer = new Reduction(RULE::DEGREE_THREE_IND, 0, new std::vector<int>(), new std::vector<int>());
 
-        delVer->deletedVertices->push_back(tempDeleted.at(tempDeleted.at(0)));
-        delVer->deletedVCVertices->push_back(tempNeighbours.at(3*i + 0));
-        delVer->deletedVCVertices->push_back(tempNeighbours.at(3*i + 1));
-        delVer->deletedVCVertices->push_back(tempNeighbours.at(3*i + 2));
-        delVer->addedEdges->push_back(tempAddedEdges.at(3*i + 0));
-        delVer->addedEdges->push_back(tempAddedEdges.at(3*i + 1));
-        delVer->addedEdges->push_back(tempAddedEdges.at(3*i + 2));
+        delVer->deletedVertices->push_back(tempDeleted.at(0));
+        delVer->deletedVCVertices->push_back(tempNeighbours->at(3*i + 0));
+        delVer->deletedVCVertices->push_back(tempNeighbours->at(3*i + 1));
+        delVer->deletedVCVertices->push_back(tempNeighbours->at(3*i + 2));
+        delVer->addedEdges->push_back(tempAddedEdges->at(3*i + 0));
+        delVer->addedEdges->push_back(tempAddedEdges->at(3*i + 1));
+        delVer->addedEdges->push_back(tempAddedEdges->at(3*i + 2));
 //        G->setInactive(delVer->deletedVCVertices);
         G->setInactive(delVer->deletedVertices);
 

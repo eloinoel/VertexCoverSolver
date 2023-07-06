@@ -1599,6 +1599,8 @@ void BucketGraph::unreduce(int* k, int previousK, std::unordered_map<int, bool>*
                 //std::cout << "after unreduce" << '\n';
                 //print();
                 break;
+            case UNCONFINED:
+                break;
             case LPFLOW:
                 *k = *k + rule->kDecrement;
                 //std::cout << "Restoring component:";
@@ -1627,37 +1629,53 @@ void BucketGraph::unreduce(int* k, int previousK, std::unordered_map<int, bool>*
                     //vc->insert(vc->end(), rule->deletedVCVertices->begin(), rule->deletedVCVertices->end());
                 }
                 break;
-            case DEGREE_THREE_IND:
+            case DEGREE_THREE_IND: {
+                int vDeg3 = rule->deletedVertices->at(0);
+                // 3 Case
+                int a = rule->deletedVCVertices->at(0);
+                int b = rule->deletedVCVertices->at(1);
+                int c = rule->deletedVCVertices->at(2);
+
+                std::vector<int> addedEdgesToA = rule->addedEdges->at(0);
+                std::vector<int> addedEdgesToB = rule->addedEdges->at(1);
+                std::vector<int> addedEdgesToC = rule->addedEdges->at(2);
+
+                for (int i = 0; i < (int) addedEdgesToA.size(); ++i) {
+                    removeEdgeFromVertex(a, addedEdgesToA.at(i));
+                }
+                for (int i = 0; i < (int) addedEdgesToB.size(); ++i) {
+                    removeEdgeFromVertex(b, addedEdgesToB.at(i));
+                }
+                for (int i = 0; i < (int) addedEdgesToC.size(); ++i) {
+                    removeEdgeFromVertex(c, addedEdgesToC.at(i));
+                }
+
                 // Solution S'
-                int v = rule->deletedVertices->front();
-                if(vc != nullptr){
-                    // 3 Case
+                if (vc != nullptr) {
                     int a = rule->deletedVCVertices->at(0);
                     int b = rule->deletedVCVertices->at(1);
                     int c = rule->deletedVCVertices->at(2);
 
                     int commonSolution = 0;
-                    std::vector<int> inSolution;
                     int inSolution[3] = {0, 0, 0};
 
                     auto ita = vc->find(a);
-                    if(ita != vc->end()){
+                    if (ita != vc->end()) {
                         commonSolution++;
                         inSolution[0] = 1;
                     }
                     auto itb = vc->find(b);
-                    if(itb != vc->end()){
+                    if (itb != vc->end()) {
                         commonSolution++;
                         inSolution[1] = 1;
                     }
                     auto itc = vc->find(c);
-                    if(itc != vc->end()){
+                    if (itc != vc->end()) {
                         commonSolution++;
                         inSolution[2] = 1;
                     }
 
-                    if(commonSolution == 1)
-                    {
+                    if (commonSolution == 1) {
                         if (inSolution[0] == 1)
                             vc->erase(ita);
                         else if (inSolution[1] == 1)
@@ -1667,36 +1685,34 @@ void BucketGraph::unreduce(int* k, int previousK, std::unordered_map<int, bool>*
                         else
                             throw std::invalid_argument("unreduce error: Ind Deg-3: unknown in case 1");
 
-                        vc->insert({v, true});
-                    }
-                    else if(commonSolution == 2)
-                    {
+                        vc->insert({vDeg3, true});
+                    } else if (commonSolution == 2) {
                         if (inSolution[0] == 1 && inSolution[1] == 1) {
                             vc->erase(ita);
-                            vc->insert({v, true});
                         } else if (inSolution[1] == 1 && inSolution[2] == 1) {
                             vc->erase(itb);
-                            vc->insert({v, true});
                         } else if (inSolution[0] == 1 && inSolution[2] == 1) {
                             vc->erase(itc);
-                            vc->insert({v, true});
                         }
-                    }
-                    else if (commonSolution == 3){
+                        vc->insert({vDeg3, true});
 
                     }
-                    else{
-                        throw std::invalid_argument("unreduce error: Ind Deg-3: unknown case");
-                    }
+//                    else if (commonSolution == 3){
+//
+//                    }
+//                    else{
+//                        throw std::invalid_argument("unreduce error: Ind Deg-3: unknown case");
+//                    }
                 }
-                // No vc
-                else{
+                    // No vc
+                else {
                     // deleteEdges
                     // set v active again
-                    setActive(v);
+                    setActive(rule->deletedVertices->at(0));
                 }
-                
+
                 break;
+            }
             default:
                 throw std::invalid_argument("unreduce error: unknown rule");
                 break;

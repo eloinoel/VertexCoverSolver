@@ -13,8 +13,8 @@ enum RULE
     DOMINATION,         // = 4
     UNCONFINED,         // = 5
     LPFLOW,             // = 6
-//    DEGREE_THREE_CLIQ,  // = 7
-    DEGREE_THREE_IND    // = 8
+    DEGREE_THREE_IND    // = 7
+//    DEGREE_THREE_CLIQ,  // = 8
 };
 
 enum RULE_APPLICATION_RESULT
