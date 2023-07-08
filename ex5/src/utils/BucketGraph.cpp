@@ -1578,6 +1578,8 @@ void BucketGraph::unreduce(int* k, int previousK, std::unordered_map<int, bool>*
                 //std::cout << "after unreduce" << '\n';
                 //print();
                 break;
+            case UNCONFINED:
+                break;
             case LPFLOW:
                 *k = *k + rule->kDecrement;
                 //std::cout << "Restoring component:";
@@ -1606,6 +1608,90 @@ void BucketGraph::unreduce(int* k, int previousK, std::unordered_map<int, bool>*
                     //vc->insert(vc->end(), rule->deletedVCVertices->begin(), rule->deletedVCVertices->end());
                 }
                 break;
+            case DEGREE_THREE_IND: {
+                int vDeg3 = rule->deletedVertices->at(0);
+                // 3 Case
+                int a = rule->deletedVCVertices->at(0);
+                int b = rule->deletedVCVertices->at(1);
+                int c = rule->deletedVCVertices->at(2);
+
+                std::vector<int> addedEdgesToA = rule->addedEdges->at(0);
+                std::vector<int> addedEdgesToB = rule->addedEdges->at(1);
+                std::vector<int> addedEdgesToC = rule->addedEdges->at(2);
+
+                for (int i = 0; i < (int) addedEdgesToA.size(); ++i) {
+                    removeEdgeFromVertex(a, addedEdgesToA.at(i));
+                }
+                for (int i = 0; i < (int) addedEdgesToB.size(); ++i) {
+                    removeEdgeFromVertex(b, addedEdgesToB.at(i));
+                }
+                for (int i = 0; i < (int) addedEdgesToC.size(); ++i) {
+                    removeEdgeFromVertex(c, addedEdgesToC.at(i));
+                }
+
+                // Solution S'
+                if (vc != nullptr) {
+                    int a = rule->deletedVCVertices->at(0);
+                    int b = rule->deletedVCVertices->at(1);
+                    int c = rule->deletedVCVertices->at(2);
+
+                    int commonSolution = 0;
+                    int inSolution[3] = {0, 0, 0};
+
+                    auto ita = vc->find(a);
+                    if (ita != vc->end()) {
+                        commonSolution++;
+                        inSolution[0] = 1;
+                    }
+                    auto itb = vc->find(b);
+                    if (itb != vc->end()) {
+                        commonSolution++;
+                        inSolution[1] = 1;
+                    }
+                    auto itc = vc->find(c);
+                    if (itc != vc->end()) {
+                        commonSolution++;
+                        inSolution[2] = 1;
+                    }
+
+                    if (commonSolution == 1) {
+                        if (inSolution[0] == 1)
+                            vc->erase(ita);
+                        else if (inSolution[1] == 1)
+                            vc->erase(itb);
+                        else if (inSolution[2] == 1)
+                            vc->erase(itc);
+                        else
+                            throw std::invalid_argument("unreduce error: Ind Deg-3: unknown in case 1");
+
+                        vc->insert({vDeg3, true});
+                    } else if (commonSolution == 2) {
+                        if (inSolution[0] == 1 && inSolution[1] == 1) {
+                            vc->erase(ita);
+                        } else if (inSolution[1] == 1 && inSolution[2] == 1) {
+                            vc->erase(itb);
+                        } else if (inSolution[0] == 1 && inSolution[2] == 1) {
+                            vc->erase(itc);
+                        }
+                        vc->insert({vDeg3, true});
+
+                    }
+//                    else if (commonSolution == 3){
+//
+//                    }
+//                    else{
+//                        throw std::invalid_argument("unreduce error: Ind Deg-3: unknown case");
+//                    }
+                }
+                    // No vc
+                else {
+                    // deleteEdges
+                    // set v active again
+                    setActive(rule->deletedVertices->at(0));
+                }
+
+                break;
+            }
             default:
                 throw std::invalid_argument("unreduce error: unknown rule");
                 break;
@@ -1819,6 +1905,71 @@ void BucketGraph::unmerge(Reduction* mergeRule)
     // TODO: free mergeVertexInfo members
     delete std::get<3>(*mergeRule->mergeVertexInfo);
     delete mergeRule->mergeVertexInfo;
+}
+
+bool BucketGraph::addEdgeToVertex(int vertex, int edge)
+{
+    if(vertex >= (int) vertexReferences.size() || edge >= (int) vertexReferences.size() || vertex < 0 || edge < 0 || vertex == edge)
+        throw std::invalid_argument("addEdgeToVertex: vertex " + std::to_string(vertex) + " or edge " + std::to_string(edge) +  " invalid\n");
+    if(!isActive(vertex) || !isActive(edge))
+        throw std::invalid_argument("addEdgeToVertex: vertex " + std::to_string(vertex) + " or edge " + std::to_string(edge) +  " inactive\n");
+    if(vertexHasEdgeTo(vertex, edge)) { return false; }
+
+    //add edge to vertex adj list
+    vertexReferences[vertex]->adj->push_back(edge);
+    vertexReferences[vertex]->adj_map->insert({edge, true});
+    vertexReferences[vertex]->degree++;
+    moveToBiggerBucket(vertexReferences[vertex]->degree-1, vertex);
+
+    //add vertex to adj list of @edge
+    vertexReferences[edge]->adj->push_back(vertex);
+    vertexReferences[edge]->adj_map->insert({vertex, true});
+    vertexReferences[edge]->degree++;
+    moveToBiggerBucket(vertexReferences[edge]->degree-1, edge);
+
+    numEdges++;
+    return true;
+}
+
+void BucketGraph::removeEdgeFromVertex(int vertex, int edge)
+{
+    if(vertex >= (int) vertexReferences.size() || edge >= (int) vertexReferences.size() || vertex < 0 || edge < 0 || vertex == edge)
+        throw std::invalid_argument("deletEdgeFromVertex: vertex " + std::to_string(vertex) + " or edge " + std::to_string(edge) +  " invalid.\n");
+    if(!isActive(vertex) || !isActive(edge))
+        throw std::invalid_argument("deleteEdgeFromVertex: vertex " + std::to_string(vertex) + " or edge " + std::to_string(edge) +  " inactive.\n");
+    if(!vertexHasEdgeTo(vertex, edge))
+        throw std::invalid_argument("deleteEdgeFromVertex: vertex " + std::to_string(vertex) + " doesn't have edge " + std::to_string(edge) +  " to delete.\n");
+
+    //delete edge from vertex adj list
+    std::vector<int>* vertex_adj = vertexReferences[vertex]->adj;
+    for(int i = (int) vertex_adj->size() - 1; i >= 0; --i) //TODO: inefficient with vectors, delete from data structure
+    {
+        if(vertex_adj->at(i) == edge)
+        {
+            vertex_adj->erase(vertex_adj->begin() + i);
+            break;
+        }
+    }
+    vertexReferences[vertex]->adj_map->erase(vertexReferences[vertex]->adj_map->find(edge));
+    vertexReferences[vertex]->degree--;
+    moveToSmallerBucket(vertexReferences[vertex]->degree+1, vertex);
+
+    //delete vertex from adj list of @edge
+    std::vector<int>* edge_adj = vertexReferences[edge]->adj;
+    for(int i = (int) edge_adj->size() - 1; i >= 0; --i) //TODO: inefficient with vectors, delete from data structure
+    {
+        if(edge_adj->at(i) == vertex)
+        {
+            edge_adj->erase(edge_adj->begin() + i);
+            break;
+        }
+    }
+    vertexReferences[edge]->adj_map->erase(vertexReferences[edge]->adj_map->find(vertex));
+    vertexReferences[edge]->degree--;
+    moveToSmallerBucket(vertexReferences[edge]->degree+1, edge);
+
+    numEdges--;
+    return;
 }
 
 

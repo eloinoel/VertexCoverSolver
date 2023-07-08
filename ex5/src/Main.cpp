@@ -208,7 +208,8 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
         {
             G->print();
             //G->printActiveList();
-            //G->printBucketQueue();
+//            G->printBucketQueue();
+//            G->printBucketSizes();
         }
         unordered_map<int, bool>* vc = nullptr;
 

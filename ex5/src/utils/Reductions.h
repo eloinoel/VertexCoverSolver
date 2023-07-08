@@ -12,7 +12,9 @@ enum RULE
     HIGH_DEGREE,        // = 3
     DOMINATION,         // = 4
     UNCONFINED,         // = 5
-    LPFLOW              // = 6
+    LPFLOW,             // = 6
+    DEGREE_THREE_IND    // = 7
+//    DEGREE_THREE_CLIQ,  // = 8
 };
 
 enum RULE_APPLICATION_RESULT
@@ -31,6 +33,7 @@ public:
     int kDecrement;
     std::vector<int>* deletedVertices = nullptr; // First idx is always to add in VC if(rule!=0)
     std::vector<int>* deletedVCVertices = nullptr;
+    std::vector<std::vector<int>>* addedEdges = nullptr;
     /* mergeVertex, original adj, original adj_map, added vertices */
     std::tuple<int, std::vector<int>*, std::unordered_map<int, bool>*, std::vector<int>*>* mergeVertexInfo = nullptr;
 
@@ -87,6 +90,9 @@ public:
     void printReductionRules();
     void printCounters();
     void printDominationSets();
+
+    bool isIndependent(int u, std::vector<int>* neighbors);
+    RULE_APPLICATION_RESULT rule_DegreeThree_Independent(BucketGraph* G, int* k);
 
     //rules return true if they were applicable
     RULE_APPLICATION_RESULT rule_HighDegree(BucketGraph* G, int* k);

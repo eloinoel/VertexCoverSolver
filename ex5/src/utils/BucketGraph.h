@@ -275,6 +275,13 @@ public:
     std::tuple<int, std::vector<int>*, std::unordered_map<int, bool>*, std::vector<int>*>* merge(int v0, int v1, int v2);
     /* restores previous previously merged vertices into 3 seperate vertices */
     void unmerge(Reduction* mergeRule);
+    
+    /* returns true if an edge (other vertex) could be added and false if it exists already
+     * throws invalid_argument exception if faulty args were provided
+     */
+    bool addEdgeToVertex(int vertex, int edge);
+    /* delete an edge from a vertex' adj list and map if exists */
+    void removeEdgeFromVertex(int vertex, int edge);//TODO: optimise graph data structure to only contain adj maps instead of lists + maps
 
     void removeFromMatching(int vertexIndex);
     void queueForMatching(int vertexIndex);
