@@ -156,7 +156,7 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeTwo(BucketGraph* G, int* k, bool 
     }
     auto stopDeg2 = std::chrono::high_resolution_clock::now();
     double Deg2 = (std::chrono::duration_cast<std::chrono::microseconds>(stopDeg2 - startDeg2).count() /  1000) / (double) 1000;
-    if (printDebug)
+    if (true || printDebug)
         std::cout << "#Reduced " << numberOfReducedVertices << " Deg2 vertices in " << Deg2 << " seconds" << std::endl;
 
     //std::cout << "----end----" << '\n';

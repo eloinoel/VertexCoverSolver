@@ -106,6 +106,25 @@ public:
                 return RESET + toPaint + RESET;
         }
     }
+
+    static std::string repeatStr(std::string toRepeat, int n) {
+        std::string tiling = "";
+        for (int i=0; i<n; i++)
+        {
+            tiling += toRepeat;
+        }
+        return tiling;
+    }
+
+    static int digitCount(int n) {
+        int spaces = 1;
+        while (n > 9)
+        {
+            n /= 10;
+            spaces++;
+        }
+        return spaces;
+    }
 };
 
 

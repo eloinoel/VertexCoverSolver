@@ -254,12 +254,11 @@ public:
     std::vector<std::string>* getOriginalEdgesToConsoleString();
     int getOriginalEdgeCount();
     void printMatching();
+    void printVC(std::unordered_map<int, bool>* vc);
 
     int getLowerBoundVC();
     int getCliqueBound(int k = INT_MAX);
     int getLPBound();
-
-    void resetLPBoundDataStructures();
 
     /* apply initial data reduction rules to graph */
     void preprocess(int* k, bool printDebug = false);
@@ -277,6 +276,8 @@ public:
     /* restores previous previously merged vertices into 3 seperate vertices */
     void unmerge(Reduction* mergeRule);
 
+    void removeFromMatching(int vertexIndex);
+    void queueForMatching(int vertexIndex);
     void strongconnect(std::stack<int>* S, int vertex, int index, std::vector<int>* indices, std::vector<int>* lowlink, std::vector<bool>* onStack, std::vector<int>* L, std::vector<int>* R);
     void getBipartMatchingFlowComponents(std::vector<int>* L, std::vector<int>* R);
     void setBipartMatchingFlowComponentsInactive(std::vector<int>* L, std::vector<int>* R, int k, double maxExecTime);
