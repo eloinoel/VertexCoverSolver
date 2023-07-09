@@ -98,8 +98,6 @@ public:
     list_member_hook<> member_hook_; //for adj_refs
 
 private:
-    std::vector<int>* adj;
-    //list<Vertex, member_hook<Vertex, list_member_hook<>, &Vertex::member_hook_>> adj_refs; //for O(1) check if has edge to specific vertex
     std::unordered_map<int, bool>* adj_map;
 
     std::string strName;
@@ -115,15 +113,14 @@ private:
     friend class Reductions;
 public:
 
-    inline std::vector<int>* getAdj() { return adj; }
-
+    inline std::unordered_map<int, bool>* getAdj() { return adj_map; }
     inline bool getActive() { return isActive; }
     inline int getDegree() { return degree; }
     inline int getIndex() { return index; }
 
 
-    Vertex(std::vector<int>* adjVertices, std::string orginalName, int _index, int startingDegree)
-     : adj(adjVertices), strName(orginalName), index(_index), degree(startingDegree)
+    Vertex(std::unordered_map<int, bool>* adjVertices, std::string orginalName, int _index, int startingDegree)
+     : adj_map(adjVertices), strName(orginalName), index(_index), degree(startingDegree)
     {
         isActive = true;
         bucketVertex = new BucketVertex(index);
@@ -146,7 +143,7 @@ private:
     std::vector<Vertex*> vertexReferences;
 
     /* doubly linked list, that acts as a list of active vertices, O(1) access, deletion and insertion */
-    intrusive::list<Vertex> activeList;
+    //intrusive::list<Vertex> activeList;
 
     int numEdges;
     int numVertices;
@@ -202,6 +199,7 @@ public:
     void setActive(std::vector<int>* vertexIndices);
     void setInactive(int vertexIndex);
     void setInactive(std::vector<int>* vertexIndices);
+    bool isActive(int vertexIndex){ return vertexReferences[vertexIndex]->isActive;};
 
     std::vector<int>* getNeighbours(int vertexIndex);
     /* specify n starting with 0 */
@@ -217,11 +215,9 @@ public:
     int getRandomConnectedVertex(int randomRangeCap = -1);
     /* returns min degree vertex of degree > 0 and -1 if doesn't exist */
     int getMinDegreeVertex();
-    /* heuristic from paper which generally worsens performance a bit but reduces number of recursive steps */
-    int getMaxDegreeVertexMinimisingNeighbourEdges();
     int getVertexDegree(int vertexIndex);
     intrusive::list<BucketVertex>* getVerticesOfDegree(int degree);
-    inline intrusive::list<Vertex>* getActiveList() { return &activeList; }
+    //inline intrusive::list<Vertex>* getActiveList() { return &activeList; }
     /* returns -1 if no vertex of degree */
     int getFirstVertexOfDegree(int degree);
     inline Vertex* getVertex(int index) { if(index < (int) vertexReferences.size()) return vertexReferences[index]; else return nullptr; }
@@ -272,7 +268,7 @@ public:
     /* vc is not nullptr, if deleted vertices should be appended to vc*/
     void unreduce(int* k, int previousK, std::unordered_map<int, bool>* vc = nullptr);
     /* merge three vertices into one for degree 2 rule, returns vertex that was merged into and its previous adjacency list */
-    std::tuple<int, std::vector<int>*, std::unordered_map<int, bool>*, std::vector<int>*>* merge(int v0, int v1, int v2);
+    std::tuple<int, std::unordered_map<int, bool>*, std::vector<int>*>* merge(int v0, int v1, int v2);
     /* restores previous previously merged vertices into 3 seperate vertices */
     void unmerge(Reduction* mergeRule);
     
@@ -285,8 +281,6 @@ public:
 
     void removeFromMatching(int vertexIndex);
     void queueForMatching(int vertexIndex);
-    void strongconnect(std::stack<int>* S, int vertex, int index, std::vector<int>* indices, std::vector<int>* lowlink, std::vector<bool>* onStack, std::vector<int>* L, std::vector<int>* R);
-    void getBipartMatchingFlowComponents(std::vector<int>* L, std::vector<int>* R);
     void setBipartMatchingFlowComponentsInactive(std::vector<int>* L, std::vector<int>* R, int k, double maxExecTime);
     int hopcroftKarpMatchingSize();
     inline void resetMatching() { void freeMatching(); void initMatching(); };
@@ -308,13 +302,8 @@ public:
     inline void unscheduleForUnconfined(int vertexIndex) { (*mayBeUnconfined)[vertexIndex] = false; }
     void scheduleComponentForUnconfined(int vertexIndex);
 
-    /* apply data reduction rules that can immediately be taken into the vertex cover*/
-    void preprocessSAT(int* k, std::vector<bool>& rulesToApply);
 
     std::vector<std::pair<std::string,std::string>> getPreprocessedEdges();
-    int printPreprocessedVertices();
-    //----------------------- Domination Rule ------------------------------------
-    bool isActive(int vertexIndex){ return vertexReferences[vertexIndex]->isActive;};
 private:
 
     //------------------------ Graph Construction ------------------------
@@ -323,12 +312,10 @@ private:
     /* tests whether a char fulfills vertex naming format*/
 	static bool isVertexCharacter(char c);
 
-    void initActiveList();  //--|
-    void initAdjMap();      //----> should be called in this order
+    void initVertexReferences();  //----> should be called in this order
     void initBucketQueue(); //--|
     void initMatching();
     void initUnconfined();
-    bool isAdjMapConsistent();
 
     void freeMatching();
     void freeUnconfined();

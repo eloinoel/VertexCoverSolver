@@ -34,8 +34,8 @@ public:
     std::vector<int>* deletedVertices = nullptr; // First idx is always to add in VC if(rule!=0)
     std::vector<int>* deletedVCVertices = nullptr;
     std::vector<std::vector<int>>* addedEdges = nullptr;
-    /* mergeVertex, original adj, original adj_map, added vertices */
-    std::tuple<int, std::vector<int>*, std::unordered_map<int, bool>*, std::vector<int>*>* mergeVertexInfo = nullptr;
+    /* mergeVertex, original adj_map, added vertices */
+    std::tuple<int, std::unordered_map<int, bool>*, std::vector<int>*>* mergeVertexInfo = nullptr;
 
     Reduction() {};
     Reduction(RULE rule) { this->rule = rule; };

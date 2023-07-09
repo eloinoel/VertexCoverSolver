@@ -28,17 +28,18 @@ std::unordered_map<int, bool>* vcVertexBranchingRecursive(BucketGraph* G, int k,
 	}
     int previousK = k;
     bool cut = false;
-    //std::cout << "> cutting through data reductions " << '\n';
+    std::cout << "#--> applying data reductions " << '\n';
     cut = G->dynamicReduce(&k, depth, printDebug);
     if(cut)
     {
-        //std::cout << "> cutting through data reductions " << '\n';
+        std::cout << "#--> cutting through data reductions " << '\n';
         G->unreduce(&k, previousK);
         return nullptr;
     }
 
-    //std::cout << "> calculated LPBound: " << G->getLPBound() << " with k=" << k << '\n';
-    if (k < G->getLPBound()) {
+    int lowerBound = G->getLPBound();
+    std::cout << "#--> calculated LPBound: " << lowerBound << " with k=" << k << '\n';
+    if (k < lowerBound) {
         G->unreduce(&k, previousK);
         return nullptr;
     }
@@ -142,6 +143,7 @@ std::unordered_map<int, bool>* vcSolverRecursive(BucketGraph* G, int* numRec, bo
 {
     int numPreprocessingVCVertices = 0;
 	int k = 0;
+
     // Apply Reduction Rules for the first time
     auto startPreprocess = std::chrono::high_resolution_clock::now();
     G->preprocess(&numPreprocessingVCVertices, printDebug);
@@ -150,6 +152,7 @@ std::unordered_map<int, bool>* vcSolverRecursive(BucketGraph* G, int* numRec, bo
     double preprocessDuration = (std::chrono::duration_cast<std::chrono::microseconds>(endPreprocess - startPreprocess).count() /  1000) / (double) 1000;
     if(printDebug)
         std::cout << "#Preprocessed Graph to size n=" << G->getNumVertices() << ", m=" << G->getNumEdges() << " in " << preprocessDuration << " seconds" << " (reduced by " << numPreprocessingVCVertices << " vertices)" << std::endl;
+    
     auto startLowerBound = std::chrono::high_resolution_clock::now();
     k = G->getLowerBoundVC();
     auto endLowerBound = std::chrono::high_resolution_clock::now();
@@ -158,6 +161,7 @@ std::unordered_map<int, bool>* vcSolverRecursive(BucketGraph* G, int* numRec, bo
     {
         std::cout << "#Calculated lower bound k=" << k << " in " << lowerBoundDuration << " seconds" << std::endl;
     }
+
 	std::unordered_map<int, bool>* vc;
     auto startBranching = std::chrono::high_resolution_clock::now();
 	while (true)
@@ -378,7 +382,8 @@ void initGainLossAge(BucketGraph* G, std::unordered_map<int, bool>* vc, std::vec
         Vertex* v = G->getVertex(it->first);
         for (auto u = v->getAdj()->begin(); u != v->getAdj()->end(); ++u)
         {
-            if(vc->find(*u) == vc->end())
+            int vertex = u->first;
+            if(vc->find(vertex) == vc->end())
             {
                 (*loss)[it->first]++;
             }
@@ -465,10 +470,11 @@ void removeMinLossVCVertex(BucketGraph* G, std::unordered_map<int, bool>* vc, st
     (*loss)[u_index] = 0;
     (*age)[u_index] = numRecursions;
     Vertex* uVertex = G->getVertex(u_index);
-    for (auto neighbour = uVertex->getAdj()->begin(); neighbour != uVertex->getAdj()->end(); ++neighbour)
+    for (auto neighbourIt = uVertex->getAdj()->begin(); neighbourIt != uVertex->getAdj()->end(); ++neighbourIt)
     {
-        if (!(G->getVertex(*neighbour)->getActive())) { continue; }
-        (*gain)[*neighbour]++;
+        int neighbour = neighbourIt->first;
+        if (!(G->getVertex(neighbour)->getActive())) { continue; }
+        (*gain)[neighbour]++;
     }
     //std::cout << cp::dye("Removed " + std::to_string(u_index), 'r') << " from vc" << std::endl;
 }
@@ -485,10 +491,11 @@ void removeBMSMinLossVCVertex(BucketGraph* G, std::unordered_map<int, bool>* vc,
     (*loss)[u_index] = 0;
     (*age)[u_index] = numRecursions;
     Vertex* uVertex = G->getVertex(u_index);
-    for (auto neighbour = uVertex->getAdj()->begin(); neighbour != uVertex->getAdj()->end(); ++neighbour)
+    for (auto neighbourIt = uVertex->getAdj()->begin(); neighbourIt != uVertex->getAdj()->end(); ++neighbourIt)
     {
-        if (!(G->getVertex(*neighbour)->getActive())) { continue; }
-        (*gain)[*neighbour]++;
+        int neighbour = neighbourIt->first;
+        if (!(G->getVertex(neighbour)->getActive())) { continue; }
+        (*gain)[neighbour]++;
     }
 }
 
@@ -519,8 +526,9 @@ void addRandomUncoveredEdgeMaxGainEndpointVertex(BucketGraph* G, std::unordered_
     {
         for (auto u = vertex->getAdj()->begin(); u != vertex->getAdj()->end(); ++u)
         {
-            if (!(G->getVertex(*u)->getActive())) { continue; }
-            (*gain)[*u]--;
+            int vert = u->first;
+            if (!(G->getVertex(vert)->getActive())) { continue; }
+            (*gain)[vert]--;
             (*loss)[v]++;
         }
         G->setInactive(v);
@@ -533,8 +541,9 @@ void addRandomUncoveredEdgeMaxGainEndpointVertex(BucketGraph* G, std::unordered_
     {
         for (auto u = neighbourVertex->getAdj()->begin(); u != neighbourVertex->getAdj()->end(); ++u)
         {
-            if (!(G->getVertex(*u)->getActive())) { continue; }
-            (*gain)[*u]--;
+            int vert = u->first;
+            if (!(G->getVertex(vert)->getActive())) { continue; }
+            (*gain)[vert]--;
         }
         G->setInactive(neighbour);
         vc->insert({neighbour, true});

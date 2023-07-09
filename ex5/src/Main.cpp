@@ -11,6 +11,7 @@
 #include "utils/ColorPrint.h"
 #include "utils/BucketGraph.h"
 #include "VertexCoverSolver.h"
+#include "utils/Benchmark.h"
 
 using namespace std;
 typedef ColorPrint cp;
@@ -282,9 +283,9 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
 int main(int argc, char* argv[]) {
     //By default, cin/cout waste time synchronizing themselves with the C library’s stdio buffers, so that you can freely intermix calls to scanf/printf with operations on cin/cout
     std::ios::sync_with_stdio(false);
-
 	try
 	{
+        //TODO: disable printDebug for final submission
         //chooseImplementationAndOutput(1, false, false, false, false, true, false);
         chooseImplementationAndOutput(2, false, false, true, true, true, false);
         //chooseImplementationAndOutput(1, true, false, false, true, true, false); //print alot
