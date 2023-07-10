@@ -1360,7 +1360,7 @@ bool BucketGraph::reduce(int* k, int depth, std::vector<bool>* rulesToApply, boo
         if(degreeTwoResult == INSUFFICIENT_BUDGET) return true;
 
         if(rulesToApply->at(2)) { dominationResult = reductions->rule_Domination(this, k, depth, true); }
-        
+
         //TODO: don't check this here, do this in the rules
         if(getVerticesOfDegree(3) != nullptr && !getVerticesOfDegree(3)->empty()){
             if (rulesToApply->at(9)) {
@@ -1408,14 +1408,14 @@ void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<
     while(!reductions->appliedRules->empty() && (*k < previousK || reductions->appliedRules->back()->kDecrement == 0))
     {
         Reduction* rule = reductions->appliedRules->back();
-        if(rule->rDepth != depth) 
+        if(rule->rDepth != depth)
         {
             if(depth < rule->rDepth)
             {
                 std::cout << "unreduce: rule: " << rule->rule << ", depth: " << depth << ", rule->depth: " << rule->rDepth << "\n";
-                throw std::invalid_argument("unreduce: attempted to unreduce rules of incorrect depth, unreducing is inconsistent with reducing"); 
+                throw std::invalid_argument("unreduce: attempted to unreduce rules of incorrect depth, unreducing is inconsistent with reducing");
             }
-            break; 
+            break;
         }
         //std::cout << "> unreducing: ";
         switch(rule->rule)
@@ -1557,22 +1557,19 @@ void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<
                 }
                 break;
             case DEGREE_THREE_IND: {
-
-                printDebug = deg3ind;
-
-                if(printDebug)
+                if(deg3ind)
                     std::cout << "\n";
 
                 if (depth != rule->rDepth)
                 {
-                    if(printDebug) {
+                    if(deg3ind) {
                         std::cout << depth << " != " << rule->rDepth << '\n';
                         std::cout << "Shouldn't unreduce at this recursion depth!!\n";
                     }
                     return;
                 }
 
-                if(printDebug) {
+                if(deg3ind) {
                     std::cout << "Recursion depth coincide => unreduce rule: Degree 3: Independent Set\n";
                     std::cout << depth << " == " << rule->rDepth << '\n';
                 }
@@ -1583,7 +1580,7 @@ void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<
                 int b = rule->deletedVCVertices->at(1);
                 int c = rule->deletedVCVertices->at(2);
 
-                if(printDebug) {
+                if(deg3ind) {
                     std::cout << "Unreduce: Degree 3 Independent Set, at recursion: "<< recursionDepth << '\n';
                     std::cout << "Degree 3 vertex: " << vDeg3 << '\n';
                     std::cout << a << ", " << b << ", " << c << '\n';
@@ -1592,7 +1589,7 @@ void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<
                 // Solution S'
                 if (vc != nullptr)
                 {
-                    if(printDebug) {
+                    if(deg3ind) {
                         std::cout << "VC: ";
                         if (vc->empty()) {
                             std::cout << "Empty...";
@@ -1627,57 +1624,57 @@ void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<
                         inSolution[2] = 1;
                     }
 
-                    if(printDebug)
+                    if(deg3ind)
                         std::cout << commonSolution <<" Neighbours are in S'\n";
 
                     if(commonSolution == 1)
                     {
                         if (inSolution[0] == 1) {
-                            if(printDebug)
+                            if(deg3ind)
                                 std::cout << "Erasing a" << '\n';
                             vc->erase(ita);
                         }
                         else if (inSolution[1] == 1) {
-                            if(printDebug)
+                            if(deg3ind)
                                 std::cout << "Erasing b" << '\n';
                             vc->erase(itb);
                         }
                         else if (inSolution[2] == 1) {
-                            if(printDebug)
+                            if(deg3ind)
                                 std::cout << "Erasing c" << '\n';
                             vc->erase(itc);
                         }
                         else
                             throw std::invalid_argument("unreduce error: Ind Deg-3: unknown in case 1");
-                        if(printDebug)
+                        if(deg3ind)
                             std::cout << "Insert v: "<< vDeg3 << " into VC!\n" << '\n';
                         vc->insert({vDeg3, true});
                     }
                     else if (commonSolution == 2)
                     {
                         if (inSolution[0] == 1 && inSolution[1] == 1) {
-                            if(printDebug)
+                            if(deg3ind)
                                 std::cout << "Erasing a: " << a <<  '\n';
                             vc->erase(ita);
                         }
                         else if (inSolution[1] == 1 && inSolution[2] == 1) {
-                            if(printDebug)
+                            if(deg3ind)
                                 std::cout << "Erasing b: " << b <<  '\n';
                             vc->erase(itb);
                         }
                         else if (inSolution[0] == 1 && inSolution[2] == 1) {
-                            if(printDebug)
+                            if(deg3ind)
                                 std::cout << "Erasing c: " << c << '\n';
                             vc->erase(itc);
                         }
-                        if(printDebug)
+                        if(deg3ind)
                             std::cout << "Adding v to S: " << vDeg3 << '\n';
                         vc->insert({vDeg3, true});
 
                     }
                     else if (commonSolution == 3)
                     {
-                        if(printDebug)
+                        if(deg3ind)
                             std::cout << "All 3 Neighbours are part of the solution!" << '\n';
                     }
                     else{
@@ -1695,10 +1692,10 @@ void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<
                 std::vector<int> addedEdgesToB = rule->addedEdges->at(1);
                 std::vector<int> addedEdgesToC = rule->addedEdges->at(2);
 
-                if(printDebug)
+                if(deg3ind)
                     std::cout << "Removing Edge:" << a <<  " with:" << '\n';
                 for (int j = 0; j < (int)addedEdgesToA.size(); ++j) {
-                    if(printDebug)
+                    if(deg3ind)
                         std::cout << addedEdgesToA.at(j) << '\n';
                     removeEdgeFromVertex(a, addedEdgesToA.at(j));
                 }
@@ -1707,13 +1704,13 @@ void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<
 //                        std::cout << j << '\n';
 //                    removeEdgeFromVertex(a, j);
 //                }
-                if(printDebug)
+                if(deg3ind)
                     std::cout << '\n';
 
-                if(printDebug)
+                if(deg3ind)
                     std::cout << "Removing Edge:" << b <<  " with:" << '\n';
                 for (int j = 0; j < (int)addedEdgesToB.size(); ++j) {
-                    if(printDebug)
+                    if(deg3ind)
                         std::cout << addedEdgesToB.at(j) << '\n';
                     removeEdgeFromVertex(b, addedEdgesToB.at(j));
                 }
@@ -1722,14 +1719,14 @@ void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<
 //                        std::cout << j << '\n';
 //                    removeEdgeFromVertex(b, j);
 //                }
-                if(printDebug)
+                if(deg3ind)
                     std::cout << '\n';
 
 
-                if(printDebug)
+                if(deg3ind)
                     std::cout << "Removing Edge:" << c <<  " with:" << '\n';
                 for (int j = 0; j < (int)addedEdgesToC.size(); ++j) {
-                    if(printDebug)
+                    if(deg3ind)
                         std::cout << addedEdgesToC.at(j) << '\n';
                     removeEdgeFromVertex(c, addedEdgesToC.at(j));
                 }
@@ -1738,28 +1735,26 @@ void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<
 //                        std::cout << j << '\n';
 //                    removeEdgeFromVertex(c, j);
 //                }
-                if(printDebug)
+                if(deg3ind)
                     std::cout << '\n';
 
                 break;
             }
             case DEGREE_THREE_CLIQ:
             {
-                printDebug = deg3clique;
-
-                if(printDebug)
+                if(deg3clique)
                     std::cout << "\n";
 
                 if (depth != rule->rDepth)
                 {
-                    if(printDebug) {
+                    if(deg3clique) {
                         std::cout << depth << " != " << rule->rDepth << '\n';
                         std::cout << "Shouldn't unreduce at this recursion depth!!\n";
                     }
                     return;
                 }
 
-                if(printDebug) {
+                if(deg3clique) {
                     std::cout << "Recursion depth coincide => unreduce rule: Degree 3: 2-Clique-Neighbourhood\n";
                     std::cout << depth << " == " << rule->rDepth << '\n';
                 }
@@ -1771,7 +1766,7 @@ void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<
                 int c12 = rule->deletedVCVertices->at(1);
                 int c2 = rule->deletedVCVertices->at(2);
 
-                if(printDebug) {
+                if(deg3clique) {
                     std::cout << "Unreduce at recursion: "<< recursionDepth << '\n';
                     std::cout << "Degree 3 vertex: " << vDeg3 << '\n';
                     std::cout << c11 << ", " << c12 << ", " << c2 << '\n';
@@ -1780,7 +1775,7 @@ void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<
                 // Solution S'
                 if (vc != nullptr)
                 {
-                    if(printDebug) {
+                    if(deg3clique) {
                         std::cout << "VC: ";
                         if (vc->empty()) {
                             std::cout << "Empty...";
@@ -1803,24 +1798,24 @@ void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<
                         commonSolution++;
                     }
 
-                    if(printDebug)
+                    if(deg3clique)
                         std::cout << commonSolution <<" Neighbours are in S'\n";
 
                     if(commonSolution == 1)
                     {
-                        if(printDebug)
+                        if(deg3clique)
                             std::cout << "Insert v: "<< vDeg3 << " into VC!\n" << '\n';
                         vc->insert({vDeg3, true});
                     }
                     else if (commonSolution == 2)
                     {
-                        if(printDebug)
+                        if(deg3clique)
                             std::cout << "Adding c2 to S: " << c2 << '\n';
                         vc->insert({c2, true});
                     }
                     else if (commonSolution == 0)
                     {
-                        if(printDebug) {
+                        if(deg3clique) {
                             std::cout << "There should be at least 1 in the common solution" << c2 << '\n';
                             std::cout << "But inserting v: " << vDeg3 << " into VC!\n" << '\n';
                         }
@@ -1841,10 +1836,10 @@ void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<
                 std::vector<int> addedEdgesToC11 = rule->addedEdges->at(0);
                 std::vector<int> addedEdgesToC12 = rule->addedEdges->at(1);
 
-                if(printDebug)
+                if(deg3clique)
                     std::cout << "Removing Edge:" << c11 <<  " with:" << '\n';
                 for (int j = 0; j < (int)addedEdgesToC11.size(); ++j) {
-                    if(printDebug)
+                    if(deg3clique)
                         std::cout << addedEdgesToC11.at(j) << '\n';
                     removeEdgeFromVertex(c11, addedEdgesToC11.at(j));
                 }
@@ -1853,13 +1848,13 @@ void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<
 //                        std::cout << j << '\n';
 //                    removeEdgeFromVertex(c11, j);
 //                }
-                if(printDebug)
+                if(deg3clique)
                     std::cout << '\n';
 
-                if(printDebug)
+                if(deg3clique)
                     std::cout << "Removing Edge:" << c12 <<  " with:" << '\n';
                 for (int j = 0; j < (int)addedEdgesToC12.size(); ++j) {
-                    if(printDebug)
+                    if(deg3clique)
                         std::cout << addedEdgesToC12.at(j) << '\n';
                     removeEdgeFromVertex(c12, addedEdgesToC12.at(j));
                 }
@@ -1868,27 +1863,25 @@ void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<
 //                        std::cout << j << '\n';
 //                    removeEdgeFromVertex(c12, j);
 //                }
-                if(printDebug)
+                if(deg3clique)
                     std::cout << "\n";
                 break;
             }
             case DEGREE_THREE_DOM:
             {
-                printDebug = deg3dom;
-
-                if(printDebug)
+                if(deg3dom)
                     std::cout << "\n";
 
                 if (depth != rule->rDepth)
                 {
-                    if(printDebug) {
+                    if(deg3dom) {
                         std::cout << depth << " != " << rule->rDepth << '\n';
                         std::cout << "Shouldn't unreduce at this recursion depth!!\n";
                     }
                     return;
                 }
 
-                if(printDebug) {
+                if(deg3dom) {
                     std::cout << "Recursion depth coincide => unreduce rule: Degree 3: Domination\n";
                     std::cout << depth << " == " << rule->rDepth << '\n';
                 }
@@ -1899,7 +1892,7 @@ void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<
                 int c1 = rule->deletedVCVertices->at(1);
                 int c2 = rule->deletedVCVertices->at(2);
 
-                if(printDebug) {
+                if(deg3dom) {
                     std::cout << "Unreduce: Deg3: Domination" << '\n';
                     std::cout << "Degree 3 vertex: " << vDeg3 << '\n';
                     std::cout << dom << ", " << c1 << ", " << c2 << '\n';
@@ -1912,7 +1905,7 @@ void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<
                 // Solution S'
                 if (vc != nullptr)
                 {
-                    if(printDebug) {
+                    if(deg3dom) {
                         std::cout << "VC: ";
                         if (vc->empty()) {
                             std::cout << "Empty...";
@@ -1924,7 +1917,7 @@ void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<
                         std::cout << '\n';
                     }
 
-                    if(printDebug) {
+                    if(deg3dom) {
                         if(clique){
                             std::cout << "Clique!" << '\n';
                             std::cout << "Inserting to VC: " << dom << ", " << c1 << ", " << c2 << '\n';
@@ -1942,7 +1935,7 @@ void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<
                     }
                     vc->insert({dom, true});
 
-                    if(printDebug) {
+                    if(deg3dom) {
                         std::cout << "VC: ";
                         if (vc->empty()) {
                             std::cout << "Empty...";
@@ -1957,7 +1950,7 @@ void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<
                 }
                 // No vc
                 else {
-                    if(printDebug) {
+                    if(deg3dom) {
                         std::cout << "Not a Solution!" << '\n';
                         if(clique){
                             std::cout << "Clique!" << '\n';

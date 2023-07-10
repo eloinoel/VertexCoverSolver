@@ -449,7 +449,7 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeThree_Independent(BucketGraph* G,
     double Deg3Ind = (std::chrono::duration_cast<std::chrono::microseconds>(stopDeg3Ind - startDeg3Ind).count() /  1000) / (double) 1000;
 
     if (printDebug)
-        std::cout << "#Reduced " << cnt << " Deg3: Independent Set: " << " in " << Deg3Ind << " seconds adding " << edgeCnt << " edges\n";
+        std::cout << "#Reduced " << cnt << " Deg3: Independent Set: " << " in " << Deg3Ind << " seconds adding " << edgeCnt << " edges at rec Depth " << G->recursionDepth <<  "\n";
 
     return APPLICABLE;
 }
@@ -463,7 +463,7 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeThree_Clique(BucketGraph* G, bool
             std::cout << "\nNo degree 3 Vertex!" << '\n';
         return INAPPLICABLE; }
 
-    if(printDebug) {
+    if(G->deg3clique) {
         std::cout << "\nRule: Degree 3: 2-Clique-Neighborhood" << '\n';
         std::cout << "Deg 3 Bucket of size: " << (int)degThreeBucket->size() << '\n';
         std::cout << "---------" << '\n';
@@ -682,7 +682,7 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeThree_Clique(BucketGraph* G, bool
     double Deg3clique = (std::chrono::duration_cast<std::chrono::microseconds>(stopDeg3clique - startDeg3clique).count() /  1000) / (double) 1000;
 
     if (printDebug)
-        std::cout << "#Reduced " << cnt << " Deg3: 2-Clique-NH: " << " in " << Deg3clique << " seconds adding " << edgeCnt << " edges\n";
+        std::cout << "#Reduced " << cnt << " Deg3: 2-Clique-NH: " << " in " << Deg3clique << " seconds adding " << edgeCnt << " edges at rec Depth " << G->recursionDepth <<  "\n";
 
 
     return APPLICABLE;
@@ -894,7 +894,7 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeThree_Domination(BucketGraph* G, 
     double Deg3dom = (std::chrono::duration_cast<std::chrono::microseconds>(stopDeg3dom - startDeg3dom).count() /  1000) / (double) 1000;
 
     if (printDebug)
-        std::cout << "#Reduced " << cnt << " Deg3: Domination: " << " in " << Deg3dom << " seconds adding " << kAdded << " to VC\n";
+        std::cout << "#Reduced " << cnt << " Deg3: Domination: " << " in " << Deg3dom << " seconds adding " << kAdded << " to VC at rec Depth " << G->recursionDepth <<  "\n";
 
 
     return APPLICABLE;
