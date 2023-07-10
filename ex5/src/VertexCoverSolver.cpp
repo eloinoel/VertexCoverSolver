@@ -45,7 +45,7 @@ std::unordered_map<int, bool>* vcVertexBranchingRecursive(BucketGraph* G, int k,
     int lowerBound = G->getLPBound();
     std::cout << "#--> calculated LPBound: " << lowerBound << " with k=" << k << '\n';
     if (k < lowerBound) {
-        G->unreduce(&k, previousK, currentRecursion);
+        G->unreduce(&k, previousK, nullptr, currentRecursion);
         return nullptr;
     }
 
