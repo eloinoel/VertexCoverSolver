@@ -156,7 +156,7 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeTwo(BucketGraph* G, int* k, bool 
     }
     auto stopDeg2 = std::chrono::high_resolution_clock::now();
     double Deg2 = (std::chrono::duration_cast<std::chrono::microseconds>(stopDeg2 - startDeg2).count() /  1000) / (double) 1000;
-    if (printDebug)
+    if (true || printDebug)
         std::cout << "#Reduced " << numberOfReducedVertices << " Deg2 vertices in " << Deg2 << " seconds" << std::endl;
 
     //std::cout << "----end----" << '\n';
@@ -1134,10 +1134,11 @@ RULE_APPLICATION_RESULT Reductions::rule_Unconfined(BucketGraph* G, int* k, bool
             S.clear();
             SNeighbours.clear();
             S.insert(std::pair<int, bool>(vertex->getIndex(), true));
-            for (auto neighbour = vertex->adj->begin(); neighbour != vertex->adj->end(); ++neighbour)
+            for (auto neighbourIt = vertex->adj_map->begin(); neighbourIt != vertex->adj_map->end(); ++neighbourIt)
             {
-                if(!G->isActive(*neighbour)) { continue; }
-                SNeighbours.insert(std::pair<int, bool>(*neighbour, true));
+                int neighbour = neighbourIt->first;
+                if(!G->isActive(neighbour)) { continue; }
+                SNeighbours.insert(std::pair<int, bool>(neighbour, true));
             }
             /* G->print();
             std::cout << cp::dye("finished initialisation with S={", 'b');
@@ -1168,11 +1169,12 @@ RULE_APPLICATION_RESULT Reductions::rule_Unconfined(BucketGraph* G, int* k, bool
                     int sharedNeighbours = 0;
                     int outsideNeighbour = -1;
                     //int outsideNeighboursSize = 0;
-                    for (auto it=G->getVertex(u->first)->adj->begin(); it != G->getVertex(u->first)->adj->end(); ++it)
+                    for (auto it=G->getVertex(u->first)->adj_map->begin(); it != G->getVertex(u->first)->adj_map->end(); ++it)
                     {
-                        if(!G->getVertex(*it)->getActive()) { continue; }
+                        int vertex = it->first;
+                        if(!G->getVertex(vertex)->getActive()) { continue; }
                         // if u has more than one neighbour in S, u does not fit the criteria
-                        if (S.find(*it) != S.end()) {
+                        if (S.find(vertex) != S.end()) {
                             sharedNeighbours++;
                             //std::cout << cp::dye("vertex "+std::to_string(u->first)+" has S neighbour: "+std::to_string(*it), 'y') << std::endl;
                             if(sharedNeighbours > 1) {
@@ -1184,11 +1186,11 @@ RULE_APPLICATION_RESULT Reductions::rule_Unconfined(BucketGraph* G, int* k, bool
                             }
                         }
                         //if(!inSNeighbours[*it] && !inS[*it])
-                        if(SNeighbours.find(*it) == SNeighbours.end() && S.find(*it) == S.end())
+                        if(SNeighbours.find(vertex) == SNeighbours.end() && S.find(vertex) == S.end())
                         {
                             //std::cout << cp::dye("vertex has neighbour: "+std::to_string(*it), 'y') << std::endl;
                             if(outsideNeighbour != -1) { valid = false; break; }
-                            outsideNeighbour = *it;
+                            outsideNeighbour = vertex;
                         }
                     }
 
@@ -1242,16 +1244,17 @@ RULE_APPLICATION_RESULT Reductions::rule_Unconfined(BucketGraph* G, int* k, bool
                     // add u's outside neighbour to S
                     S.insert(std::pair<int, bool>(bestOutsideNeighbour, true));
                     // add non-intersecting outsideNeighbour neighbourhood to neighbours
-                    for(auto it=G->getVertex(bestOutsideNeighbour)->adj->begin(); it != G->getVertex(bestOutsideNeighbour)->adj->end(); ++it)
+                    for(auto it = G->getVertex(bestOutsideNeighbour)->adj_map->begin(); it != G->getVertex(bestOutsideNeighbour)->adj_map->end(); ++it)
                     {
-                        if(!G->isActive(*it) || S.find(*it) != S.end()) { continue; }
-                        if(SNeighbours.find(*it) == SNeighbours.end())
+                        int vertex = it->first;
+                        if(!G->isActive(vertex) || S.find(vertex) != S.end()) { continue; }
+                        if(SNeighbours.find(vertex) == SNeighbours.end())
                         {
-                            SNeighbours.insert(std::pair<int, bool>(*it, true));
+                            SNeighbours.insert(std::pair<int, bool>(vertex, true));
                         }
                         else
                         {
-                            SNeighbours.erase(*it);
+                            SNeighbours.erase(vertex);
                         }
                     }
                     /* std::cout << cp::dye("continuing search with S={", 'y');
@@ -1762,14 +1765,12 @@ void Reductions::freeReductionRule(Reduction* reduction, bool freeMergeVertexInf
         if(reduction->deletedVertices) { delete reduction->deletedVertices; reduction->deletedVertices = NULL; }
         if(reduction->deletedVCVertices) { delete reduction->deletedVCVertices; reduction->deletedVCVertices = NULL; }
         if(reduction->mergeVertexInfo) {
-            std::tuple<int, std::vector<int>*, std::unordered_map<int, bool>*, std::vector<int>*>* mergeVertexInfo = reduction->mergeVertexInfo;
+            std::tuple<int, std::unordered_map<int, bool>*, std::vector<int>*>* mergeVertexInfo = reduction->mergeVertexInfo;
             if(freeMergeVertexInfoData)
             {
-                auto original_adj = std::get<1>(*mergeVertexInfo);
-                if(original_adj) { delete original_adj; original_adj = NULL; }
-                auto original_adj_map = std::get<2>(*mergeVertexInfo);
+                auto original_adj_map = std::get<1>(*mergeVertexInfo);
                 if(original_adj_map) { delete original_adj_map; original_adj_map = NULL; }
-                auto added_vertices = std::get<3>(*mergeVertexInfo);
+                auto added_vertices = std::get<2>(*mergeVertexInfo);
                 if(added_vertices) { delete added_vertices; added_vertices = NULL; }
             }
             delete reduction->mergeVertexInfo;

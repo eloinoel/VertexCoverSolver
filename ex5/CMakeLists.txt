@@ -73,4 +73,4 @@ include_directories(${INCLUDE_DIRECTORIES} ${BOOST_ROOT} include)
 #find_package(Boost REQUIRED COMPONENTS system)
 
 # Create an executable
-add_executable(VertexCoverSolver src/Main.cpp src/VertexCoverSolver.cpp src/utils/BucketGraph.cpp src/utils/Reductions.cpp)
+add_executable(VertexCoverSolver src/Main.cpp src/VertexCoverSolver.cpp src/utils/BucketGraph.cpp src/utils/Reductions.cpp src/utils/Benchmark.cpp)
