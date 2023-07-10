@@ -1272,7 +1272,7 @@ void BucketGraph::preprocess(int* k, std::vector<bool>& rulesToApply, bool print
     {
         if(rulesToApply[0] && reductions->rule_DegreeOne(this, k, -1, false, printDebug) == APPLICABLE) continue;
         if(rulesToApply[1] && reductions->rule_DegreeTwo(this, k, -1, false, printDebug) == APPLICABLE) continue;
-        //TODO:
+        //TODO: depth setzen
         if(reductions->rule_DegreeThree_Domination(this, k, false, deg3dom) == APPLICABLE) continue;
         if(reductions->rule_DegreeThree_Clique(this, deg3clique) == APPLICABLE) continue;
         if(reductions->rule_DegreeThree_Independent(this, deg3ind) == APPLICABLE) continue;
@@ -1303,9 +1303,9 @@ bool BucketGraph::dynamicReduce(int* k, int depth, bool printDebug)
     else
     {
         // deg1 + deg2 + highDeg + buss
-        reductions = std::vector<bool>{true, true, false, false, false, true, true, true, true, true};
+        reductions = std::vector<bool>{true, true, false, false, false, true, true, true, true, true, true};
     }
-    reductions = std::vector<bool>{true, true, false, true, true, true, true};
+    reductions = std::vector<bool>{true, true, false, true, true, true, true, true, true, true};
     //reductions = std::vector<bool>{false, false, false, false, false, false, false};
     return reduce(k, depth, &reductions, printDebug);
 }

@@ -34,7 +34,7 @@ std::unordered_map<int, bool>* vcVertexBranchingRecursive(BucketGraph* G, int k,
     int previousK = k;
     bool cut = false;
     std::cout << "#--> applying data reductions " << '\n';
-    //cut = G->dynamicReduce(&k, depth, printDebug);
+    cut = G->dynamicReduce(&k, depth, printDebug);
     if(cut)
     {
         std::cout << "#--> cutting through data reductions " << '\n';
@@ -149,7 +149,7 @@ std::unordered_map<int, bool>* vcSolverRecursive(BucketGraph* G, int* numRec, bo
 
     // Apply Reduction Rules for the first time
     auto startPreprocess = std::chrono::high_resolution_clock::now();
-    std::vector<bool> rulesToApply = std::vector<bool>{true, true, false, true, true, true, true};
+    std::vector<bool> rulesToApply = std::vector<bool>{true, true, false, true, true, true, true, true, true, true};
     G->preprocess(&numPreprocessingVCVertices, rulesToApply, printDebug);
     numPreprocessingVCVertices = -numPreprocessingVCVertices;
     auto endPreprocess = std::chrono::high_resolution_clock::now();
@@ -213,7 +213,7 @@ std::unordered_map<int, bool>* maxHeuristicSolver(BucketGraph* G, int* numRec, b
     int numPreprocessingVCVertices = 0;
     if(applyReductions)
     {
-        std::vector<bool> rulesToApply = std::vector<bool> ({true, true, true, false});
+        std::vector<bool> rulesToApply = std::vector<bool> ({true, true, true, false, false, false , false , false , false, false});
         G->preprocess(&numPreprocessingVCVertices, rulesToApply);
         numPreprocessingVCVertices = -numPreprocessingVCVertices;
     }
