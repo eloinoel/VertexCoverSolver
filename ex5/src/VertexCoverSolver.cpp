@@ -21,8 +21,13 @@ typedef ColorPrint cp;
 
 std::unordered_map<int, bool>* vcVertexBranchingRecursive(BucketGraph* G, int k, int depth, int* numRec, bool printDebug = false)
 {
+
     (*numRec)++;
-	if (k < 0)
+    // Save recursion depth to unreduce degree-3 at correct depth
+    G->recursionDepth++;
+	int currentRecursion = *numRec;
+
+    if (k < 0)
     {
 		return nullptr;
 	}
@@ -90,7 +95,7 @@ std::unordered_map<int, bool>* vcVertexBranchingRecursive(BucketGraph* G, int k,
 	//cannot fully explore neighbours
     if (vertexDeg > k)
     {
-        //G->unreduce(&k, previousK);
+        G->unreduce(&k, previousK, depth);
         return nullptr;
     }
 
@@ -113,7 +118,6 @@ std::unordered_map<int, bool>* vcVertexBranchingRecursive(BucketGraph* G, int k,
         G->setActive(neighbours);
         for (int i = 0; i < (int) neighbours->size(); i++)
         {
-            //S->push_back(neighbours->at(i));
             S->insert({neighbours->at(i), true}); //push results
         }
         G->unreduce(&k, previousK, depth, S); //unreduce needs correct vc für unmerge of deg2rule
@@ -141,6 +145,7 @@ std::unordered_map<int, bool>* vcSolverRecursive(BucketGraph* G, int* numRec, bo
 {
     int numPreprocessingVCVertices = 0;
 	int k = 0;
+    G->recursionDepth = 0;
 
     // Apply Reduction Rules for the first time
     auto startPreprocess = std::chrono::high_resolution_clock::now();
@@ -176,7 +181,7 @@ std::unordered_map<int, bool>* vcSolverRecursive(BucketGraph* G, int* numRec, bo
             double branchingDuration = (std::chrono::duration_cast<std::chrono::microseconds>(endPreprocess - startPreprocess).count() /  1000) / (double) 1000;
             if(printDebug)
                 std::cout << "#Finished branching in " << branchingDuration << " seconds" << std::endl;
-			return vc;
+            return vc;
 		}
         k++;
 	}
@@ -639,7 +644,7 @@ int getUpperBound(BucketGraph* G, double timeCap)
     //cout << "before heuristic solver" << endl;
     //G->print();
     std::unordered_map<int, bool>* heuristicVC = maxHeuristicSolver(G, &heuristicNumRecursions, false, false);
-    //see if we can find a better initial solution 
+    //see if we can find a better initial solution
     heuristicVC = chooseSmallestHeuristicSolution(G, &heuristicNumRecursions, &heuristicVC, true, true, NUM_RANDOM_SOLUTION_GENERATIONS, HEURISTIC_SOLVER_TIME_CAP, false);
     auto endHeuristicWrapper = std::chrono::high_resolution_clock::now();
     double heuristicWrapperDuration = (std::chrono::duration_cast<std::chrono::microseconds>(endHeuristicWrapper - startHeuristicWrapper).count() /  1000) / (double) 1000;

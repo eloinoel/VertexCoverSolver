@@ -410,3 +410,11 @@ FodyWeavers.xsd
 vc-data-students/*
 
 
+vc-data-students/benchmark-fast.sh
+vc-data-students/verifier.py
+*.txt
+*.dimacs
+*.py
+ex5/src/Main.cpp
+vc-data-students/verifier.py
+vc-data-students/benchmark-fast.sh

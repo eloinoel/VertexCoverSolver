@@ -1242,9 +1242,19 @@ void BucketGraph::preprocess(int* k, bool printDebug)
     {
         if(reductions->rule_DegreeOne(this, k, -1, false, printDebug) == APPLICABLE) continue;
         if(reductions->rule_DegreeTwo(this, k, -1, false, printDebug) == APPLICABLE) continue;
+
+        //TODO:
+        if(reductions->rule_DegreeThree_Domination(this, k, false, deg3dom) == APPLICABLE) continue;
+        if(reductions->rule_DegreeThree_Clique(this, deg3clique) == APPLICABLE) continue;
+        if(reductions->rule_DegreeThree_Independent(this, deg3ind) == APPLICABLE) continue;
+        //TODO:
         //if(reductions->rule_Domination(this, k, -1, false) == APPLICABLE) continue;
         if(reductions->rule_Unconfined(this, k, -1, false, printDebug) == APPLICABLE) continue;
         if(reductions->rule_LPFlow(this, k, -1, false, printDebug) == APPLICABLE) continue;
+
+
+
+
         return;
     }
 }
@@ -1262,6 +1272,11 @@ void BucketGraph::preprocess(int* k, std::vector<bool>& rulesToApply, bool print
     {
         if(rulesToApply[0] && reductions->rule_DegreeOne(this, k, -1, false, printDebug) == APPLICABLE) continue;
         if(rulesToApply[1] && reductions->rule_DegreeTwo(this, k, -1, false, printDebug) == APPLICABLE) continue;
+        //TODO:
+        if(reductions->rule_DegreeThree_Domination(this, k, false, deg3dom) == APPLICABLE) continue;
+        if(reductions->rule_DegreeThree_Clique(this, deg3clique) == APPLICABLE) continue;
+        if(reductions->rule_DegreeThree_Independent(this, deg3ind) == APPLICABLE) continue;
+        //TODO:
         if(rulesToApply[2] && reductions->rule_Domination(this, k, -1, false) == APPLICABLE) continue;
         if(rulesToApply[3] && reductions->rule_Unconfined(this, k, -1, false, printDebug) == APPLICABLE) continue;
         if(rulesToApply[4] && reductions->rule_LPFlow(this, k, -1, false, printDebug) == APPLICABLE) continue;
@@ -1278,17 +1293,17 @@ bool BucketGraph::dynamicReduce(int* k, int depth, bool printDebug)
     if(depth % 25 == 0)
     {
         // + unconfined
-        reductions = std::vector<bool>{true, true, false, true && UNCONFINED_INITIALISED, true && LP_INITIALISED, true, true};
+        reductions = std::vector<bool>{true, true, true, false && true && UNCONFINED_INITIALISED, true && LP_INITIALISED, true, true, true, true, true};
     }
     else if(depth % 10 == 0)
     {
         // + LP
-        reductions = std::vector<bool>{true, true, false, false, true && LP_INITIALISED, true, true};
+        reductions = std::vector<bool>{true, true, false, false, true && LP_INITIALISED, true, true, true, true, true};
     }
     else
     {
         // deg1 + deg2 + highDeg + buss
-        reductions = std::vector<bool>{true, true, false, false, false, true, true};
+        reductions = std::vector<bool>{true, true, false, false, false, true, true, true, true, true};
     }
     reductions = std::vector<bool>{true, true, false, true, true, true, true};
     //reductions = std::vector<bool>{false, false, false, false, false, false, false};
@@ -1303,11 +1318,16 @@ bool BucketGraph::dynamicReduce(int* k, int depth, bool printDebug)
  * 4: LP,
  * 5: highDeg,
  * 6: Buss
+ * 7: Deg3IndepentSet,
+ * 8: Deg3Clique,
+ * 9: Deg3Domination
 */
 bool BucketGraph::reduce(int* k, int depth, std::vector<bool>* rulesToApply, bool printDebug)
 {
     if(rulesToApply == nullptr) {
-        rulesToApply = new std::vector{true, true, true, true, true, true, true};
+                                    //  0     1       2       3    4      5      6   7       8   9
+        rulesToApply = new std::vector{true, true, false, true, true, true, true, true, true, true};
+//        rulesToApply = new std::vector{true, true, true, true, true, true, true, true};
     }
     //initialisise
     RULE_APPLICATION_RESULT degreeTwoResult = INAPPLICABLE;
@@ -1317,6 +1337,10 @@ bool BucketGraph::reduce(int* k, int depth, std::vector<bool>* rulesToApply, boo
     RULE_APPLICATION_RESULT dominationResult = INAPPLICABLE;
     RULE_APPLICATION_RESULT unconfinedResult = INAPPLICABLE;
     RULE_APPLICATION_RESULT LPFlowResult = INAPPLICABLE;
+    RULE_APPLICATION_RESULT degreeThreeIndResult = INAPPLICABLE;
+    RULE_APPLICATION_RESULT degreeThreeCliqResult = INAPPLICABLE;
+    RULE_APPLICATION_RESULT degreeThreeDomResult = INAPPLICABLE;
+
     while(true)
     {
         //std::cout << "highdeg " << '\n';
@@ -1336,6 +1360,24 @@ bool BucketGraph::reduce(int* k, int depth, std::vector<bool>* rulesToApply, boo
         if(degreeTwoResult == INSUFFICIENT_BUDGET) return true;
 
         if(rulesToApply->at(2)) { dominationResult = reductions->rule_Domination(this, k, depth, true); }
+        
+        //TODO: don't check this here, do this in the rules
+        if(getVerticesOfDegree(3) != nullptr && !getVerticesOfDegree(3)->empty()){
+            if (rulesToApply->at(9)) {
+                degreeThreeDomResult = reductions->rule_DegreeThree_Domination(this, k, true, deg3dom);
+            }
+            if (degreeThreeDomResult == INSUFFICIENT_BUDGET) return true;
+
+            if (rulesToApply->at(8)) { degreeThreeCliqResult = reductions->rule_DegreeThree_Clique(this, deg3clique); }
+            if (degreeThreeCliqResult == INSUFFICIENT_BUDGET) return true;
+
+            if (rulesToApply->at(7)) { degreeThreeIndResult = reductions->rule_DegreeThree_Independent(this, deg3ind); }
+            if (degreeThreeIndResult == INSUFFICIENT_BUDGET) return true;
+        }
+        //TODO:
+        if(degreeThreeDomResult == APPLICABLE || degreeThreeCliqResult == APPLICABLE || degreeThreeIndResult == APPLICABLE) { continue; }
+
+        if(rulesToApply->at(2)) { dominationResult = reductions->rule_Domination(this, k, depth, true); }
         if(dominationResult == APPLICABLE) continue;
         if(dominationResult == INSUFFICIENT_BUDGET) return true;
 
@@ -1346,6 +1388,7 @@ bool BucketGraph::reduce(int* k, int depth, std::vector<bool>* rulesToApply, boo
         if(rulesToApply->at(4)) { LPFlowResult = reductions->rule_LPFlow(this, k, depth, true, printDebug); }
         if(LPFlowResult == APPLICABLE) continue;
         if(LPFlowResult == INSUFFICIENT_BUDGET) return true;
+
         return false;
     }
     delete rulesToApply;
@@ -1358,6 +1401,8 @@ void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<
         throw std::invalid_argument("unreduce: appliedRules is nullptr");
     if(reductions->appliedRules->empty())
         return;
+
+    bool printDebug;
 
     //pop rules
     while(!reductions->appliedRules->empty() && (*k < previousK || reductions->appliedRules->back()->kDecrement == 0))
@@ -1512,28 +1557,53 @@ void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<
                 }
                 break;
             case DEGREE_THREE_IND: {
+
+                printDebug = deg3ind;
+
+                if(printDebug)
+                    std::cout << "\n";
+
+                if (depth != rule->rDepth)
+                {
+                    if(printDebug) {
+                        std::cout << depth << " != " << rule->rDepth << '\n';
+                        std::cout << "Shouldn't unreduce at this recursion depth!!\n";
+                    }
+                    return;
+                }
+
+                if(printDebug) {
+                    std::cout << "Recursion depth coincide => unreduce rule: Degree 3: Independent Set\n";
+                    std::cout << depth << " == " << rule->rDepth << '\n';
+                }
+
                 int vDeg3 = rule->deletedVertices->at(0);
-                // 3 Case
+
                 int a = rule->deletedVCVertices->at(0);
                 int b = rule->deletedVCVertices->at(1);
                 int c = rule->deletedVCVertices->at(2);
 
-                std::vector<int> addedEdgesToA = rule->addedEdges->at(0);
-                std::vector<int> addedEdgesToB = rule->addedEdges->at(1);
-                std::vector<int> addedEdgesToC = rule->addedEdges->at(2);
-
-                for (int i = 0; i < (int) addedEdgesToA.size(); ++i) {
-                    removeEdgeFromVertex(a, addedEdgesToA.at(i));
-                }
-                for (int i = 0; i < (int) addedEdgesToB.size(); ++i) {
-                    removeEdgeFromVertex(b, addedEdgesToB.at(i));
-                }
-                for (int i = 0; i < (int) addedEdgesToC.size(); ++i) {
-                    removeEdgeFromVertex(c, addedEdgesToC.at(i));
+                if(printDebug) {
+                    std::cout << "Unreduce: Degree 3 Independent Set, at recursion: "<< recursionDepth << '\n';
+                    std::cout << "Degree 3 vertex: " << vDeg3 << '\n';
+                    std::cout << a << ", " << b << ", " << c << '\n';
                 }
 
                 // Solution S'
-                if (vc != nullptr) {
+                if (vc != nullptr)
+                {
+                    if(printDebug) {
+                        std::cout << "VC: ";
+                        if (vc->empty()) {
+                            std::cout << "Empty...";
+                        } else {
+                            for (const auto &pair: *vc) {
+                                std::cout << pair.first << " ";
+                            }
+                        }
+                        std::cout << '\n';
+                    }
+
                     int a = rule->deletedVCVertices->at(0);
                     int b = rule->deletedVCVertices->at(1);
                     int c = rule->deletedVCVertices->at(2);
@@ -1557,42 +1627,330 @@ void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<
                         inSolution[2] = 1;
                     }
 
-                    if (commonSolution == 1) {
-                        if (inSolution[0] == 1)
-                            vc->erase(ita);
-                        else if (inSolution[1] == 1)
-                            vc->erase(itb);
-                        else if (inSolution[2] == 1)
-                            vc->erase(itc);
-                        else
-                            throw std::invalid_argument("unreduce error: Ind Deg-3: unknown in case 1");
+                    if(printDebug)
+                        std::cout << commonSolution <<" Neighbours are in S'\n";
 
-                        vc->insert({vDeg3, true});
-                    } else if (commonSolution == 2) {
-                        if (inSolution[0] == 1 && inSolution[1] == 1) {
+                    if(commonSolution == 1)
+                    {
+                        if (inSolution[0] == 1) {
+                            if(printDebug)
+                                std::cout << "Erasing a" << '\n';
                             vc->erase(ita);
-                        } else if (inSolution[1] == 1 && inSolution[2] == 1) {
+                        }
+                        else if (inSolution[1] == 1) {
+                            if(printDebug)
+                                std::cout << "Erasing b" << '\n';
                             vc->erase(itb);
-                        } else if (inSolution[0] == 1 && inSolution[2] == 1) {
+                        }
+                        else if (inSolution[2] == 1) {
+                            if(printDebug)
+                                std::cout << "Erasing c" << '\n';
                             vc->erase(itc);
                         }
+                        else
+                            throw std::invalid_argument("unreduce error: Ind Deg-3: unknown in case 1");
+                        if(printDebug)
+                            std::cout << "Insert v: "<< vDeg3 << " into VC!\n" << '\n';
+                        vc->insert({vDeg3, true});
+                    }
+                    else if (commonSolution == 2)
+                    {
+                        if (inSolution[0] == 1 && inSolution[1] == 1) {
+                            if(printDebug)
+                                std::cout << "Erasing a: " << a <<  '\n';
+                            vc->erase(ita);
+                        }
+                        else if (inSolution[1] == 1 && inSolution[2] == 1) {
+                            if(printDebug)
+                                std::cout << "Erasing b: " << b <<  '\n';
+                            vc->erase(itb);
+                        }
+                        else if (inSolution[0] == 1 && inSolution[2] == 1) {
+                            if(printDebug)
+                                std::cout << "Erasing c: " << c << '\n';
+                            vc->erase(itc);
+                        }
+                        if(printDebug)
+                            std::cout << "Adding v to S: " << vDeg3 << '\n';
                         vc->insert({vDeg3, true});
 
                     }
-//                    else if (commonSolution == 3){
-//
-//                    }
-//                    else{
-//                        throw std::invalid_argument("unreduce error: Ind Deg-3: unknown case");
-//                    }
+                    else if (commonSolution == 3)
+                    {
+                        if(printDebug)
+                            std::cout << "All 3 Neighbours are part of the solution!" << '\n';
+                    }
+                    else{
+                        throw std::invalid_argument("unreduce error: Independent Deg-3: unknown case");
+                    }
                 }
-                    // No vc
+                // No vc
                 else {
-                    // deleteEdges
                     // set v active again
                     setActive(rule->deletedVertices->at(0));
                 }
 
+                // Removing Edges!
+                std::list<int> addedEdgesToA = rule->addedEdges->at(0);
+                std::list<int> addedEdgesToB = rule->addedEdges->at(1);
+                std::list<int> addedEdgesToC = rule->addedEdges->at(2);
+
+                if(printDebug)
+                    std::cout << "Removing Edge:" << a <<  " with:" << '\n';
+                for (auto j: addedEdgesToA){
+                    if(printDebug)
+                        std::cout << j << '\n';
+                    removeEdgeFromVertex(a, j);
+                }
+                if(printDebug)
+                    std::cout << '\n';
+
+                if(printDebug)
+                    std::cout << "Removing Edge:" << b <<  " with:" << '\n';
+                for (auto j: addedEdgesToB){
+                    if(printDebug)
+                        std::cout << j << '\n';
+                    removeEdgeFromVertex(b, j);
+                }
+                if(printDebug)
+                    std::cout << '\n';
+
+
+                if(printDebug)
+                    std::cout << "Removing Edge:" << c <<  " with:" << '\n';
+                for (auto j: addedEdgesToC){
+                    if(printDebug)
+                        std::cout << j << '\n';
+                    removeEdgeFromVertex(c, j);
+                }
+                if(printDebug)
+                    std::cout << '\n';
+
+                break;
+            }
+            case DEGREE_THREE_CLIQ:
+            {
+                printDebug = deg3clique;
+
+                if(printDebug)
+                    std::cout << "\n";
+
+                if (depth != rule->rDepth)
+                {
+                    if(printDebug) {
+                        std::cout << depth << " != " << rule->rDepth << '\n';
+                        std::cout << "Shouldn't unreduce at this recursion depth!!\n";
+                    }
+                    return;
+                }
+
+                if(printDebug) {
+                    std::cout << "Recursion depth coincide => unreduce rule: Degree 3: 2-Clique-Neighbourhood\n";
+                    std::cout << depth << " == " << rule->rDepth << '\n';
+                }
+
+                int vDeg3 = rule->deletedVertices->at(0);
+
+                // 3 Case
+                int c11 = rule->deletedVCVertices->at(0);
+                int c12 = rule->deletedVCVertices->at(1);
+                int c2 = rule->deletedVCVertices->at(2);
+
+                if(printDebug) {
+                    std::cout << "Unreduce at recursion: "<< recursionDepth << '\n';
+                    std::cout << "Degree 3 vertex: " << vDeg3 << '\n';
+                    std::cout << c11 << ", " << c12 << ", " << c2 << '\n';
+                }
+
+                // Solution S'
+                if (vc != nullptr)
+                {
+                    if(printDebug) {
+                        std::cout << "VC: ";
+                        if (vc->empty()) {
+                            std::cout << "Empty...";
+                        } else {
+                            for (const auto &pair: *vc) {
+                                std::cout << pair.first << " ";
+                            }
+                        }
+                        std::cout << '\n';
+                    }
+
+                    int commonSolution = 0;
+
+                    auto itc11 = vc->find(c11);
+                    if (itc11 != vc->end()) {
+                        commonSolution++;
+                    }
+                    auto itc12 = vc->find(c12);
+                    if (itc12 != vc->end()) {
+                        commonSolution++;
+                    }
+
+                    if(printDebug)
+                        std::cout << commonSolution <<" Neighbours are in S'\n";
+
+                    if(commonSolution == 1)
+                    {
+                        if(printDebug)
+                            std::cout << "Insert v: "<< vDeg3 << " into VC!\n" << '\n';
+                        vc->insert({vDeg3, true});
+                    }
+                    else if (commonSolution == 2)
+                    {
+                        if(printDebug)
+                            std::cout << "Adding c2 to S: " << c2 << '\n';
+                        vc->insert({c2, true});
+                    }
+                    else if (commonSolution == 0)
+                    {
+                        if(printDebug) {
+                            std::cout << "There should be at least 1 in the common solution" << c2 << '\n';
+                            std::cout << "But inserting v: " << vDeg3 << " into VC!\n" << '\n';
+                        }
+                        vc->insert({vDeg3, true});
+                    }
+                    else{
+                        throw std::invalid_argument("unreduce error: 2-Clique: unknown case");
+                    }
+                }
+                // No vc
+                else {
+                    // set v active again
+                    setActive(rule->deletedVertices->at(0));
+                    setActive(c2);
+                }
+
+                // Removing Edges!
+                std::list<int> addedEdgesToC11 = rule->addedEdges->at(0);
+                std::list<int> addedEdgesToC12 = rule->addedEdges->at(1);
+
+                if(printDebug)
+                    std::cout << "Removing Edge:" << c11 <<  " with:" << '\n';
+                for (auto j: addedEdgesToC11){
+                    if(printDebug)
+                        std::cout << j << '\n';
+                    removeEdgeFromVertex(c11, j);
+                }
+                if(printDebug)
+                    std::cout << '\n';
+
+                if(printDebug)
+                    std::cout << "Removing Edge:" << c12 <<  " with:" << '\n';
+                for (auto j: addedEdgesToC12){
+                    if(printDebug)
+                        std::cout << j << '\n';
+                    removeEdgeFromVertex(c12, j);
+                }
+                if(printDebug)
+                    std::cout << "\n";
+                break;
+            }
+            case DEGREE_THREE_DOM:
+            {
+                printDebug = deg3dom;
+
+                if(printDebug)
+                    std::cout << "\n";
+
+                if (depth != rule->rDepth)
+                {
+                    if(printDebug) {
+                        std::cout << depth << " != " << rule->rDepth << '\n';
+                        std::cout << "Shouldn't unreduce at this recursion depth!!\n";
+                    }
+                    return;
+                }
+
+                if(printDebug) {
+                    std::cout << "Recursion depth coincide => unreduce rule: Degree 3: Domination\n";
+                    std::cout << depth << " == " << rule->rDepth << '\n';
+                }
+                int vDeg3 = rule->deletedVertices->at(0);
+
+                // 3 Case
+                int dom = rule->deletedVCVertices->at(0);
+                int c1 = rule->deletedVCVertices->at(1);
+                int c2 = rule->deletedVCVertices->at(2);
+
+                if(printDebug) {
+                    std::cout << "Unreduce: Deg3: Domination" << '\n';
+                    std::cout << "Degree 3 vertex: " << vDeg3 << '\n';
+                    std::cout << dom << ", " << c1 << ", " << c2 << '\n';
+                }
+
+                bool clique = false;
+                if (rule->kDecrement == 3)
+                    clique = true;
+
+                // Solution S'
+                if (vc != nullptr)
+                {
+                    if(printDebug) {
+                        std::cout << "VC: ";
+                        if (vc->empty()) {
+                            std::cout << "Empty...";
+                        } else {
+                            for (const auto &pair: *vc) {
+                                std::cout << pair.first << " ";
+                            }
+                        }
+                        std::cout << '\n';
+                    }
+
+                    if(printDebug) {
+                        if(clique){
+                            std::cout << "Clique!" << '\n';
+                            std::cout << "Inserting to VC: " << dom << ", " << c1 << ", " << c2 << '\n';
+                        }
+                        else{
+                            std::cout << "No Clique!" << '\n';
+                            std::cout << "Inserting dominator to VC: " << dom << '\n';
+                        }
+                    }
+
+                    if(clique)
+                    {
+                        vc->insert({c1, true});
+                        vc->insert({c2, true});
+                    }
+                    vc->insert({dom, true});
+
+                    if(printDebug) {
+                        std::cout << "VC: ";
+                        if (vc->empty()) {
+                            std::cout << "Empty...";
+                        } else {
+                            for (const auto &pair: *vc) {
+                                std::cout << pair.first << " ";
+                            }
+                        }
+                        std::cout << '\n';
+                        std::cout << '\n';
+                    }
+                }
+                // No vc
+                else {
+                    if(printDebug) {
+                        std::cout << "Not a Solution!" << '\n';
+                        if(clique){
+                            std::cout << "Clique!" << '\n';
+                            std::cout << "Setting active again: " << dom << ", " << c1 << ", " << c2 << '\n';
+                        }
+                        else{
+                            std::cout << "No Clique!" << '\n';
+                            std::cout << "Activating dominator to VC: " << dom << '\n';
+                        }
+                    }
+
+                    if(clique){
+                        setActive(c1);
+                        setActive(c2);
+                    }
+                    setActive(dom);
+                }
+                *k = *k + rule->kDecrement;
                 break;
             }
             default:
@@ -1601,6 +1959,7 @@ void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<
         }
         if (rule->deletedVCVertices != nullptr) delete rule->deletedVCVertices;
         if (rule->deletedVertices != nullptr) delete rule->deletedVertices;
+        if(rule->addedEdges != nullptr) delete rule->addedEdges;
         reductions->appliedRules->pop_back();
         delete rule;
         if(*k > previousK)
@@ -1828,8 +2187,14 @@ void BucketGraph::removeEdgeFromVertex(int vertex, int edge)
 {
     if(vertex >= (int) vertexReferences.size() || edge >= (int) vertexReferences.size() || vertex < 0 || edge < 0 || vertex == edge)
         throw std::invalid_argument("deletEdgeFromVertex: vertex " + std::to_string(vertex) + " or edge " + std::to_string(edge) +  " invalid.\n");
+
+    // If inactive the edge should still be deleted so that in case this node is activated again it doesn't have those extra edges
     if(!isActive(vertex) || !isActive(edge))
-        throw std::invalid_argument("deleteEdgeFromVertex: vertex " + std::to_string(vertex) + " or edge " + std::to_string(edge) +  " inactive.\n");
+    {
+        //TODO: delete the edge even when inactive to restore initial state
+        return;
+    }
+
     if(!vertexHasEdgeTo(vertex, edge))
         throw std::invalid_argument("deleteEdgeFromVertex: vertex " + std::to_string(vertex) + " doesn't have edge " + std::to_string(edge) +  " to delete.\n");
 

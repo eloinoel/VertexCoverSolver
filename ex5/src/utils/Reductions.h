@@ -2,6 +2,7 @@
 #define REDUCTIONS_H
 
 #include <vector>
+#include <list>
 #include <unordered_map>
 
 enum RULE
@@ -13,8 +14,9 @@ enum RULE
     DOMINATION,         // = 4
     UNCONFINED,         // = 5
     LPFLOW,             // = 6
-    DEGREE_THREE_IND    // = 7
-//    DEGREE_THREE_CLIQ,  // = 8
+    DEGREE_THREE_IND,    // = 7
+    DEGREE_THREE_CLIQ,  // = 8
+    DEGREE_THREE_DOM  // = 9
 };
 
 enum RULE_APPLICATION_RESULT
@@ -101,8 +103,10 @@ public:
     void printCounters();
     void printDominationSets();
 
-    bool isIndependent(int u, std::vector<int>* neighbors);
-    RULE_APPLICATION_RESULT rule_DegreeThree_Independent(BucketGraph* G, int* k);
+    // Degree 3
+    RULE_APPLICATION_RESULT rule_DegreeThree_Independent(BucketGraph* G, bool printDebug = false);
+    RULE_APPLICATION_RESULT rule_DegreeThree_Clique(BucketGraph* G, bool printDebug = false);
+    RULE_APPLICATION_RESULT rule_DegreeThree_Domination(BucketGraph* G, int* k, bool checkBudget, bool printDebug = false);
 
     //rules return true if they were applicable
     RULE_APPLICATION_RESULT rule_HighDegree(BucketGraph* G, int* k, int depth);

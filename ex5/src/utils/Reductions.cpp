@@ -251,132 +251,93 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeTwo_Secure(BucketGraph* G, int* k
 //    return INAPPLICABLE;
 }
 
-//bool isIndependentSet(BucketGraph* G, std::vector<int>* abc)
-//{
-//    int a = abc->at(0);
-//    int b = abc->at(1);
-//    int c = abc->at(2);
-//
-//    std::vector<int>* nA = G->getNeighbours(a);
-//    std::vector<int>* nB = G->getNeighbours(b);
-////    std::vector<int>* nC = G->getNeighbours(c);
-//
-//    for (int i = 0; i < (int)nA->size(); ++i) {
-//        if(nA->at(i) == b || nA->at(i) == c)
-//            return false;
-//    }
-//
-//    for (int i = 0; i < (int)nB->size(); ++i) {
-//        if(nB->at(i) == c)
-//            return false;
-//    }
-//
-////    for (int i = 0; i < (int)nB->size(); ++i) {
-////        if(nB->at(i) == a || nB->at(i) == c)
-////            return false;
-////    }
-//
-////    for (int i = 0; i < (int)nC->size(); ++i) {
-////        if(nC->at(i) == a || nC->at(i) == b)
-////            return false;
-////    }
-//
-//    return true;
-//}
-
-bool Reductions::isIndependent(int u, std::vector<int>* neighbors)
-{
-    for (int i = 0; i < (int)neighbors->size(); ++i) {
-        if(neighbors->at(i) == u)
-            return false;
-    }
-
-    return true;
-}
-
-RULE_APPLICATION_RESULT Reductions::rule_DegreeThree_Independent(BucketGraph* G, int* k)
+RULE_APPLICATION_RESULT Reductions::rule_DegreeThree_Independent(BucketGraph* G, bool printDebug)
 {
     list<BucketVertex>* degThreeBucket = G->getVerticesOfDegree(3);
 
-    if(degThreeBucket == nullptr || degThreeBucket->empty()) return INAPPLICABLE;
+    if(degThreeBucket == nullptr || degThreeBucket->empty()) {
+        if(printDebug)
+            std::cout << "\nNo degree 3 Vertex!" << '\n';
+        return INAPPLICABLE; }
+
+    if(printDebug) {
+        std::cout << "\nRule: Degree 3: Indenpendent Set" << '\n';
+        std::cout << "Deg 3 Bucket of size: " << (int)degThreeBucket->size() << '\n';
+    }
 
     int cnt = 0;
-//    std::vector<int> tempVC;
+
     std::vector<int> tempDeleted;
+    std::vector<int> tempNeighbours;
     std::unordered_map<int, int> alreadyInactive;
-    std::vector<int>* tempNeighbours;
-    std::vector<std::vector<int>>* tempAddedEdges;
-//
+    std::vector<std::list<int>> tempAddedEdges;
+
     for(auto it = degThreeBucket->begin(); it != degThreeBucket->end(); it++)
     {
-//        std::cout << "start of while loop" << '\n';
-        if(!G->isActive(it->index))
+        int v = it->index;
+
+        if(!G->isActive(v)) {
             continue;
-//        std::cout << "Degree 3 vertex: " << it->index << '\n';
+        }
 
-        std::vector<int>* neighbours = G->getNeighbours(it->index);
-
-//        if(!isIndependentSet(G, neighbours))
-//        {
-//            continue;
-//        }
+        std::vector<int>* neighbours = G->getNeighbours(v);
 
         int a = neighbours->at(0);
         int b = neighbours->at(1);
         int c = neighbours->at(2);
 
-        std::vector<int>* nA = G->getNeighbours(a);
-        std::vector<int>* nB = G->getNeighbours(b);
-        std::vector<int>* nC = G->getNeighbours(c);
-
-        // TODO: change when getNeighbours returns map
-        if(!G->vertexHasEdgeTo(a, b))
-            continue;
-        if(!G->vertexHasEdgeTo(a, c))
-            continue;
-        if(!G->vertexHasEdgeTo(b, c))
-            continue;
-
-        if(alreadyInactive[it->index] == 1 || alreadyInactive[a] == 1 || alreadyInactive[b] == 1 || alreadyInactive[c] == 1)
-        {
-//            std::cout << "Nope not this vertex: " << it->index << '\n';
-//            std::cout << neighbours.at(0) << ", " << neighbours.at(1) << ", " << neighbours.at(2) << '\n';
-            continue;
-        }
-
-//        std::cout << "degree of deg3 vertex: " << it->index << '\n';
         if(!G->isActive(a) || !G->isActive(b) || !G->isActive(c)) {
             continue;
         }
 
-        std::vector<int> addedEdgesToA = {};
-        std::vector<int> addedEdgesToB = {};
-        std::vector<int> addedEdgesToC = {};
+        if(G->vertexHasEdgeTo(a, b) || G->vertexHasEdgeTo(a, c) || G->vertexHasEdgeTo(b, c)) {
+            if(printDebug) {
+                std::cout << "Neighbours are not independent!\n";
+                std::cout << a << ", " << b << ", " << c << '\n';
+            }
+            continue;
+        }
+
+        std::vector<int>* nA = G->getNeighbours(a);
+        std::vector<int>* nB = G->getNeighbours(b);
+        std::vector<int>* nC = G->getNeighbours(c);
+
+        if(alreadyInactive[v] == 1 || alreadyInactive[a] == 1 || alreadyInactive[b] == 1 || alreadyInactive[c] == 1)
+        {
+            if(printDebug) {
+                std::cout << "Already treated: " << v << ", maybe next round!\n";
+                std::cout << a << ", " << b << ", " << c << '\n';
+            }
+            continue;
+        }
+
+        std::list<int> addedEdgesToA;
+        std::list<int> addedEdgesToB;
+        std::list<int> addedEdgesToC;
 
         // Edges {a, b} {b, c}
-        G->addEdgeToVertex(a,b);
-        G->addEdgeToVertex(b,c);
         addedEdgesToA.push_back(b);
-//        addedEdgesToB.push_back(a);
         addedEdgesToB.push_back(c);
-//        addedEdgesToC.push_back(b);
 
         // Edges {a, N(b)}
         for (int i = 0; i < (int)nB->size(); ++i) {
-            if(G->addEdgeToVertex(a, nB->at(i)))
+            if(G->isActive(nB->at(i)) && !G->vertexHasEdgeTo(a, nB->at(i)) && alreadyInactive[nB->at(i)] != 1){
                 addedEdgesToA.push_back(nB->at(i));
+            }
         }
 
         // Edges {b, N(c)}
         for (int i = 0; i < (int)nC->size(); ++i) {
-            if(G->addEdgeToVertex(b, nC->at(i)))
+            if(G->isActive(nC->at(i)) && !G->vertexHasEdgeTo(b, nC->at(i)) && alreadyInactive[nC->at(i)] != 1) {
                 addedEdgesToB.push_back(nC->at(i));
+            }
         }
 
         // Edges {c, N(a)}
         for (int i = 0; i < (int)nA->size(); ++i) {
-            if(G->addEdgeToVertex(c, nA->at(i)))
+            if(G->isActive(nA->at(i)) && !G->vertexHasEdgeTo(c, nA->at(i))&& alreadyInactive[nA->at(i)] != 1) {
                 addedEdgesToC.push_back(nA->at(i));
+            }
         }
 
         alreadyInactive[it->index] = 1;
@@ -384,44 +345,498 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeThree_Independent(BucketGraph* G,
         alreadyInactive[b] = 1;
         alreadyInactive[c] = 1;
 
-        tempDeleted.push_back(it->index);
-        tempNeighbours->push_back(a);
-        tempNeighbours->push_back(b);
-        tempNeighbours->push_back(c);
-        tempAddedEdges->push_back(addedEdgesToA);
-        tempAddedEdges->push_back(addedEdgesToB);
-        tempAddedEdges->push_back(addedEdgesToC);
+        tempDeleted.push_back(v);
+        tempNeighbours.push_back(a);
+        tempNeighbours.push_back(b);
+        tempNeighbours.push_back(c);
+
+        tempAddedEdges.push_back(addedEdgesToA);
+        tempAddedEdges.push_back(addedEdgesToB);
+        tempAddedEdges.push_back(addedEdgesToC);
+
         cnt++;
 
-//        std::cout << neighbours.at(0) << ", " << neighbours.at(1) << ", " << neighbours.at(2) << '\n';
+        delete neighbours;
+        delete nA;
+        delete nB;
+        delete nC;
 
-//        std::cout << "---------" << '\n';
+        if(printDebug)
+            std::cout << "---------" << '\n';
     }
 
     if(tempDeleted.empty() || cnt == 0) {
+        if(printDebug)
+            std::cout << "Nothing was applied\n";
         return INAPPLICABLE;
     }
-//    std::cout << "I have " << cnt<< " elements\n";
 
     for (int i = 0; i < cnt; ++i) {
-//        std::cout << "I deleted Vertex: " << tempDeleted.at(3*i) << tempDeleted.at(3*i+1) << tempDeleted.at(3*i+2) << '\n';
         Reduction* delVer = new Reduction(RULE::DEGREE_THREE_IND, 0, new std::vector<int>(), new std::vector<int>());
+        delVer->addedEdges = new std::vector<std::list<int>>;
 
-        delVer->deletedVertices->push_back(tempDeleted.at(0));
-        delVer->deletedVCVertices->push_back(tempNeighbours->at(3*i + 0));
-        delVer->deletedVCVertices->push_back(tempNeighbours->at(3*i + 1));
-        delVer->deletedVCVertices->push_back(tempNeighbours->at(3*i + 2));
-        delVer->addedEdges->push_back(tempAddedEdges->at(3*i + 0));
-        delVer->addedEdges->push_back(tempAddedEdges->at(3*i + 1));
-        delVer->addedEdges->push_back(tempAddedEdges->at(3*i + 2));
-//        G->setInactive(delVer->deletedVCVertices);
+        delVer->rDepth = G->recursionDepth;
+        delVer->deletedVertices->push_back(tempDeleted.at(i));
+
+        int a = tempNeighbours.at(3*i + 0);
+        int b = tempNeighbours.at(3*i + 1);
+        int c = tempNeighbours.at(3*i + 2);
+
+        std::list<int> edgeToA = tempAddedEdges.at(3*i+0);
+        std::list<int> edgeToB = tempAddedEdges.at(3*i+1);
+        std::list<int> edgeToC = tempAddedEdges.at(3*i+2);
+
+        if(printDebug) {
+            std::cout << "\nApplying rule to v = " << tempDeleted.at(i) << '\n';
+            std::cout << "At recursion = " << delVer->rDepth << '\n';
+
+            std::cout << "Edge 1:" << a << " with:" << '\n';
+            for (auto j: edgeToA) {
+                std::cout << j << '\n';
+            }
+            std::cout << "Edge 2:" << b << " with:" << '\n';
+            for (auto j: edgeToB) {
+                std::cout << j << '\n';
+            }
+
+            std::cout << "Edge 3:" << c << " with:" << '\n';
+            for (auto j: edgeToC) {
+                std::cout << j << '\n';
+            }
+        }
+
+        for (auto j: edgeToA) {
+            G->addEdgeToVertex(a, j);
+        }
+
+        for (auto j: edgeToB) {
+            G->addEdgeToVertex(b, j);
+        }
+
+        for (auto j: edgeToC) {
+            G->addEdgeToVertex(c, j);
+        }
+
+        delVer->deletedVCVertices->push_back(a);
+        delVer->deletedVCVertices->push_back(b);
+        delVer->deletedVCVertices->push_back(c);
+        delVer->addedEdges->push_back(edgeToA);
+        delVer->addedEdges->push_back(edgeToB);
+        delVer->addedEdges->push_back(edgeToC);
+
         G->setInactive(delVer->deletedVertices);
-
         appliedRules->push_back(delVer);
     }
 
     return APPLICABLE;
-//    return INAPPLICABLE;
+}
+
+RULE_APPLICATION_RESULT Reductions::rule_DegreeThree_Clique(BucketGraph* G, bool printDebug)
+{
+    list<BucketVertex>* degThreeBucket = G->getVerticesOfDegree(3);
+
+    if(degThreeBucket == nullptr || degThreeBucket->empty()) {
+        if(printDebug)
+            std::cout << "\nNo degree 3 Vertex!" << '\n';
+        return INAPPLICABLE; }
+
+    if(printDebug) {
+        std::cout << "\nRule: Degree 3: 2-Clique-Neighborhood" << '\n';
+        std::cout << "Deg 3 Bucket of size: " << (int)degThreeBucket->size() << '\n';
+        std::cout << "---------" << '\n';
+    }
+
+    int cnt = 0;
+
+    std::vector<int> tempDeleted;
+    std::vector<int> tempNeighbours;
+    std::unordered_map<int, int> alreadyInactive;
+    std::vector<std::list<int>> tempAddedEdges;
+
+    for(auto it = degThreeBucket->begin(); it != degThreeBucket->end(); it++)
+    {
+        int v = it->index;
+
+        if(!G->isActive(v)) {
+            continue;
+        }
+
+        std::vector<int>* neighbours = G->getNeighbours(v);
+
+        int a = neighbours->at(0);
+        int b = neighbours->at(1);
+        int c = neighbours->at(2);
+
+        if(!G->isActive(a) || !G->isActive(b) || !G->isActive(c)) {
+            continue;
+        }
+
+        if(G->vertexHasEdgeTo(a, b) && G->vertexHasEdgeTo(a, c) && G->vertexHasEdgeTo(b, c)) {
+            if(printDebug) {
+                std::cout << "Neighbours are independent!\n";
+                std::cout << a << ", " << b << ", " << c << '\n';
+                std::cout << "---------" << '\n';
+            }
+            continue;
+        }
+
+        if(alreadyInactive[v] == 1 || alreadyInactive[a] == 1 || alreadyInactive[b] == 1 || alreadyInactive[c] == 1)
+        {
+            if(printDebug) {
+                std::cout << "Already treated: " << v << ", maybe next round!\n";
+                std::cout << a << ", " << b << ", " << c << '\n';
+                std::cout << "---------" << '\n';
+            }
+            continue;
+        }
+
+        int c11;
+        int c12;
+        int c2;
+
+        bool connectionAB = G->vertexHasEdgeTo(a, b);
+        bool connectionAC = G->vertexHasEdgeTo(a, c);
+        bool connectionBC = G->vertexHasEdgeTo(b, c);
+
+        // C1: a-b, C2: c
+        if (connectionAB && !connectionAC && !connectionBC)
+        {
+            c11 = a;
+            c12 = b;
+            c2 = c;
+        }// C1: a-c, C2: b
+        else if (!connectionAB && connectionAC && !connectionBC)
+        {
+            c11 = a;
+            c12 = c;
+            c2 = b;
+        }// C1: b-c, C2: a
+        else if (!connectionAB && !connectionAC && connectionBC)
+        {
+            c11 = b;
+            c12 = c;
+            c2 = a;
+        }
+        else{
+            if(printDebug) {
+                std::cout << "Neighbours dominate: " << v << '\n';
+                std::cout << a << ", " << b << ", " << c << '\n';
+                std::cout << "---------" << '\n';
+            }
+            continue;
+        }
+
+        if(printDebug) {
+            std::cout << "VALID = " << cnt+1 << '\n';
+            std::cout << "Found vertex: " << v << '\n';
+            std::cout << c11 << ", " << c12 << ", " << c2 << '\n';
+        }
+
+//        std::vector<int>* nC11 = G->getNeighbours(c11);
+//        std::vector<int>* nC12 = G->getNeighbours(c12);
+        std::vector<int>* nC2 = G->getNeighbours(c2);
+
+        std::list<int> addedEdgesToC11;
+        std::list<int> addedEdgesToC12;
+
+        // Adding edges to N(C2)
+        for (int i = 0; i < (int)nC2->size(); ++i) {
+            if(G->isActive(nC2->at(i)) && alreadyInactive[nC2->at(i)] != 1){
+                // Edges {C11, N(C2)}
+                if(!G->vertexHasEdgeTo(c11, nC2->at(i)))
+                    addedEdgesToC11.push_back(nC2->at(i));
+                // Edges {C12, N(C2)}
+                if(!G->vertexHasEdgeTo(c12, nC2->at(i)))
+                    addedEdgesToC12.push_back(nC2->at(i));
+            }
+        }
+
+        alreadyInactive[it->index] = 1;
+        alreadyInactive[c11] = 1;
+        alreadyInactive[c12] = 1;
+        alreadyInactive[c2] = 1;
+
+        tempDeleted.push_back(v);
+        tempNeighbours.push_back(c11);
+        tempNeighbours.push_back(c12);
+        tempNeighbours.push_back(c2);
+
+        tempAddedEdges.push_back(addedEdgesToC11);
+        tempAddedEdges.push_back(addedEdgesToC12);
+
+        cnt++;
+
+        delete neighbours;
+//        delete nC11;
+//        delete nC12;
+        delete nC2;
+
+        if(printDebug)
+            std::cout << "---------" << '\n';
+    }
+
+    if(tempDeleted.empty() || cnt == 0) {
+        if(printDebug)
+            std::cout << "Nothing was applied\n";
+        return INAPPLICABLE;
+    }
+
+    if(printDebug)
+        std::cout << "I have " << cnt<< " elements\n";
+
+    for (int i = 0; i < cnt; ++i) {
+        Reduction* delVer = new Reduction(RULE::DEGREE_THREE_CLIQ, 0, new std::vector<int>(), new std::vector<int>());
+        delVer->addedEdges = new std::vector<std::list<int>>;
+        delVer->rDepth = G->recursionDepth;
+
+        int v = tempDeleted.at(i);
+        delVer->deletedVertices->push_back(v);
+
+        int c11 = tempNeighbours.at(3*i + 0);
+        int c12 = tempNeighbours.at(3*i + 1);
+        int c2 = tempNeighbours.at(3*i + 2);
+
+        std::list<int> edgeToC11 = tempAddedEdges.at(2*i+0);
+        std::list<int> edgeToC12 = tempAddedEdges.at(2*i+1);
+
+        if(printDebug) {
+            std::cout << "\nApplying rule to v = " << v << '\n';
+            std::cout << i << '\n';
+            std::cout << "At recursion = " << delVer->rDepth << '\n';
+
+            std::cout << "Edge 1:" << c11 << " with Neighbour of C2:" << '\n';
+            for (auto j: edgeToC11) {
+                std::cout << j << '\n';
+            }
+            std::cout << "Edge 2:" << c12 << " with Neighbour of C2:" << '\n';
+            for (auto j: edgeToC12) {
+                std::cout << j << '\n';
+            }
+        }
+
+        for (auto j: edgeToC11) {
+            G->addEdgeToVertex(c11, j);
+        }
+
+        for (auto j: edgeToC12) {
+            G->addEdgeToVertex(c12, j);
+        }
+
+        delVer->deletedVCVertices->push_back(c11);
+        delVer->deletedVCVertices->push_back(c12);
+        delVer->deletedVCVertices->push_back(c2);
+        delVer->addedEdges->push_back(edgeToC11);
+        delVer->addedEdges->push_back(edgeToC12);
+        appliedRules->push_back(delVer);
+
+        G->setInactive(v);
+        G->setInactive(c2);
+
+        if(printDebug)
+            std::cout << "---------" << '\n';
+    }
+
+    return APPLICABLE;
+}
+
+RULE_APPLICATION_RESULT Reductions::rule_DegreeThree_Domination(BucketGraph* G, int* k, bool checkBudget, bool printDebug)
+{
+    list<BucketVertex>* degThreeBucket = G->getVerticesOfDegree(3);
+
+    if(degThreeBucket == nullptr || degThreeBucket->empty()) {
+        if(printDebug)
+            std::cout << "\nNo degree 3 Vertex!" << '\n';
+        return INAPPLICABLE; }
+
+    if(printDebug) {
+        std::cout << "\nRule: Degree 3: Domination" << '\n';
+        std::cout << "Deg 3 Bucket of size: " << (int)degThreeBucket->size() << '\n';
+        std::cout << "---------" << '\n';
+    }
+
+    int cnt = 0;
+    int kDecrement = 0;
+
+    std::vector<int> tempDeleted;
+    std::vector<int> tempNeighbours;
+    std::unordered_map<int, int> alreadyInactive;
+    std::vector<bool> tempClique;
+
+    for(auto it = degThreeBucket->begin(); it != degThreeBucket->end(); it++)
+    {
+        int v = it->index;
+
+        if(!G->isActive(v)) {
+            continue;
+        }
+
+        if(*k - kDecrement < 1 && checkBudget)
+            return INSUFFICIENT_BUDGET;
+
+        std::vector<int>* neighbours = G->getNeighbours(v);
+
+        int a = neighbours->at(0);
+        int b = neighbours->at(1);
+        int c = neighbours->at(2);
+
+        if(!G->isActive(a) || !G->isActive(b) || !G->isActive(c)) {
+            continue;
+        }
+
+        if(!G->vertexHasEdgeTo(a, b) && !G->vertexHasEdgeTo(a, c) && !G->vertexHasEdgeTo(b, c)) {
+            if(printDebug) {
+                std::cout << "Neighbours are independent!\n";
+                std::cout << a << ", " << b << ", " << c << '\n';
+                std::cout << "---------" << '\n';
+            }
+            continue;
+        }
+
+        if(alreadyInactive[v] == 1 || alreadyInactive[a] == 1 || alreadyInactive[b] == 1 || alreadyInactive[c] == 1)
+        {
+            if(printDebug) {
+                std::cout << "Already treated: " << v << ", maybe next round!\n";
+                std::cout << a << ", " << b << ", " << c << '\n';
+                std::cout << "---------" << '\n';
+            }
+            continue;
+        }
+
+        int dominant = a;
+        int c1 = b;
+        int c2 = c;
+
+        bool clique = false;
+
+        bool connectionAB = G->vertexHasEdgeTo(a, b);
+        bool connectionAC = G->vertexHasEdgeTo(a, c);
+        bool connectionBC = G->vertexHasEdgeTo(b, c);
+
+        if(connectionAB && connectionAC && connectionBC)
+        {
+            clique = true;
+        }
+        // Dom: a, C: b-c
+        else if (connectionAB && connectionAC && !connectionBC)
+        {
+            dominant = a;
+            c1 = b;
+            c2 = c;
+        }// Dom: b, C: a-c
+        else if (connectionAB && !connectionAC && connectionBC)
+        {
+            c1 = a;
+            c2 = c;
+            dominant = b;
+        }// Dom: c, C: b-a
+        else if (!connectionAB && connectionAC && connectionBC)
+        {
+            c2 = b;
+            dominant = c;
+            c1 = a;
+        }
+        else{
+            if(printDebug) {
+                std::cout << "2-Clique Neighbourhood: " << v << '\n';
+                std::cout << a << ", " << b << ", " << c << '\n';
+                std::cout << "---------" << '\n';
+            }
+            continue;
+        }
+
+        if(printDebug) {
+            std::cout << "VALID = " << cnt+1 << '\n';
+            std::string foundV = "Found vertex: " + std::to_string(v) + '\n';
+//            std::cout <<  << v << '\n';
+            std::cout << ColorPrint::dye(foundV, 'y');
+
+            std::cout << dominant << ", " << c1 << ", " << c2 << '\n';
+            if (clique)
+                std::cout << "CLIQUE!" << '\n';
+            else {
+                std::cout << "No Clique, goes to deg 2!" << '\n';
+                std::cout << "With Dominant Vertex: " << dominant << '\n';
+            }
+        }
+
+        if(clique)
+            kDecrement += 3;
+        else
+            kDecrement += 1;
+
+        alreadyInactive[it->index] = 1;
+        alreadyInactive[dominant] = 1;
+        alreadyInactive[c1] = 1;
+        alreadyInactive[c2] = 1;
+
+        tempDeleted.push_back(v);
+        tempNeighbours.push_back(dominant);
+        tempNeighbours.push_back(c1);
+        tempNeighbours.push_back(c2);
+
+        tempClique.push_back(clique);
+
+        delete neighbours;
+
+        cnt++;
+
+        if(printDebug)
+            std::cout << "---------" << '\n';
+    }
+
+    if(tempDeleted.empty() || cnt == 0) {
+        if(printDebug)
+            std::cout << "Nothing was applied\n";
+        return INAPPLICABLE;
+    }
+
+    for (int i = 0; i < cnt; ++i) {
+        Reduction* delVer = new Reduction(RULE::DEGREE_THREE_DOM, 0, new std::vector<int>(), new std::vector<int>());
+        delVer->rDepth = G->recursionDepth;
+
+        int v = tempDeleted.at(i);
+        delVer->deletedVertices->push_back(v);
+
+        int dom = tempNeighbours.at(3*i + 0);
+        int c1 = tempNeighbours.at(3*i + 1);
+        int c2 = tempNeighbours.at(3*i + 2);
+
+        // Case 1: Clique
+        if (tempClique.at(i))
+        {
+            delVer->kDecrement = 3;
+            G->setInactive(c1);
+            G->setInactive(c2);
+        }
+        else
+        {
+            delVer->kDecrement = 1;
+        }
+        G->setInactive(dom);
+
+        delVer->deletedVCVertices->push_back(dom);
+        delVer->deletedVCVertices->push_back(c1);
+        delVer->deletedVCVertices->push_back(c2);
+        appliedRules->push_back(delVer);
+
+        (*k) = (*k) - delVer->kDecrement;
+
+        if(printDebug) {
+            std::cout << "\nApplying rule to v = " << v << '\n';
+            std::cout << "At recursion = " << delVer->rDepth << '\n';
+            std::cout << "k = " << *k << '\n';
+            if (tempClique.at(i))
+                std::cout << "Neighbours a clique " << '\n';
+            else {
+                std::cout << "Neighbours no clique " << '\n';
+                std::cout << dom << ", " << c1 << ", " << c2 << '\n';
+            }
+            std::cout << "---------" << '\n';
+        }
+
+    }
+
+    return APPLICABLE;
 }
 
 RULE_APPLICATION_RESULT Reductions::rule_LPFlow(BucketGraph* G, int* k, int depth, bool checkBudget, bool printDebug)

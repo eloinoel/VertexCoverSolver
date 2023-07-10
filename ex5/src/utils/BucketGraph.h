@@ -135,6 +135,11 @@ public:
     // Size n
     std::vector<int>* dominationHelper;
 
+    int recursionDepth = 0;
+    bool deg3ind = false;
+    bool deg3clique = false;
+    bool deg3dom = false;
+
     bool LP_INITIALISED = false;
     bool UNCONFINED_INITIALISED = false;
 
@@ -222,6 +227,7 @@ public:
     int getFirstVertexOfDegree(int degree);
     inline Vertex* getVertex(int index) { if(index < (int) vertexReferences.size()) return vertexReferences[index]; else return nullptr; }
 
+    int getBucketSize(int degree){return (int)getBucket(3)->vertices.size();};
     /*  The stable iterator allows for deletion from-, and insertion into the bucketQueue, while iterating through it
     *   Whenever the element, the iterator points to is deleted, the iterator is incremented/decremented
     *   When a new element is inserted into the bucket during iteration, the iterator will iterate over it later
