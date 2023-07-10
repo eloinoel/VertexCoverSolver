@@ -138,6 +138,11 @@ public:
     // Size n
     std::vector<int>* dominationHelper;
 
+    int recursionDepth = 0;
+    bool deg3ind = false;
+    bool deg3clique = false;
+    bool deg3dom = false;
+
     bool LP_INITIALISED = false;
     bool UNCONFINED_INITIALISED = false;
 
@@ -226,6 +231,7 @@ public:
     int getFirstVertexOfDegree(int degree);
     inline Vertex* getVertex(int index) { if(index < (int) vertexReferences.size()) return vertexReferences[index]; else return nullptr; }
 
+    int getBucketSize(int degree){return (int)getBucket(3)->vertices.size();};
     /*  The stable iterator allows for deletion from-, and insertion into the bucketQueue, while iterating through it
     *   Whenever the element, the iterator points to is deleted, the iterator is incremented/decremented
     *   When a new element is inserted into the bucket during iteration, the iterator will iterate over it later
@@ -271,7 +277,7 @@ public:
     /* apply data reduction rules to graph, returns true if no vertex cover can be found for this k */
     bool reduce(int* k, std::vector<bool>* rulesToApply = nullptr, bool printDebug = false);
     /* vc is not nullptr, if deleted vertices should be appended to vc*/
-    void unreduce(int* k, int previousK, std::unordered_map<int, bool>* vc = nullptr);
+    void unreduce(int* k, int previousK, std::unordered_map<int, bool>* vc = nullptr, int currRec = 0);
     /* merge three vertices into one for degree 2 rule, returns vertex that was merged into and its previous adjacency list */
     std::tuple<int, std::vector<int>*, std::unordered_map<int, bool>*, std::vector<int>*>* merge(int v0, int v1, int v2);
     /* restores previous previously merged vertices into 3 seperate vertices */
