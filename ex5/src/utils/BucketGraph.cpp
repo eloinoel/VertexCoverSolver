@@ -1240,11 +1240,11 @@ void BucketGraph::preprocess(int* k, bool printDebug)
 {
     while(true)
     {
-        if(reductions->rule_DegreeOne(this, k, false, printDebug) == APPLICABLE) continue;
-        if(reductions->rule_DegreeTwo(this, k, false, printDebug) == APPLICABLE) continue;
-        //if(reductions->rule_Domination(this, k, false) == APPLICABLE) continue;
-        if(reductions->rule_Unconfined(this, k, false, printDebug) == APPLICABLE) continue;
-        if(reductions->rule_LPFlow(this, k, false, printDebug) == APPLICABLE) continue;
+        if(reductions->rule_DegreeOne(this, k, -1, false, printDebug) == APPLICABLE) continue;
+        if(reductions->rule_DegreeTwo(this, k, -1, false, printDebug) == APPLICABLE) continue;
+        //if(reductions->rule_Domination(this, k, -1, false) == APPLICABLE) continue;
+        if(reductions->rule_Unconfined(this, k, -1, false, printDebug) == APPLICABLE) continue;
+        if(reductions->rule_LPFlow(this, k, -1, false, printDebug) == APPLICABLE) continue;
         return;
     }
 }
@@ -1256,15 +1256,15 @@ void BucketGraph::preprocess(int* k, bool printDebug)
  * 3: unconfined,
  * 4: LP
 */
-void BucketGraph::preprocess(int* k, std::vector<bool>& rulesToApply)
+void BucketGraph::preprocess(int* k, std::vector<bool>& rulesToApply, bool printDebug)
 {
     while(true)
     {
-        if(rulesToApply[0] && reductions->rule_DegreeOne(this, k, false) == APPLICABLE) continue;
-        if(rulesToApply[1] && reductions->rule_DegreeTwo(this, k, false) == APPLICABLE) continue;
-        if(rulesToApply[2] && reductions->rule_Domination(this, k, false) == APPLICABLE) continue;
-        if(rulesToApply[3] && reductions->rule_Unconfined(this, k, false) == APPLICABLE) continue;
-        if(rulesToApply[4] && reductions->rule_LPFlow(this, k, false) == APPLICABLE) continue;
+        if(rulesToApply[0] && reductions->rule_DegreeOne(this, k, -1, false, printDebug) == APPLICABLE) continue;
+        if(rulesToApply[1] && reductions->rule_DegreeTwo(this, k, -1, false, printDebug) == APPLICABLE) continue;
+        if(rulesToApply[2] && reductions->rule_Domination(this, k, -1, false) == APPLICABLE) continue;
+        if(rulesToApply[3] && reductions->rule_Unconfined(this, k, -1, false, printDebug) == APPLICABLE) continue;
+        if(rulesToApply[4] && reductions->rule_LPFlow(this, k, -1, false, printDebug) == APPLICABLE) continue;
         return;
     }
 }
@@ -1292,7 +1292,7 @@ bool BucketGraph::dynamicReduce(int* k, int depth, bool printDebug)
     }
     reductions = std::vector<bool>{true, true, false, true, true, true, true};
     //reductions = std::vector<bool>{false, false, false, false, false, false, false};
-    return reduce(k, &reductions, printDebug);
+    return reduce(k, depth, &reductions, printDebug);
 }
 
 /*
@@ -1304,7 +1304,7 @@ bool BucketGraph::dynamicReduce(int* k, int depth, bool printDebug)
  * 5: highDeg,
  * 6: Buss
 */
-bool BucketGraph::reduce(int* k, std::vector<bool>* rulesToApply, bool printDebug)
+bool BucketGraph::reduce(int* k, int depth, std::vector<bool>* rulesToApply, bool printDebug)
 {
     if(rulesToApply == nullptr) {
         rulesToApply = new std::vector{true, true, true, true, true, true, true};
@@ -1320,30 +1320,30 @@ bool BucketGraph::reduce(int* k, std::vector<bool>* rulesToApply, bool printDebu
     while(true)
     {
         //std::cout << "highdeg " << '\n';
-        if(rulesToApply->at(5)) { highDegreeResult = reductions->rule_HighDegree(this, k); }
+        if(rulesToApply->at(5)) { highDegreeResult = reductions->rule_HighDegree(this, k, depth); }
         if(highDegreeResult == APPLICABLE) continue;
         if(highDegreeResult == INSUFFICIENT_BUDGET) return true;
 
         if(rulesToApply->at(6) && reductions->rule_Buss(this, k, getNumConnectedVertices(), getNumEdges()) == APPLICABLE) return true;
 
-        if(rulesToApply->at(0)) { degreeOneResult = reductions->rule_DegreeOne(this, k, true, printDebug); }
+        if(rulesToApply->at(0)) { degreeOneResult = reductions->rule_DegreeOne(this, k, depth, true, printDebug); }
         if(degreeOneResult == APPLICABLE) continue;
         if(degreeOneResult == INSUFFICIENT_BUDGET) return true;
 
         //std::cout << "deg2 " << '\n';
-        if(rulesToApply->at(1)) { degreeTwoResult = reductions->rule_DegreeTwo(this, k, true, printDebug); }
+        if(rulesToApply->at(1)) { degreeTwoResult = reductions->rule_DegreeTwo(this, k, depth, true, printDebug); }
         if(degreeTwoResult == APPLICABLE) continue;
         if(degreeTwoResult == INSUFFICIENT_BUDGET) return true;
 
-        if(rulesToApply->at(2)) { dominationResult = reductions->rule_Domination(this, k, true); }
+        if(rulesToApply->at(2)) { dominationResult = reductions->rule_Domination(this, k, depth, true); }
         if(dominationResult == APPLICABLE) continue;
         if(dominationResult == INSUFFICIENT_BUDGET) return true;
 
-        if(rulesToApply->at(3)) { unconfinedResult = reductions->rule_Unconfined(this, k, true, printDebug); }
+        if(rulesToApply->at(3)) { unconfinedResult = reductions->rule_Unconfined(this, k, depth, true, printDebug); }
         if(unconfinedResult == APPLICABLE) continue;
         if(unconfinedResult == INSUFFICIENT_BUDGET) return true;
 
-        if(rulesToApply->at(4)) { LPFlowResult = reductions->rule_LPFlow(this, k, true, printDebug); }
+        if(rulesToApply->at(4)) { LPFlowResult = reductions->rule_LPFlow(this, k, depth, true, printDebug); }
         if(LPFlowResult == APPLICABLE) continue;
         if(LPFlowResult == INSUFFICIENT_BUDGET) return true;
         return false;
@@ -1352,7 +1352,7 @@ bool BucketGraph::reduce(int* k, std::vector<bool>* rulesToApply, bool printDebu
     return false;
 }
 
-void BucketGraph::unreduce(int* k, int previousK, std::unordered_map<int, bool>* vc)
+void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<int, bool>* vc)
 {
     if(reductions->appliedRules == nullptr)
         throw std::invalid_argument("unreduce: appliedRules is nullptr");
@@ -1363,6 +1363,15 @@ void BucketGraph::unreduce(int* k, int previousK, std::unordered_map<int, bool>*
     while(!reductions->appliedRules->empty() && (*k < previousK || reductions->appliedRules->back()->kDecrement == 0))
     {
         Reduction* rule = reductions->appliedRules->back();
+        if(rule->rDepth != depth) 
+        {
+            if(depth < rule->rDepth)
+            {
+                std::cout << "unreduce: rule: " << rule->rule << ", depth: " << depth << ", rule->depth: " << rule->rDepth << "\n";
+                throw std::invalid_argument("unreduce: attempted to unreduce rules of incorrect depth, unreducing is inconsistent with reducing"); 
+            }
+            break; 
+        }
         //std::cout << "> unreducing: ";
         switch(rule->rule)
         {
