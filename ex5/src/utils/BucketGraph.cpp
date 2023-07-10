@@ -1243,7 +1243,7 @@ void BucketGraph::preprocess(int* k, bool printDebug)
         if(reductions->rule_DegreeOne(this, k, -1, false, printDebug) == APPLICABLE) continue;
         if(reductions->rule_DegreeTwo(this, k, -1, false, printDebug) == APPLICABLE) continue;
 
-        //TODO:
+        //TODO: add depth to rules
         if(reductions->rule_DegreeThree_Domination(this, k, false, deg3dom) == APPLICABLE) continue;
         if(reductions->rule_DegreeThree_Clique(this, deg3clique) == APPLICABLE) continue;
         if(reductions->rule_DegreeThree_Independent(this, deg3ind) == APPLICABLE) continue;
@@ -1691,38 +1691,53 @@ void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<
                 }
 
                 // Removing Edges!
-                std::list<int> addedEdgesToA = rule->addedEdges->at(0);
-                std::list<int> addedEdgesToB = rule->addedEdges->at(1);
-                std::list<int> addedEdgesToC = rule->addedEdges->at(2);
+                std::vector<int> addedEdgesToA = rule->addedEdges->at(0);
+                std::vector<int> addedEdgesToB = rule->addedEdges->at(1);
+                std::vector<int> addedEdgesToC = rule->addedEdges->at(2);
 
                 if(printDebug)
                     std::cout << "Removing Edge:" << a <<  " with:" << '\n';
-                for (auto j: addedEdgesToA){
+                for (int j = 0; j < (int)addedEdgesToA.size(); ++j) {
                     if(printDebug)
-                        std::cout << j << '\n';
-                    removeEdgeFromVertex(a, j);
+                        std::cout << addedEdgesToA.at(j) << '\n';
+                    removeEdgeFromVertex(a, addedEdgesToA.at(j));
                 }
+//                for (auto j: addedEdgesToA){
+//                    if(printDebug)
+//                        std::cout << j << '\n';
+//                    removeEdgeFromVertex(a, j);
+//                }
                 if(printDebug)
                     std::cout << '\n';
 
                 if(printDebug)
                     std::cout << "Removing Edge:" << b <<  " with:" << '\n';
-                for (auto j: addedEdgesToB){
+                for (int j = 0; j < (int)addedEdgesToB.size(); ++j) {
                     if(printDebug)
-                        std::cout << j << '\n';
-                    removeEdgeFromVertex(b, j);
+                        std::cout << addedEdgesToB.at(j) << '\n';
+                    removeEdgeFromVertex(b, addedEdgesToB.at(j));
                 }
+//                for (auto j: addedEdgesToB){
+//                    if(printDebug)
+//                        std::cout << j << '\n';
+//                    removeEdgeFromVertex(b, j);
+//                }
                 if(printDebug)
                     std::cout << '\n';
 
 
                 if(printDebug)
                     std::cout << "Removing Edge:" << c <<  " with:" << '\n';
-                for (auto j: addedEdgesToC){
+                for (int j = 0; j < (int)addedEdgesToC.size(); ++j) {
                     if(printDebug)
-                        std::cout << j << '\n';
-                    removeEdgeFromVertex(c, j);
+                        std::cout << addedEdgesToC.at(j) << '\n';
+                    removeEdgeFromVertex(c, addedEdgesToC.at(j));
                 }
+//                for (auto j: addedEdgesToC){
+//                    if(printDebug)
+//                        std::cout << j << '\n';
+//                    removeEdgeFromVertex(c, j);
+//                }
                 if(printDebug)
                     std::cout << '\n';
 
@@ -1823,26 +1838,36 @@ void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<
                 }
 
                 // Removing Edges!
-                std::list<int> addedEdgesToC11 = rule->addedEdges->at(0);
-                std::list<int> addedEdgesToC12 = rule->addedEdges->at(1);
+                std::vector<int> addedEdgesToC11 = rule->addedEdges->at(0);
+                std::vector<int> addedEdgesToC12 = rule->addedEdges->at(1);
 
                 if(printDebug)
                     std::cout << "Removing Edge:" << c11 <<  " with:" << '\n';
-                for (auto j: addedEdgesToC11){
+                for (int j = 0; j < (int)addedEdgesToC11.size(); ++j) {
                     if(printDebug)
-                        std::cout << j << '\n';
-                    removeEdgeFromVertex(c11, j);
+                        std::cout << addedEdgesToC11.at(j) << '\n';
+                    removeEdgeFromVertex(c11, addedEdgesToC11.at(j));
                 }
+//                for (auto j: addedEdgesToC11){
+//                    if(printDebug)
+//                        std::cout << j << '\n';
+//                    removeEdgeFromVertex(c11, j);
+//                }
                 if(printDebug)
                     std::cout << '\n';
 
                 if(printDebug)
                     std::cout << "Removing Edge:" << c12 <<  " with:" << '\n';
-                for (auto j: addedEdgesToC12){
+                for (int j = 0; j < (int)addedEdgesToC12.size(); ++j) {
                     if(printDebug)
-                        std::cout << j << '\n';
-                    removeEdgeFromVertex(c12, j);
+                        std::cout << addedEdgesToC12.at(j) << '\n';
+                    removeEdgeFromVertex(c12, addedEdgesToC12.at(j));
                 }
+//                for (auto j: addedEdgesToC12){
+//                    if(printDebug)
+//                        std::cout << j << '\n';
+//                    removeEdgeFromVertex(c12, j);
+//                }
                 if(printDebug)
                     std::cout << "\n";
                 break;
