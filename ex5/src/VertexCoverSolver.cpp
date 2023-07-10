@@ -177,6 +177,10 @@ std::unordered_map<int, bool>* vcSolverRecursive(BucketGraph* G, int* numRec, bo
 		{
             // Add Reduced Vertices to Vertex Cover
             G->unreduce(&k, vc->size()+numPreprocessingVCVertices, -1, vc);
+            if(G->getReductionStackSize() > 0)
+            {
+                throw std::invalid_argument("vcSolverRecursive: reduction rule stack isn't fully popped after final unreduce");
+            }
             auto endBranching = std::chrono::high_resolution_clock::now();
             double branchingDuration = (std::chrono::duration_cast<std::chrono::microseconds>(endPreprocess - startPreprocess).count() /  1000) / (double) 1000;
             if(printDebug)
@@ -255,6 +259,10 @@ std::unordered_map<int, bool>* maxHeuristicSolver(BucketGraph* G, int* numRec, b
     {
         int k = 0;
         G->unreduce(&k, vc->size()+numPreprocessingVCVertices, -1, vc);
+        if(G->getReductionStackSize() > 0)
+        {
+            throw std::invalid_argument("vcSolverRecursive: reduction rule stack isn't fully popped after final unreduce");
+        }
         G->resetMatching();
     }
 
@@ -858,6 +866,10 @@ std::unordered_map<int, bool>* vcSolverConstrained(BucketGraph* G, int* numRec, 
     {
         // Add Reduced Vertices to Vertex Cover
         G->unreduce(&k, vc->size()+numPreprocessingVCVertices, -1, vc);
+        if(G->getReductionStackSize() > 0)
+        {
+            throw std::invalid_argument("vcSolverRecursive: reduction rule stack isn't fully popped after final unreduce");
+        }
         auto endBranching = std::chrono::high_resolution_clock::now();
         double branchingDuration = (std::chrono::duration_cast<std::chrono::microseconds>(endBranching - startPreprocess).count() /  1000) / (double) 1000;
         if(printDebug)
