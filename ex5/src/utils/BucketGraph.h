@@ -265,14 +265,14 @@ public:
     /* apply initial data reduction rules to graph */
     void preprocess(int* k, bool printDebug = false);
     /* apply initial data reduction rules to graph and possibly omit certain rules, 0: deg1, 1: deg2, 2: domination, 3: LP, 4: unconfined etc. */
-    void preprocess(int* k, std::vector<bool>& rulesToApply);
+    void preprocess(int* k, std::vector<bool>& rulesToApply, bool printDebug = false);
 
     /* apply data reduction rules to graph depending on search depth, returns true if no vertex cover can be found for this k */
     bool dynamicReduce(int* k, int depth, bool printDebug = false);
     /* apply data reduction rules to graph, returns true if no vertex cover can be found for this k */
-    bool reduce(int* k, std::vector<bool>* rulesToApply = nullptr, bool printDebug = false);
+    bool reduce(int* k, int depth, std::vector<bool>* rulesToApply = nullptr, bool printDebug = false);
     /* vc is not nullptr, if deleted vertices should be appended to vc*/
-    void unreduce(int* k, int previousK, std::unordered_map<int, bool>* vc = nullptr, int currRec = 0);
+    void unreduce(int* k, int previousK, int depth, std::unordered_map<int, bool>* vc = nullptr);
     /* merge three vertices into one for degree 2 rule, returns vertex that was merged into and its previous adjacency list */
     std::tuple<int, std::unordered_map<int, bool>*, std::vector<int>*>* merge(int v0, int v1, int v2);
     /* restores previous previously merged vertices into 3 seperate vertices */
