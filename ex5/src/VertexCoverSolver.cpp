@@ -149,7 +149,7 @@ std::unordered_map<int, bool>* vcSolverRecursive(BucketGraph* G, int* numRec, bo
 
     // Apply Reduction Rules for the first time
     auto startPreprocess = std::chrono::high_resolution_clock::now();
-    std::vector<bool> rulesToApply = std::vector<bool>{true, true, false, true, true, true, true, true, true, true};
+    std::vector<bool> rulesToApply = std::vector<bool>{true, true, false, true, true, false, false, false, false, false};
     G->preprocess(&numPreprocessingVCVertices, rulesToApply, printDebug);
     numPreprocessingVCVertices = -numPreprocessingVCVertices;
     auto endPreprocess = std::chrono::high_resolution_clock::now();

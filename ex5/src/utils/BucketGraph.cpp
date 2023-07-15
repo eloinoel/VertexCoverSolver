@@ -1264,7 +1264,12 @@ void BucketGraph::preprocess(int* k, bool printDebug)
  * 1: deg2,
  * 2: domination,
  * 3: unconfined,
- * 4: LP
+ * 4: LP,
+ * 5: highDeg (not in preprocessing),
+ * 6: Buss (not in preprocessing), 
+ * 7: Deg3IndepentSet,
+ * 8: Deg3Clique,
+ * 9: Deg3Domination
 */
 void BucketGraph::preprocess(int* k, std::vector<bool>& rulesToApply, bool printDebug)
 {
@@ -1273,9 +1278,9 @@ void BucketGraph::preprocess(int* k, std::vector<bool>& rulesToApply, bool print
         if(rulesToApply[0] && reductions->rule_DegreeOne(this, k, -1, false, printDebug) == APPLICABLE) continue;
         if(rulesToApply[1] && reductions->rule_DegreeTwo(this, k, -1, false, printDebug) == APPLICABLE) continue;
         //TODO: depth setzen
-        if(reductions->rule_DegreeThree_Domination(this, k, false, deg3dom) == APPLICABLE) continue;
-        if(reductions->rule_DegreeThree_Clique(this, deg3clique) == APPLICABLE) continue;
-        if(reductions->rule_DegreeThree_Independent(this, deg3ind) == APPLICABLE) continue;
+        if(rulesToApply[7] && reductions->rule_DegreeThree_Domination(this, k, false, deg3dom) == APPLICABLE) continue;
+        if(rulesToApply[8] && reductions->rule_DegreeThree_Clique(this, deg3clique) == APPLICABLE) continue;
+        if(rulesToApply[9] && reductions->rule_DegreeThree_Independent(this, deg3ind) == APPLICABLE) continue;
         //TODO:
         if(rulesToApply[2] && reductions->rule_Domination(this, k, -1, false) == APPLICABLE) continue;
         if(rulesToApply[3] && reductions->rule_Unconfined(this, k, -1, false, printDebug) == APPLICABLE) continue;
@@ -1305,7 +1310,7 @@ bool BucketGraph::dynamicReduce(int* k, int depth, bool printDebug)
         // deg1 + deg2 + highDeg + buss
         reductions = std::vector<bool>{true, true, false, false, false, true, true, true, true, true, true};
     }
-    reductions = std::vector<bool>{true, true, false, true, true, true, true, true, true, true};
+    reductions = std::vector<bool>{true, true, false, true, true, true, true, false, false, false};
     //reductions = std::vector<bool>{false, false, false, false, false, false, false};
     return reduce(k, depth, &reductions, printDebug);
 }
@@ -2177,6 +2182,14 @@ void BucketGraph::unmerge(Reduction* mergeRule)
     // TODO: free mergeVertexInfo members
     delete std::get<2>(*mergeRule->mergeVertexInfo);
     delete mergeRule->mergeVertexInfo;
+}
+
+int BucketGraph::getReductionStackSize()
+{
+    if(reductions != nullptr && reductions->appliedRules != nullptr) 
+        return reductions->appliedRules->size();
+    else
+        return -1;
 }
 
 bool BucketGraph::addEdgeToVertex(int vertex, int edge)
