@@ -837,6 +837,19 @@ std::pair<int, std::unordered_map<int, bool>*> vcVertexBranchingConstrained(Buck
 
 std::unordered_map<int, bool>* vcSolverConstrained(BucketGraph* G, int* numRec, bool printDebug)
 {
+    auto startUpper = std::chrono::high_resolution_clock::now();
+    int numHeurRecursions = 0;
+    std::unordered_map<int, bool>* heuristicVC = maxHeuristicSolver(G, &numHeurRecursions, false, false);
+    int u = heuristicVC->size();
+    delete heuristicVC;
+    //int u = 15000;//1730;//getUpperBound(G, 5);
+    auto endUpper = std::chrono::high_resolution_clock::now();
+    double upperBoundDuration = (std::chrono::duration_cast<std::chrono::microseconds>(endUpper - startUpper).count() /  1000) / (double) 1000;
+    if(printDebug)
+    {
+        std::cout << "#Calculated upper Bound u=" << u << " in " << upperBoundDuration << " seconds" << std::endl;
+    }
+
     int numPreprocessingVCVertices = 0;
 	int k = 0;
     // Apply Reduction Rules for the first time
@@ -846,17 +859,8 @@ std::unordered_map<int, bool>* vcSolverConstrained(BucketGraph* G, int* numRec, 
     numPreprocessingVCVertices = -numPreprocessingVCVertices;
     auto endPreprocess = std::chrono::high_resolution_clock::now();
     double preprocessDuration = (std::chrono::duration_cast<std::chrono::microseconds>(endPreprocess - startPreprocess).count() /  1000) / (double) 1000;
-    if(printDebug)
+    if(printDebug) {
         std::cout << "#Preprocessed Graph to size n=" << G->getNumVertices() << ", m=" << G->getNumEdges() << " in " << preprocessDuration << " seconds" << " (reduced by " << numPreprocessingVCVertices << " vertices)" << std::endl;
-
-    // Get upper bound
-    auto startUpper = std::chrono::high_resolution_clock::now();
-    int u = 15000;//1730;//getUpperBound(G, 5);
-    auto endUpper = std::chrono::high_resolution_clock::now();
-    double upperBoundDuration = (std::chrono::duration_cast<std::chrono::microseconds>(endUpper - startUpper).count() /  1000) / (double) 1000;
-    if(printDebug)
-    {
-        std::cout << "#Calculated upper Bound u=" << u << " in " << upperBoundDuration << " seconds" << std::endl;
     }
 
 	std::unordered_map<int, bool>* vc;
@@ -876,6 +880,11 @@ std::unordered_map<int, bool>* vcSolverConstrained(BucketGraph* G, int* numRec, 
         if(printDebug)
             std::cout << "#Finished branching in " << branchingDuration << " seconds" << std::endl;
         return vc;
+    } 
+    else //catch errors in empty graphs
+    {
+        vc = new std::unordered_map<int, bool>();
+        if(printDebug) { std::cout << "#Received nullptr vc" << std::endl; }
     }
     return vc;
 }
