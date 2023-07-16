@@ -186,6 +186,8 @@ public:
     inline BucketGraph() {  }
     ~BucketGraph() { freeGraph(); }
 
+    inline int getVertexReferencesSize() { return vertexReferences.size(); }
+
     /* creates and initialises a graph from standard input */
     static BucketGraph* readStandardInput(bool initReductionDataStructures = true);
     std::vector<std::string>* getStringsFromVertexIndices(std::vector<int>* vertices);

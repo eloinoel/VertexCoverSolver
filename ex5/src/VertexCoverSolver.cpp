@@ -4,6 +4,7 @@
 #include <math.h>          // INFINITY
 #include "utils/ColorPrint.h"
 #include "utils/BucketGraph.h"
+#include "utils/Packing.h"
 #include <chrono>
 #include <random>
 
@@ -687,7 +688,8 @@ int getUpperBound(BucketGraph* G, double timeCap)
     return localSearchVCSize;
 }
 
-std::pair<int, std::unordered_map<int, bool>*> vcVertexBranchingConstrained(BucketGraph* G, int k, int c, int u, int depth, int* numRec, bool printDebug = false)
+std::pair<int, std::unordered_map<int, bool>*> vcVertexBranchingConstrained(BucketGraph* G, int k, int c, int u, int depth, int* numRec,
+Packing* constraints = nullptr, bool printDebug = false)
 {
     (*numRec)++;
     int previousK = k;
@@ -863,9 +865,12 @@ std::unordered_map<int, bool>* vcSolverConstrained(BucketGraph* G, int* numRec, 
         std::cout << "#Preprocessed Graph to size n=" << G->getNumVertices() << ", m=" << G->getNumEdges() << " in " << preprocessDuration << " seconds" << " (reduced by " << numPreprocessingVCVertices << " vertices)" << std::endl;
     }
 
+    //init packing
+    Packing* packingConstraints = new Packing(G->getVertexReferencesSize());
+
 	std::unordered_map<int, bool>* vc;
     auto startBranching = std::chrono::high_resolution_clock::now();
-    auto results = vcVertexBranchingConstrained(G, u, 0, u, 0, numRec, printDebug);
+    auto results = vcVertexBranchingConstrained(G, u, 0, u, 0, numRec, packingConstraints, printDebug);
     vc = results.second;
     if (vc != nullptr)
     {
