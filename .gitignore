@@ -417,5 +417,5 @@ vc-data-students/verifier.py
 *.py
 ex5/src/Main.cpp
 vc-data-students/verifier.py
-vc-data-students/benchmark-fast.sh
+*benchmark-fast.sh
 vc-data-students/benchmark-fast.sh
