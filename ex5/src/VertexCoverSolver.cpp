@@ -734,9 +734,49 @@ Packing* constraints = nullptr, bool printDebug = false)
 	}
 
     // TODO: Solve connected components independently
-    std::pair<int, std::unordered_map<int, bool>*> firstSolution;
-    std::pair<int, std::unordered_map<int, bool>*> secondSolution;
+    std::pair<int, std::unordered_map<int, bool>*> firstSolution = std::pair<int, std::unordered_map<int, bool>*>(u, nullptr);
+    std::pair<int, std::unordered_map<int, bool>*> secondSolution = std::pair<int, std::unordered_map<int, bool>*>(u, nullptr);;
 
+    //TODO: add neighbourhood packing constraint and update existing ones
+    /* if(constraints != nullptr)
+    {
+        Vertex* vertexObj = G->getVertex(vertex);
+        std::unordered_map<int, bool>* vertexAdjMap = vertexObj->getAdj();
+
+        bool currentConstraintsHold = true;
+        std::vector<int> updatedConstraintVertices = std::vector<int>();
+        int numActiveNeighbours = 0; //need this later for adding new constraint
+        for(auto it = vertexAdjMap->begin(); it != vertexAdjMap->end(); ++it)
+        {
+            int neighbourOfVertex = it->first;
+            if(G->isActive(neighbourOfVertex))
+            {
+                numActiveNeighbours++;
+                if(constraints->existsNeighbourhoodConstraintForVertex(neighbourOfVertex))
+                {
+                    currentConstraintsHold = currentConstraintsHold & constraints->incrementNeighbourhoodConstraintForVertex(neighbourOfVertex);
+                    updatedConstraintVertices.push_back(neighbourOfVertex);
+                    if(!currentConstraintsHold)
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+        if(!currentConstraintsHold) 
+        {
+            //revert changes made to constraints 
+            for(auto it = updatedConstraintVertices.begin(); it != updatedConstraintVertices.end(); ++it)
+            {
+                constraints->decrementNeighbourhoodConstraintForVertex(*it);
+            }
+        }
+        else
+        {
+            constraints->addNeighbourhoodConstraintForVertex(vertex, numActiveNeighbours);
+        }
+    }
+ */
     //std::cout << cp::dye("branching: choosing vertex: " + std::to_string(vertex), 'b') << std::endl;
 	//delete first vertex from graph and explore solution
     G->setInactive(vertex);

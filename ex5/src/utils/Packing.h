@@ -48,12 +48,30 @@ public:
             return true;
     }
 
+    void decrementNeighbourhoodConstraintForVertex(int vertex)
+    {
+        if(vertex > (int) neighbourhoodConstraint.size() - 1) { throw std::invalid_argument("Packing: incrementNeighbourhoodConstraintForVertex: given vertex is illegal."); }
+        if(neighbourhoodConstraint[vertex].first < 0 || neighbourhoodConstraint[vertex].second < 0) { throw std::invalid_argument("Packing: incrementNeighbourhoodConstraintForVertex: constraint values for vertex are illegal"); }
+        
+        neighbourhoodConstraint[vertex].first--;
+    }
+
     void deleteNeighbourhoodConstraintForVertex(int vertex)
     {
         if(vertex > (int) neighbourhoodConstraint.size() - 1) { throw std::invalid_argument("Packing: deleteNeighbourhoodConstraintForVertex: given vertex is illegal."); }
         
         neighbourhoodConstraint[vertex].first = -1;
         neighbourhoodConstraint[vertex].second = -1;
+    }
+
+    bool existsNeighbourhoodConstraintForVertex(int vertex)
+    {
+        if(vertex > (int) neighbourhoodConstraint.size() - 1) { throw std::invalid_argument("Packing: deleteNeighbourhoodConstraintForVertex: given vertex is illegal."); }
+        
+        if(neighbourhoodConstraint[vertex].first < 0)
+            return false;
+        else
+            return true;
     }
 
 };
