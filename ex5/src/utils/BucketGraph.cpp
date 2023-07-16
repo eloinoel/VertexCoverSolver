@@ -436,6 +436,43 @@ void BucketGraph::freeGraph()
     }
 }
 
+/* copies originalVertexNames and edges (deep copy) to a new graph and inits the graph from there*/
+BucketGraph* BucketGraph::copy()
+{
+    BucketGraph* graphCopy = new BucketGraph();
+
+    //std::cout << "#starting copy" << std::endl; 
+    graphCopy->originalVertexNames = std::unordered_map<std::string, std::pair<int, int>>();
+    for(auto it = originalVertexNames.begin(); it != originalVertexNames.end(); ++it)
+    {
+        std::string originalName = it->first;
+        graphCopy->originalVertexNames.insert({originalName, std::pair<int, int>({it->second.first, it->second.second})});
+    }
+
+    //std::cout << "#starting edges copy" << std::endl; 
+
+    graphCopy->edges = std::vector<std::pair<std::string, std::string>>((int) edges.size());
+    for(int i = 0; i < (int) edges.size(); ++i)
+    {
+        std::string firstVertex = edges[i].first;
+        std::string secondVertex = edges[i].second;
+        graphCopy->edges[i] = std::pair<std::string, std::string>({firstVertex, secondVertex});
+    }
+
+    //std::cout << "#starting initVertexReferences" << std::endl; 
+    graphCopy->initVertexReferences(); // sets vertex references and the adj_maps
+    //std::cout << "#starting initBucketQueue" << std::endl; 
+    graphCopy->initBucketQueue(); // initialise bucket queue
+    //std::cout << "#starting initMatching" << std::endl; 
+    graphCopy->initMatching(); // LP Bound matching fields
+    //std::cout << "#starting initUnconfined" << std::endl; 
+    graphCopy->initUnconfined(); // Unconfined optimisation fields
+    graphCopy->reductions = new Reductions();
+    //std::cout << "#returning" << std::endl;
+
+    return graphCopy;
+}
+
 /*----------------------------------------------------------*/
 /*-------------------   Graph Utility   --------------------*/
 /*----------------------------------------------------------*/
@@ -1318,7 +1355,7 @@ bool BucketGraph::dynamicReduce(int* k, int depth, bool printDebug)
 //    }
                                 //  0     1     2     3     4     5     6      7    8     9     10
 //    reductions = std::vector<bool>{true, true, false, true, true, true, true, true, true, true, false};
-    reductions = std::vector<bool>{true, true, false, true, true, true, true, false, false, false};
+    reductions = std::vector<bool>{true, true, false, true, true, true, false, false, false, false};
     return reduce(k, depth, &reductions, printDebug);
 }
 

@@ -194,6 +194,9 @@ public:
     inline BucketGraph() {  }
     ~BucketGraph() { freeGraph(); }
 
+    /* should only be called in unreduced graph */
+    BucketGraph* copy();
+
     inline int getVertexReferencesSize() { return vertexReferences.size(); }
 
     /* creates and initialises a graph from standard input */

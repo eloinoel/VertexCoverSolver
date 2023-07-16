@@ -5,6 +5,8 @@
 #include <vector>
 #include <stdexcept>
 
+class BucketGraph;
+
 class Packing
 {
 
@@ -27,52 +29,21 @@ public:
     //*************** Neightbourhood Constraint ****************
     //**********************************************************
 
-    void addNeighbourhoodConstraintForVertex(int vertex, int numActiveNeighbours)
-    {
-        if(vertex > (int) neighbourhoodConstraint.size() - 1 || numActiveNeighbours <= 0) { throw std::invalid_argument("Packing: addNeighbourhoodConstraintForVertex: constraint values for vertex are illegal"); }
-        
-        neighbourhoodConstraint[vertex].first = 0;
-        neighbourhoodConstraint[vertex].second = numActiveNeighbours;
-    }
+    void addNeighbourhoodConstraintForVertex(int vertex, int numActiveNeighbours);
 
     /* returns true if packing constraint still holds, returns false if the branching should be cut */
-    bool incrementNeighbourhoodConstraintForVertex(int vertex)
-    {
-        if(vertex > (int) neighbourhoodConstraint.size() - 1) { throw std::invalid_argument("Packing: incrementNeighbourhoodConstraintForVertex: given vertex is illegal."); }
-        if(neighbourhoodConstraint[vertex].first < 0 || neighbourhoodConstraint[vertex].second < 0) { throw std::invalid_argument("Packing: incrementNeighbourhoodConstraintForVertex: constraint values for vertex are illegal"); }
-        
-        neighbourhoodConstraint[vertex].first++;
-        if(neighbourhoodConstraint[vertex].first > neighbourhoodConstraint[vertex].second - 1)
-            return false;
-        else
-            return true;
-    }
+    bool incrementNeighbourhoodConstraintForVertex(int vertex);
 
-    void decrementNeighbourhoodConstraintForVertex(int vertex)
-    {
-        if(vertex > (int) neighbourhoodConstraint.size() - 1) { throw std::invalid_argument("Packing: incrementNeighbourhoodConstraintForVertex: given vertex is illegal."); }
-        if(neighbourhoodConstraint[vertex].first < 0 || neighbourhoodConstraint[vertex].second < 0) { throw std::invalid_argument("Packing: incrementNeighbourhoodConstraintForVertex: constraint values for vertex are illegal"); }
-        
-        neighbourhoodConstraint[vertex].first--;
-    }
+    void decrementNeighbourhoodConstraintForVertex(int vertex);
 
-    void deleteNeighbourhoodConstraintForVertex(int vertex)
-    {
-        if(vertex > (int) neighbourhoodConstraint.size() - 1) { throw std::invalid_argument("Packing: deleteNeighbourhoodConstraintForVertex: given vertex is illegal."); }
-        
-        neighbourhoodConstraint[vertex].first = -1;
-        neighbourhoodConstraint[vertex].second = -1;
-    }
+    void deleteNeighbourhoodConstraintForVertex(int vertex);
 
-    bool existsNeighbourhoodConstraintForVertex(int vertex)
-    {
-        if(vertex > (int) neighbourhoodConstraint.size() - 1) { throw std::invalid_argument("Packing: deleteNeighbourhoodConstraintForVertex: given vertex is illegal."); }
-        
-        if(neighbourhoodConstraint[vertex].first < 0)
-            return false;
-        else
-            return true;
-    }
+    bool existsNeighbourhoodConstraintForVertex(int vertex);
+
+    /* returns true if constraints hold, returns false if solver should not branch on given vertex */
+    bool checkNeighbourhoodConstraints(int branchingVertex, BucketGraph* G);
+
+    void undoNeighbourhoodConstraints(int branchingVertex, BucketGraph* G);
 
 };
 

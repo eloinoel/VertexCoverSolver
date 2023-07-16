@@ -100,7 +100,6 @@ public:
 
     bool isDominated(BucketGraph* G, int dom, std::vector<bool>* pendingDeletions , bool printDebug);
     void initRuleCounter();
-    void initDominationVector(BucketGraph* G);
 
     void printReductionRules();
     void printCounters();
