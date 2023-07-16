@@ -25,7 +25,6 @@ std::unordered_map<int, bool>* vcVertexBranchingRecursive(BucketGraph* G, int k,
 
     (*numRec)++;
     // Save recursion depth to unreduce degree-3 at correct depth
-    G->recursionDepth++;
 	int currentRecursion = *numRec;
 
     if (k < 0)
@@ -34,17 +33,20 @@ std::unordered_map<int, bool>* vcVertexBranchingRecursive(BucketGraph* G, int k,
 	}
     int previousK = k;
     bool cut = false;
-    std::cout << "#--> applying data reductions " << '\n';
+    if(printDebug)
+        std::cout << "#--> applying data reductions " << '\n';
     cut = G->dynamicReduce(&k, depth, printDebug);
     if(cut)
     {
-        std::cout << "#--> cutting through data reductions " << '\n';
+        if(printDebug)
+            std::cout << "#--> cutting through data reductions " << '\n';
         G->unreduce(&k, previousK, depth);
         return nullptr;
     }
 
     int lowerBound = G->getLPBound();
-    std::cout << "#--> calculated LPBound: " << lowerBound << " with k=" << k << '\n';
+    if(printDebug)
+        std::cout << "#--> calculated LPBound: " << lowerBound << " with k=" << k << '\n';
     if (k < lowerBound) {
         G->unreduce(&k, previousK, depth);
         return nullptr;
@@ -146,10 +148,10 @@ std::unordered_map<int, bool>* vcSolverRecursive(BucketGraph* G, int* numRec, bo
 {
     int numPreprocessingVCVertices = 0;
 	int k = 0;
-    G->recursionDepth = 0;
 
     // Apply Reduction Rules for the first time
     auto startPreprocess = std::chrono::high_resolution_clock::now();
+                                                    //    0    1     2     3     4    5     6      7    8     9
     std::vector<bool> rulesToApply = std::vector<bool>{true, true, false, true, true, false, false, false, false, false};
     G->preprocess(&numPreprocessingVCVertices, rulesToApply, printDebug);
     numPreprocessingVCVertices = -numPreprocessingVCVertices;
@@ -925,7 +927,7 @@ std::unordered_map<int, bool>* vcSolverConstrained(BucketGraph* G, int* numRec, 
         if(printDebug)
             std::cout << "#Finished branching in " << branchingDuration << " seconds" << std::endl;
         return vc;
-    } 
+    }
     else //catch errors in empty graphs
     {
         vc = new std::unordered_map<int, bool>();

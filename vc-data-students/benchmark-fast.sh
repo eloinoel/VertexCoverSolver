@@ -89,6 +89,7 @@ run_ce_solver()
 			solNumber="";
 			if [ -f "$data/$solFile.solution" ]; then
 				solNumber=$(cat $data/$solFile.solution);
+				solNumber="${solNumber//$'\r'/}"
 			fi
 			
 			verify="\t";
@@ -112,9 +113,9 @@ run_ce_solver()
 						notAVertexCover="OK"
 					fi
 				fi
-				
+
 				# If user solution is a vertex cover check the size and compare it against provided solution size
-				if [ "$notAVertexCover" = "OK" ] && [ -n "$solNumber" ] && [ "$solNumber" -eq "$solNumber" ] 2>/dev/null; then
+				if [ "$notAVertexCover" = "OK" ] && [ -n "$solNumber" ] && [ "$solNumber" -eq "$solNumber" ] ; then
 					if [ "$solNumber" -eq "$k" ]; then
 						verify="OK\t0";
 					elif [ "$solNumber" -gt "$k" ]; then

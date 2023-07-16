@@ -16,7 +16,8 @@ enum RULE
     LPFLOW,             // = 6
     DEGREE_THREE_IND,    // = 7
     DEGREE_THREE_CLIQ,  // = 8
-    DEGREE_THREE_DOM  // = 9
+    DEGREE_THREE_DOM//,  // = 9
+//    DEGREE_FOUR_CLIQUE  // = 9
 };
 
 enum RULE_APPLICATION_RESULT
@@ -74,6 +75,8 @@ public:
     bool dominationHeuristic = true;
     int cntDom = 0;
 
+    std::string lineDelimiter = "---------\n";
+
     bool printDebug = false;
     bool printTimer = false;
 
@@ -104,9 +107,14 @@ public:
     void printDominationSets();
 
     // Degree 3
-    RULE_APPLICATION_RESULT rule_DegreeThree_Independent(BucketGraph* G, bool printDebug = false);
-    RULE_APPLICATION_RESULT rule_DegreeThree_Clique(BucketGraph* G, bool printDebug = false);
-    RULE_APPLICATION_RESULT rule_DegreeThree_Domination(BucketGraph* G, int* k, bool checkBudget, bool printDebug = false);
+    bool isTouchable(BucketGraph* G, std::vector<int> * neighbours, std::unordered_map<int, int>& inactiveMap);
+
+    RULE_APPLICATION_RESULT rule_DegreeThree_Independent(BucketGraph* G, int depth, bool printDebug = false);
+    RULE_APPLICATION_RESULT rule_DegreeThree_Clique(BucketGraph* G, int* k, int depth, bool checkBudget, bool printDebug = false);
+//    RULE_APPLICATION_RESULT rule_DegreeThree_Clique_Better(BucketGraph* G, int depth, bool printDebug = false);
+    RULE_APPLICATION_RESULT rule_DegreeThree_Domination(BucketGraph* G, int* k, int depth, bool deg2inc, bool checkBudget, bool printDebug = false);
+
+//    RULE_APPLICATION_RESULT rule_DegreeFour_Clique(BucketGraph* G, int* k, int depth, bool checkBudget, bool printDebug = false);
 
     //rules return true if they were applicable
     RULE_APPLICATION_RESULT rule_HighDegree(BucketGraph* G, int* k, int depth);
@@ -115,6 +123,7 @@ public:
     RULE_APPLICATION_RESULT rule_DegreeOne(BucketGraph* G, int* k, int depth, bool checkBudget, bool printDebug = false);
 
     RULE_APPLICATION_RESULT rule_DegreeTwo(BucketGraph* G, int* k, int depth, bool checkBudget, bool printDebug = false);
+    RULE_APPLICATION_RESULT rule_DegreeTwo_Simple_Case(BucketGraph* G, int* k, int depth, bool checkBudget, bool printDebug = false);
     RULE_APPLICATION_RESULT rule_DegreeTwo_Secure(BucketGraph* G, int* k);
 
     RULE_APPLICATION_RESULT rule_LPFlow(BucketGraph* G, int* k, int depth, bool checkBudget, bool printDebug = false);
