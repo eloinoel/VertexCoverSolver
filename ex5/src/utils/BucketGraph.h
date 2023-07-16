@@ -135,10 +135,18 @@ public:
     // Size n
     std::vector<int>* dominationHelper;
 
-    int recursionDepth = 0;
     bool deg3ind = false;
     bool deg3clique = false;
     bool deg3dom = false;
+    bool deg3 = false;
+    bool deg4clique = true;
+
+    bool deg3domDeg2 = false;
+
+    int cntDeg3Ind = 0;
+    int cntDeg3Clique = 0;
+    int cntDeg3Dom1 = 0;
+    int cntDeg3Dom2 = 0;
 
     bool LP_INITIALISED = false;
     bool UNCONFINED_INITIALISED = false;
@@ -308,8 +316,11 @@ public:
     inline void unscheduleForUnconfined(int vertexIndex) { (*mayBeUnconfined)[vertexIndex] = false; }
     void scheduleComponentForUnconfined(int vertexIndex);
 
-
     std::vector<std::pair<std::string,std::string>> getPreprocessedEdges();
+
+    void unreduceDeg3Ind(Reduction* rule, std::unordered_map<int, bool>* vc = nullptr);
+    void unreduceDeg3Clique(Reduction* rule, std::unordered_map<int, bool>* vc = nullptr);
+    void unreduceDeg3Dom(Reduction* rule, std::unordered_map<int, bool>* vc = nullptr);
 private:
 
     //------------------------ Graph Construction ------------------------

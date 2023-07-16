@@ -164,9 +164,9 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
             throw invalid_argument("Error constructing graph from input file.");
         if (printGraph)
         {
-            G->print();
+//            G->print();
             //G->printActiveList();
-            //G->printBucketQueue();
+            G->printBucketQueue();
         }
         unordered_map<int, bool>* vc = nullptr;
 
