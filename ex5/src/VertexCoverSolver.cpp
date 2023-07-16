@@ -470,14 +470,6 @@ void removeMinLossVCVertex(BucketGraph* G, std::unordered_map<int, bool>* vc, st
 {
     int u_index = getMinLossIndex(vc, loss, age);
     auto u = vc->find(u_index);
-    /* std::cout << "uIndex: " << u_index << std::endl;
-    std::cout << "vc size: " << vc->size() << std::endl;
-    int i=0;
-    for (auto it = vc->begin(); it != vc->end(); ++it)
-    {
-        std::cout << "vc[" << i << "]: " << it->first << std::endl;
-        i++;
-    } */
     if (u == vc->end()) { throw std::invalid_argument("removeMinLossVCVertex: Iterator of u not found\n"); }
     vc->erase(u);
     G->setActive(u_index);
@@ -491,7 +483,6 @@ void removeMinLossVCVertex(BucketGraph* G, std::unordered_map<int, bool>* vc, st
         if (!(G->getVertex(neighbour)->getActive())) { continue; }
         (*gain)[neighbour]++;
     }
-    //std::cout << cp::dye("Removed " + std::to_string(u_index), 'r') << " from vc" << std::endl;
 }
 
 void removeBMSMinLossVCVertex(BucketGraph* G, std::unordered_map<int, bool>* vc, std::vector<int>* gain, std::vector<int>* loss, std::vector<int>* age, int numRecursions, int k)
@@ -516,25 +507,20 @@ void removeBMSMinLossVCVertex(BucketGraph* G, std::unordered_map<int, bool>* vc,
 
 void addRandomUncoveredEdgeMaxGainEndpointVertex(BucketGraph* G, std::unordered_map<int, bool>* vc, std::vector<int>* gain, std::vector<int>* loss, std::vector<int>* age, int numRecursions)
 {
-    //std::cout << "Adding to vc..." << std::endl;
     //int v = G->getRandomConnectedVertex(10);    // TODO: consider pseudo randomness (are all vertices selectable?)
     int v = G->getRandomConnectedVertex(INT32_MAX); // TODO: test more what limit is appropriate
 
     if (v == -1) { return; }
     Vertex* vertex = G->getVertex(v);
     if (vertex->getDegree() == 0) { throw std::invalid_argument("addRandomUncoveredEdgeMaxGainEndpointVertex: Got vertex of degree 0\n"); }
-    //std::cout << cp::dye("Chose edge adjacent to vertex: " + std::to_string(v), 'y') << std::endl;
 
     auto neighbours = G->getNeighbours(v);  // TODO: slow getNeighbours
-    //std::cout << "neighbours size: " << neighbours->size() << std::endl;
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> distr(0, neighbours->size()-1);
     int rnd = (int) distr(gen);
-    //std::cout << cp::dye("Chose vertex neighbours index: " + std::to_string(rnd), 'y') << std::endl;
     int neighbour = neighbours->at(rnd);
     Vertex* neighbourVertex = G->getVertex(neighbour);
-    //std::cout << cp::dye("Chose vertex neighbour: " + std::to_string(neighbour), 'y') << std::endl;
 
     // add vertex with higher gain into vc
     if((*gain)[v] > (*gain)[neighbour] || ((*gain)[v] == (*gain)[neighbour] && (*age)[v] <= (*age)[neighbour]))
@@ -550,7 +536,6 @@ void addRandomUncoveredEdgeMaxGainEndpointVertex(BucketGraph* G, std::unordered_
         vc->insert({v, true});
         (*gain)[v] = 0;
         (*age)[v] = numRecursions;
-        //std::cout << cp::dye("Added " + std::to_string(v), 'g') << " to vc" << std::endl;
     }
     else
     {
@@ -564,7 +549,6 @@ void addRandomUncoveredEdgeMaxGainEndpointVertex(BucketGraph* G, std::unordered_
         vc->insert({neighbour, true});
         (*gain)[neighbour] = 0;
         (*age)[neighbour] = numRecursions;
-        //std::cout << cp::dye("Added " + std::to_string(neighbour), 'g') << " to vc" << std::endl;
     }
 }
 
@@ -575,7 +559,6 @@ void addRandomUncoveredEdgeMaxGainEndpointVertex(BucketGraph* G, std::unordered_
 */
 std::unordered_map<int, bool>* fastVC(BucketGraph* G, std::unordered_map<int, bool>* vc, int* numRec, double timeout)
 {
-    //std::cout << "before guards" << std::endl;
     if (vc == nullptr) { throw std::invalid_argument("fastVC: passed vc is nullptr\n"); }
     for (auto it = vc->begin(); it != vc->end(); ++it)
     {
@@ -585,7 +568,6 @@ std::unordered_map<int, bool>* fastVC(BucketGraph* G, std::unordered_map<int, bo
         }
     }
 
-    //std::cout << "before inits" << std::endl;
     int numRecursions = 0;
     int n = G->getTotalNumVertices();
     std::vector<int> gain = std::vector<int>(n);
@@ -603,7 +585,6 @@ std::unordered_map<int, bool>* fastVC(BucketGraph* G, std::unordered_map<int, bo
         // we found an improved vc! time to overwrite our previous best solution and search further
         if (G->getMaxDegree() <= 0)
         {
-            //std::cout << cp::dye("Found vc of size: " + std::to_string(currentVC->size()), 'g') << std::endl;
             delete bestVC;
             bestVC = new std::unordered_map<int, bool>(*currentVC);
             removeMinLossVCVertex(G, currentVC, &gain, &loss, &age, numRecursions);
@@ -645,7 +626,7 @@ std::unordered_map<int, bool>* fastVC(BucketGraph* G, std::unordered_map<int, bo
 /*
     G should be preprocessed
 */
-int getUpperBoundFromRandomHeuristic(BucketGraph* graphCopy, BucketGraph* G, int numPreprocessingVCVertices, int timeoutSoftCap)
+int getUpperBoundFromRandomHeuristic(BucketGraph* graphCopy, BucketGraph* G, int numPreprocessingVCVertices, double timeoutSoftCap)
 {
     int vcNumRec = 0;
     std::unordered_map<int, bool>* currentBestVC = nullptr;
@@ -754,24 +735,19 @@ std::pair<int, std::unordered_map<int, bool>*> vcVertexBranchingConstrained(Buck
     (*numRec)++;
     int previousK = k;
     bool cut = false;
-    //std::cout << "> cutting through data reductions " << '\n';
-    //std::cout << "> calculated LPBound: " << G->getLPBound() << " with c=" << u-k << " + k=" << k << " with u=" << u << '\n';
     cut = G->dynamicReduce(&k, depth, printDebug);
     if(cut)
     {
-        //std::cout << "> cutting through data reductions " << '\n';
         G->unreduce(&k, previousK, depth);
         return std::pair<int, std::unordered_map<int, bool>*>(u, nullptr);
     }
     c += previousK - k;
 
-    //std::cout << "> calculated LPBound: " << G->getLPBound() << " with c=" << u-k << " + k=" << k << " with u=" << u << '\n';
     if (c + G->getLPBound() >= u) {
         G->unreduce(&k, previousK, depth);
         return std::pair<int, std::unordered_map<int, bool>*>(u, nullptr);
     }
 
-    //std::cout << "before getMaxDegreeVertex" << std::endl;
 	int vertex = G->getMaxDegreeVertex();
     //no vertices left
     if (vertex == -1)
@@ -780,33 +756,26 @@ std::pair<int, std::unordered_map<int, bool>*> vcVertexBranchingConstrained(Buck
         G->unreduce(&k, previousK, depth, vc);
         return std::pair<int, std::unordered_map<int, bool>*>(c, vc);
     }
-    //std::cout << "before getVertexDegree: " << vertex << std::endl;
     int vertexDeg = G->getVertexDegree(vertex);
-    //std::cout << "got maxDegree vertex degree: " << vertexDeg << std::endl;
     //G->print();
 	//graph has no edges left
 	if (vertexDeg == 0)
 	{
         std::unordered_map<int, bool>* vc = new std::unordered_map<int, bool>();
         G->unreduce(&k, previousK, depth, vc);
-        //G->printVC(vc);
         return std::pair<int, std::unordered_map<int, bool>*>(c, vc);
 	}
 
-    // TODO: Solve connected components independently
     std::pair<int, std::unordered_map<int, bool>*> firstSolution = std::pair<int, std::unordered_map<int, bool>*>(u, nullptr);
     std::pair<int, std::unordered_map<int, bool>*> secondSolution = std::pair<int, std::unordered_map<int, bool>*>(u, nullptr);;
 
     std::pair<int, std::unordered_map<int, bool>*> results;
     std::unordered_map<int, bool>* vc = nullptr;
-    if(true)//if(constraints->checkNeighbourhoodConstraints(vertex, G))
+    if(constraints->checkNeighbourhoodConstraints(vertex, G))
     {
-        //std::cout << cp::dye("branching: choosing vertex: " + std::to_string(vertex), 'b') << std::endl;
         //delete first vertex from graph and explore solution
         G->setInactive(vertex);
-        //cout << "before branching" << endl;
         results = vcVertexBranchingConstrained(G, k - 1, c + 1, u, depth+1, numRec);
-        //std::cout << "after branching" << std::endl;
         if(u > results.first) {
             k = k - u + results.first;
             previousK = previousK - u + results.first;
@@ -824,7 +793,6 @@ std::pair<int, std::unordered_map<int, bool>*> vcVertexBranchingConstrained(Buck
         }
         else
         {
-            //cout << "before setActive" << endl;
             //revert changes to graph
             G->setActive(vertex);
             //constraints->undoNeighbourhoodConstraints(vertex, G);
@@ -834,7 +802,7 @@ std::pair<int, std::unordered_map<int, bool>*> vcVertexBranchingConstrained(Buck
         //cout << cp::dye("restoring vertex: ", 'g') << vertex << endl;
     }
     
-
+    //std::cout << "before cannot explore neighbours cutoff" << std::endl;
 	//cannot fully explore neighbours
     if (vertexDeg > u)
     {
@@ -842,7 +810,7 @@ std::pair<int, std::unordered_map<int, bool>*> vcVertexBranchingConstrained(Buck
         return firstSolution;
     }
 
-    //cout << "deleting neighbourhood of vertex " << vertex << ": ";
+    //std::cout << "deleting neighbourhood of vertex " << vertex << ": " << std::endl;
     std::vector<int>* neighbours = G->getNeighbours(vertex);
     /* std::cout << cp::dye("branching: choosing neighbours of vertex " + std::to_string(vertex) + ": ", 'b');
     for(int i = 0; i < (int) neighbours->size(); i++)
@@ -851,7 +819,7 @@ std::pair<int, std::unordered_map<int, bool>*> vcVertexBranchingConstrained(Buck
     }
     std::cout << std::endl; */
     G->setInactive(neighbours);
-    //std::cout << "prebranch k=" << k << '\n';
+    //std::cout << "prebranch k=" << k << std::endl;
 	results = vcVertexBranchingConstrained(G, k - neighbours->size(), c + neighbours->size(), u, depth+1, numRec);
     //std::cout << "after neighbour branching" << std::endl;
     if(u > results.first) {
@@ -908,8 +876,15 @@ std::pair<int, std::unordered_map<int, bool>*> vcVertexBranchingConstrained(Buck
 
 std::unordered_map<int, bool>* vcSolverConstrained(BucketGraph* G, int* numRec, bool printDebug)
 {
+    std::vector<bool> rulesToApply = std::vector<bool>{true, true, false, true, true, false, false, false, false, false};
     BucketGraph* graphCopy = G->copy();
-    int UPPER_BOUND_TIME_CAP = 2; //in seconds
+    BucketGraph* graphCopyForPre = G->copy();
+
+    int numPreprocessingVCVerticesCopy = 0;
+    graphCopyForPre->preprocess(&numPreprocessingVCVerticesCopy, rulesToApply, printDebug);
+    numPreprocessingVCVerticesCopy = -numPreprocessingVCVerticesCopy;
+
+    double UPPER_BOUND_TIME_CAP = 1.f; //in seconds
 
     /* auto startUpper = std::chrono::high_resolution_clock::now();
     int numHeurRecursions = 0;
@@ -924,7 +899,7 @@ std::unordered_map<int, bool>* vcSolverConstrained(BucketGraph* G, int* numRec, 
     int numPreprocessingVCVertices = 0;
 	int k = 0;
     auto startPreprocess = std::chrono::high_resolution_clock::now();
-    std::vector<bool> rulesToApply = std::vector<bool>{true, true, false, true, true, false, false, false, false, false};
+    
     G->preprocess(&numPreprocessingVCVertices, rulesToApply, printDebug);
     numPreprocessingVCVertices = -numPreprocessingVCVertices;
     auto endPreprocess = std::chrono::high_resolution_clock::now();
@@ -935,7 +910,7 @@ std::unordered_map<int, bool>* vcSolverConstrained(BucketGraph* G, int* numRec, 
 
     //get upper bound
     auto startUpper = std::chrono::high_resolution_clock::now();
-    int u = getUpperBound(graphCopy, G, numPreprocessingVCVertices, UPPER_BOUND_TIME_CAP, printDebug) + 1;
+    int u = getUpperBound(graphCopy, graphCopyForPre, numPreprocessingVCVerticesCopy, UPPER_BOUND_TIME_CAP, printDebug) + 1;
     auto endUpper = std::chrono::high_resolution_clock::now();
     double upperBoundDuration = (std::chrono::duration_cast<std::chrono::microseconds>(endUpper - startUpper).count() /  1000) / (double) 1000;
     if(printDebug)

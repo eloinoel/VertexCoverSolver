@@ -760,10 +760,14 @@ bool BucketGraph::vertexHasEdgeTo(int vertex, int secondVertex)
 void BucketGraph::removeFromBucketQueue(int vertex)
 {
     int degree = vertexReferences[vertex]->degree;
+    //std::cout << "removeFromBucketQueue: before bucket removal" << std::endl;
     bucketReferences[degree]->remove(vertexReferences[vertex]->bucketVertex);
+    //std::cout << "removeFromBucketQueue: after bucket removal" << std::endl;
     if(bucketReferences[degree]->vertices.size() == 0) {
+        //std::cout << "removeFromBucketQueue: before iterator updates" << std::endl;
         if(degree == stable_bucketQueue_inc_iterator->degree) { ++stable_bucketQueue_inc_iterator; }
         if(degree == stable_bucketQueue_dec_iterator->degree) { --stable_bucketQueue_dec_iterator; }
+        //std::cout << "removeFromBucketQueue: before erase" << std::endl;
         bucketQueue.erase(bucketQueue.iterator_to(*bucketReferences[degree]));
     }
 }
@@ -1324,6 +1328,7 @@ void BucketGraph::preprocess(int* k, std::vector<bool>& rulesToApply, bool print
     }
 }
 
+void BucketGraph::printReductionStack() { reductions->printReductionStack(); }
 /*
  * 0: deg1, 1: deg2, 2: domination, 3: unconfined, 4: LP, 5: highDeg, 6: buss
 */
@@ -1355,7 +1360,7 @@ bool BucketGraph::dynamicReduce(int* k, int depth, bool printDebug)
 //    }
                                 //  0     1     2     3     4     5     6      7    8     9     10
 //    reductions = std::vector<bool>{true, true, false, true, true, true, true, true, true, true, false};
-    reductions = std::vector<bool>{true, true, false, true, true, true, false, false, false, false};
+    reductions = std::vector<bool>{true, true, false, true, true, true, true, true, true, true, true};
     return reduce(k, depth, &reductions, printDebug);
 }
 
@@ -1457,6 +1462,7 @@ void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<
     while(!reductions->appliedRules->empty() && (*k < previousK || reductions->appliedRules->back()->kDecrement == 0))
     {
         Reduction* rule = reductions->appliedRules->back();
+        //std::cout << "unreduce: rule: " << rule->rule << ", depth: " << depth << ", rule->depth: " << rule->rDepth << std::endl;
         if(rule->rDepth != depth)
         {
             if(depth < rule->rDepth)
@@ -1507,6 +1513,7 @@ void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<
                 }
                 else
                 {
+                    //std::cout << "before unmerge" << std::endl;
                     int mergeVertex = std::get<0>(*rule->mergeVertexInfo);
                     //std::cout << "deg2 merged" << std::endl;
                     unmerge(rule); //handles setting vertices back active
@@ -1655,6 +1662,7 @@ void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<
                 throw std::invalid_argument("unreduce error: unknown rule");
                 break;
         }
+        //std::cout << "unreduce: before delete" << std::endl;
         if (rule->deletedVCVertices != nullptr) delete rule->deletedVCVertices;
         if (rule->deletedVertices != nullptr) delete rule->deletedVertices;
         if(rule->addedEdges != nullptr) delete rule->addedEdges;
@@ -1823,30 +1831,28 @@ void BucketGraph::unmerge(Reduction* mergeRule)
         numEdges--;
         //std::cout << "deg2 post adj pop" << std::endl;
         vertexReferences[mergeVertex]->degree--;
-        //std::cout << "after pop" << '\n';
+        //std::cout << "after pop" << std::endl;
         vertexReferences[added_vertices->at(i)]->adj_map->erase(mergeVertex);
         //vertexReferences[added_vertices->at(i)]->adj_map->erase(vertexReferences[added_vertices->at(i)]->adj_map->find(mergeVertex));
-        //std::cout << "after adj map" << '\n';
+        //std::cout << "after adj map" << std::endl;
         vertexReferences[added_vertices->at(i)]->degree--;
-        //std::cout << "moving vertex " << added_vertices->at(i) << " with deg=" << vertexReferences[added_vertices->at(i)]->degree+1 << " to smaller bucket" << '\n';
+        //std::cout << "moving vertex " << added_vertices->at(i) << " with deg=" << vertexReferences[added_vertices->at(i)]->degree+1 << " to smaller bucket" << std::endl;
         /* print();
         printBucketQueue(); */
         if(vertexReferences[added_vertices->at(i)]->isActive) { moveToSmallerBucket(vertexReferences[added_vertices->at(i)]->degree+1, added_vertices->at(i)); }
-        if(!vertexReferences[added_vertices->at(i)]->isActive) { std::cout << cp::dye("inconsistency, should be active while unmerging: ", 'r') << added_vertices->at(i) << '\n'; }
-        //std::cout << "after move to smaller bucket" << '\n';
+        if(!vertexReferences[added_vertices->at(i)]->isActive) { std::cout << cp::dye("inconsistency, should be active while unmerging: ", 'r') << added_vertices->at(i) << std::endl; }
+        //std::cout << "after move to smaller bucket" << std::endl;
         //moving to smaller bucket not needed because still inactive
     }
-    //if(mergeVertex == 21) { std::cout << "mergeVertex degree " << vertexReferences[mergeVertex]->degree << '\n'; }
     //std::cout << "after added vertices edge decrement" << '\n';
     //std::cout << "mergevertex adj size:" << vertexReferences[mergeVertex]->degree << '\n';
     delete vertexReferences[mergeVertex]->adj_map;
     vertexReferences[mergeVertex]->adj_map = std::get<1>(*mergeRule->mergeVertexInfo);
     //std::cout << "mergevertex saved adj size:" << vertexReferences[mergeVertex]->degree << '\n';
 
-    //std::cout << "after mergevertex reset" << '\n';
-    //std::cout << "unmerge_debug2" << '\n';
+    //std::cout << "after mergevertex reset" << std::endl;
     addToBucketQueue(mergeVertex);
-    //std::cout << "after add to bucket queue" << '\n';
+    //std::cout << "after add to bucket queue" << std::endl;
     //std::cout << "mergeVertex: " << mergeVertex << ", N's: " << v0 << ", " << v1 << ", " << v2 << '\n';
     if(LP_INITIALISED)
     {

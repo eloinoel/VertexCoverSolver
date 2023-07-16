@@ -1,5 +1,6 @@
 #include "Packing.h"
 #include "BucketGraph.h"
+#include <chrono>
 
 void Packing::addNeighbourhoodConstraintForVertex(int vertex, int numActiveNeighbours)
 {
@@ -51,11 +52,15 @@ bool Packing::existsNeighbourhoodConstraintForVertex(int vertex)
         return true;
 }
 
+
 bool Packing::checkNeighbourhoodConstraints(int branchingVertex, BucketGraph* G)
 {
-    Vertex* vertexObj = G->getVertex(branchingVertex);
+    int tmp = 0;
+    auto startTime = std::chrono::high_resolution_clock::now();
+    Vertex* vertexObj = G->getVertex(branchingVertex); return true;
     std::unordered_map<int, bool>* vertexAdjMap = vertexObj->getAdj();
-
+    auto endTime = std::chrono::high_resolution_clock::now();
+    
     bool currentConstraintsHold = true;
     std::vector<int> updatedConstraintVertices = std::vector<int>();
     int numActiveNeighbours = 0; //need this later for adding new constraint
