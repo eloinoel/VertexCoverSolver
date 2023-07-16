@@ -194,6 +194,8 @@ public:
     inline BucketGraph() {  }
     ~BucketGraph() { freeGraph(); }
 
+    inline int getVertexReferencesSize() { return vertexReferences.size(); }
+
     /* creates and initialises a graph from standard input */
     static BucketGraph* readStandardInput(bool initReductionDataStructures = true);
     std::vector<std::string>* getStringsFromVertexIndices(std::vector<int>* vertices);
@@ -285,6 +287,8 @@ public:
     std::tuple<int, std::unordered_map<int, bool>*, std::vector<int>*>* merge(int v0, int v1, int v2);
     /* restores previous previously merged vertices into 3 seperate vertices */
     void unmerge(Reduction* mergeRule);
+
+    int getReductionStackSize();
     
     /* returns true if an edge (other vertex) could be added and false if it exists already
      * throws invalid_argument exception if faulty args were provided
