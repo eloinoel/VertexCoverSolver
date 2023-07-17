@@ -1343,25 +1343,26 @@ bool BucketGraph::dynamicReduce(int* k, int depth, bool printDebug)
     if(depth % period_deg3 == 0){
         reductions.at(7) = true; // Deg4 Ind
         reductions.at(8) = true; // Deg4 2-Clique
-        if(period_deg3 > 1) period_deg3--;
+        if(period_deg3 > min_period) period_deg3--;
+        else
+            period_deg3 = min_period;
     }
     if(depth % period_unc == 0)
     {
         // + unconfined
-//        reductions = std::vector<bool>{true, true, true, false && true && UNCONFINED_INITIALISED, true && LP_INITIALISED, true, true, true, true};
         reductions.at(4) = UNCONFINED_INITIALISED;
-//        reductions.at(10) = true; // Deg4 2-Clique
-        if(period_unc > 1) period_unc--;
-
+        if(period_unc > min_period) period_unc--;
+        else
+            period_unc = min_period;
     }
     if(depth % period_lp == 0)
     {
         // + LP
-//        reductions.at(7) = true; // Deg4 Ind
-//        reductions.at(8) = true; // Deg4 2-Clique
         reductions.at(4) = LP_INITIALISED;
         reductions.at(10) = true; // Deg4 2-Clique
-        if(period_lp > 1) period_lp--;
+        if(period_lp > min_period) period_lp--;
+        else
+            period_lp = min_period;
     }
 
     return reduce(k, depth, &reductions, printDebug);
