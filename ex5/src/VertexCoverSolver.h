@@ -19,6 +19,8 @@ std::unordered_map<int, bool>* vcSolverRecursive(BucketGraph* G, int* numRec, bo
 std::unordered_map<int, bool>* vcSolverConstrained(BucketGraph* G, int* numRec, bool printDebug);
 std::unordered_map<int, bool>* vcSolverConstrainedB(BucketGraph* G, int* numRec, bool printDebug);
 
+std::unordered_map<int, bool>* vcSolverConstrainedEloi(BucketGraph* G, int* numRec, bool printDebug);
+
 
 /* Heuristic Code */
 

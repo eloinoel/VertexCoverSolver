@@ -324,6 +324,7 @@ public:
     void unmerge(Reduction* mergeRule);
 
     int getReductionStackSize();
+    void verifyAdjacency();
     
     /* returns true if an edge (other vertex) could be added and false if it exists already
      * throws invalid_argument exception if faulty args were provided
