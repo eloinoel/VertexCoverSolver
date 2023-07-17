@@ -1364,6 +1364,8 @@ bool BucketGraph::dynamicReduce(int* k, int depth, bool printDebug)
         if(period_lp > 1) period_lp--;
     }
 
+    //TODO: delete debug constellation
+    reductions = std::vector<bool>{true, false, false, true, true, false, false, false, false, false, false, false};
     return reduce(k, depth, &reductions, printDebug);
 }
 
@@ -1912,6 +1914,69 @@ int BucketGraph::getReductionStackSize()
         return reductions->appliedRules->size();
     else
         return -1;
+}
+
+void BucketGraph::verifyAdjacency()
+{
+    //verify vertices
+    for (int i = 0; i < (int) vertexReferences.size(); i++)
+    {
+        Vertex* vertex = vertexReferences[i];
+        if(!vertex->isActive) { continue; }
+
+        // CHECK NEIGHBOURS
+        int activeNeighbours = 0;
+        for (auto neighbour = vertex->adj_map->begin(); neighbour != vertex->adj_map->end(); ++neighbour)
+        {
+            Vertex* neighbourVertex = vertexReferences[neighbour->first];
+
+            // COUNT ACTIVE NEIGHBOURS
+            if(neighbourVertex->isActive || isActive(neighbourVertex->index)) {
+                activeNeighbours++;
+            }
+
+            // CHECK SYMMETRIC ADJACENCY
+            if(!vertexHasEdgeTo(neighbour->first, i)) {
+                throw std::invalid_argument("verifyAdjacency: Vertices "+std::to_string(i)+" and "+std::to_string(neighbour->first)+" have an asymmetric adjacency relationship");
+            }
+        }
+
+        // CHECK DEGREE EQUALS ADJ MAP SIZE
+        if (activeNeighbours != vertex->degree) {
+            throw std::invalid_argument("verifyAdjacency: Vertex "+std::to_string(i)+" has unequal degree "+std::to_string(vertex->degree)+" and adjacency map size "+std::to_string(vertex->adj_map->size()));
+        }
+    }
+
+    //verify bucket vertices
+    for (int i = 0; i < (int) bucketReferences.size(); i++)
+    {
+        Bucket* bucket = bucketReferences[i];
+        if(bucket == nullptr) { continue; }
+
+        for (auto vertex_it = bucket->vertices.begin(); vertex_it != bucket->vertices.end(); ++vertex_it)
+        {
+            Vertex* vertex = vertexReferences[vertex_it->index];
+
+            // CHECK ACTIVE
+            if(!vertex->isActive || !vertex->isActive) {
+                throw std::invalid_argument("verifyAdjacency: Vertex "+std::to_string(i)+" in Degree Bucket "+std::to_string(bucket->degree)+"is inactive");
+            }
+
+            // CHECK DEGREE AND CORRECT BUCKET
+            if(vertex->degree != bucket->degree) {
+                throw std::invalid_argument("verifyAdjacency: Vertex "+std::to_string(i)+" with Degree "+std::to_string(vertex->degree)+" is in wrong Degree Bucket "+std::to_string(bucket->degree));
+            }
+        }
+    }
+
+    //verify bucket queue
+    for (auto bucket_it = bucketQueue.begin(); bucket_it != bucketQueue.end(); ++bucket_it)
+    {
+        // CHECK EMPTY BUCKET
+        if(bucket_it->vertices.size() <= 0) {
+            throw std::invalid_argument("verifyAdjacency: Degree Bucket "+std::to_string(bucket_it->degree)+"in bucketQueue is empty");
+        }
+    }
 }
 
 bool BucketGraph::addEdgeToVertex(int vertex, int edge)
