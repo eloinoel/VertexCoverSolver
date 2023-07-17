@@ -1340,30 +1340,29 @@ bool BucketGraph::dynamicReduce(int* k, int depth, bool printDebug)
                                                     //  0     1     2     3     4     5     6      7    8     9
     std::vector<bool> reductions = std::vector<bool>{true, true, false, false, false, true, true, false, false, true, false, true};
 
-    if(depth % 25 == 0)
-    {
-        // + unconfined
-//        reductions = std::vector<bool>{true, true, true, false && true && UNCONFINED_INITIALISED, true && LP_INITIALISED, true, true, true, true};
-        reductions.at(4) = UNCONFINED_INITIALISED;
-//        reductions.at(10) = true; // Deg4 2-Clique
-    }
-    else if(depth % 10 == 0)
-    {
-        // + LP
-//        reductions = std::vector<bool>{true, true, false, false, true && LP_INITIALISED, true, true, true, true, false};
-        reductions.at(4) = LP_INITIALISED;
+    if(depth % period_deg3 == 0){
         reductions.at(7) = true; // Deg4 Ind
         reductions.at(8) = true; // Deg4 2-Clique
-        reductions.at(10) = true; // Deg4 2-Clique
+        if(period_deg3 > 1) period_deg3--;
     }
-//    else
-//    {
-//        // deg1 + deg2 + highDeg + buss
-//                                        //  0     1     2     3     4     5     6      7    8     9     10
-//        reductions = std::vector<bool>{true, true, false, false, false, true, true, true, true, true, false};
-//    }
-                                //  0     1     2     3     4     5     6      7    8     9    10  11
-//    reductions = std::vector<bool>{true, true, false, true, true, true, true, true, true, true, true};
+    if(depth % period_unc == 0)
+    {
+////         + unconfined
+        reductions.at(4) = UNCONFINED_INITIALISED;
+//        reductions.at(10) = true; // Deg4 2-Clique
+        if(period_unc > 1) period_unc--;
+
+    }
+    if(depth % period_lp == 0)
+    {
+        // + LP
+//        reductions.at(7) = true; // Deg4 Ind
+//        reductions.at(8) = true; // Deg4 2-Clique
+        reductions.at(4) = LP_INITIALISED;
+        reductions.at(10) = true; // Deg4 2-Clique
+        if(period_lp > 1) period_lp--;
+    }
+
     return reduce(k, depth, &reductions, printDebug);
 }
 

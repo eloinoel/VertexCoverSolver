@@ -150,6 +150,16 @@ public:
     int cntDeg3Dom2 = 0;
     int cntDeg4Clique = 0;
 
+    int period_deg3 = 20;
+    int period_unc = 40;
+    int period_lp = 25;
+    bool changePeriodDeg3 = false;
+
+    int upperBound = 1;
+    int upperBound1_4;
+    int upperBound1_3;
+    int upperBound1_2;
+
     bool LP_INITIALISED = false;
     bool UNCONFINED_INITIALISED = false;
 
@@ -201,6 +211,25 @@ public:
 
     inline int getVertexReferencesSize() { return vertexReferences.size(); };
     void printReductionStack();
+
+    void initRulePeriods(){ upperBound1_4 = upperBound/4; period_deg3 = upperBound1_4;
+        upperBound1_2 = upperBound/2; period_unc = upperBound1_2;
+        upperBound1_3 = upperBound/3; period_lp = upperBound1_3;}
+
+    void resetRulePeriods(int depth){
+        if(depth < upperBound1_4)
+            period_deg3 = upperBound1_4 - depth;
+        else
+            period_deg3 = 1;
+        if(depth < upperBound1_2)
+            period_unc = upperBound1_2 - ((depth-1)/2);
+        else
+            period_unc = 1;
+        if(depth < upperBound1_3)
+            period_lp = upperBound1_3 - ((depth-1)/3);
+        else
+            period_lp = 1;
+    }
 
     /* creates and initialises a graph from standard input */
     static BucketGraph* readStandardInput(bool initReductionDataStructures = true);

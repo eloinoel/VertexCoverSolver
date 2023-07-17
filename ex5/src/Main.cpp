@@ -288,7 +288,7 @@ int main(int argc, char* argv[]) {
         //TODO: disable printDebug for final submission
         //chooseImplementationAndOutput(1, false, false, false, false, true, false);
         chooseImplementationAndOutput(1, false, false, false, true, true, false);
-        //chooseImplementationAndOutput(1, true, false, false, true, true, false); //print alot
+        //chooseImplementationAndOutput(2, true, false, false, true, true, false); //print alot
         //chooseImplementationAndOutput(5, false, false, false, false, true, false);
     }
 	catch (const exception& e)
