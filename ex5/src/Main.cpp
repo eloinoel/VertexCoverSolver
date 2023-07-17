@@ -62,7 +62,7 @@ void my_sig_handler(sig_atomic_t s)
  * 1: Recursive Solver
  * 2: Constrained Solver
  * 
- * 4: Constrained Solver (Version Eloi)
+ * 4: Constrained Solver (Version Eloi) //TODO: doesn't work
 
  * 5: (b) apply data reduction and output smaller graph and diff in vc size
  * 6: SAT Solver
@@ -259,9 +259,11 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
 
         unordered_map<int, bool>* vc = nullptr;
         int numRecursiveSteps = 0;
-        vc = vcSolverConstrainedEloi(G, &numRecursiveSteps, printDebug);
+        //vc = vcSolverConstrainedEloi(G, &numRecursiveSteps, printDebug);
+        int solutionSize = determineOptimalSolutionSize(G, &numRecursiveSteps, printDebug); //TODO: doesn't work
+        cout << "#recursive steps: " << solutionSize << endl;
         
-        if(printVC)
+        if(printVC && vc != nullptr)
         {
             G->printVertices(vc);
             cout << "#recursive steps: " << numRecursiveSteps << endl;
@@ -332,7 +334,7 @@ int main(int argc, char* argv[]) {
 	{
         //TODO: disable printDebug for final submission
         //chooseImplementationAndOutput(1, false, false, false, false, true, false);
-        chooseImplementationAndOutput(4, false, false, true, true, true, false);
+        chooseImplementationAndOutput(1, false, false, false, false, true, false);
         //chooseImplementationAndOutput(2, true, false, false, true, true, false); //print alot
         //chooseImplementationAndOutput(5, false, false, false, false, true, false);
     }

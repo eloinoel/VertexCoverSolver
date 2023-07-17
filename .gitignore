@@ -408,6 +408,7 @@ FodyWeavers.xsd
 
 *.csv
 vc-data-students/*
+vc-data-students-medium
 
 
 vc-data-students/benchmark-fast.sh
