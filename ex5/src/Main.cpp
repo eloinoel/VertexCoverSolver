@@ -197,6 +197,8 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
     // Constrained Solver
     else if(version == 2)
     {
+
+
         auto startGraph = std::chrono::high_resolution_clock::now();
         BucketGraph* G = BucketGraph::readStandardInput();
         auto endGraph = std::chrono::high_resolution_clock::now();

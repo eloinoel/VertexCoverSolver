@@ -1347,7 +1347,8 @@ bool BucketGraph::dynamicReduce(int* k, int depth, bool printDebug)
     }
     if(depth % period_unc == 0)
     {
-////         + unconfined
+        // + unconfined
+//        reductions = std::vector<bool>{true, true, true, false && true && UNCONFINED_INITIALISED, true && LP_INITIALISED, true, true, true, true};
         reductions.at(4) = UNCONFINED_INITIALISED;
 //        reductions.at(10) = true; // Deg4 2-Clique
         if(period_unc > 1) period_unc--;
