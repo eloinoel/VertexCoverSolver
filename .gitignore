@@ -424,3 +424,5 @@ ex5/src/VertexCoverSolver.cpp
 *Abgabe
 vc-data-students/2-social-networks/51-bcsstk33.graph.dimacs
 vc-data-students/2-social-networks/51-bcsstk33.graph.solution
+*.dimacs
+*.solution
