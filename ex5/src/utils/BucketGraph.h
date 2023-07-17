@@ -196,7 +196,11 @@ public:
     inline BucketGraph() {  }
     ~BucketGraph() { freeGraph(); }
 
-    inline int getVertexReferencesSize() { return vertexReferences.size(); }
+    /* should only be called in unreduced graph */
+    BucketGraph* copy();
+
+    inline int getVertexReferencesSize() { return vertexReferences.size(); };
+    void printReductionStack();
 
     /* creates and initialises a graph from standard input */
     static BucketGraph* readStandardInput(bool initReductionDataStructures = true);

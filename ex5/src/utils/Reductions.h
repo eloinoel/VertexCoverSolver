@@ -4,6 +4,7 @@
 #include <vector>
 #include <list>
 #include <unordered_map>
+#include <iostream>
 
 enum RULE
 {
@@ -95,13 +96,13 @@ public:
 
 public:
     void printReductionStack();
+    inline void printRule(Reduction* rule) { std::cout << "Rule: " <<  rule->rule << std::endl; }
 
     void freeReductions();
     void freeReductionRule(Reduction* reduction, bool freeMergeVertexInfoData);
 
     bool isDominated(BucketGraph* G, int dom, std::vector<bool>* pendingDeletions , bool printDebug);
     void initRuleCounter();
-    void initDominationVector(BucketGraph* G);
 
     void printReductionRules();
     void printCounters();

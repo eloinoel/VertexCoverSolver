@@ -436,6 +436,43 @@ void BucketGraph::freeGraph()
     }
 }
 
+/* copies originalVertexNames and edges (deep copy) to a new graph and inits the graph from there*/
+BucketGraph* BucketGraph::copy()
+{
+    BucketGraph* graphCopy = new BucketGraph();
+
+    //std::cout << "#starting copy" << std::endl;
+    graphCopy->originalVertexNames = std::unordered_map<std::string, std::pair<int, int>>();
+    for(auto it = originalVertexNames.begin(); it != originalVertexNames.end(); ++it)
+    {
+        std::string originalName = it->first;
+        graphCopy->originalVertexNames.insert({originalName, std::pair<int, int>({it->second.first, it->second.second})});
+    }
+
+    //std::cout << "#starting edges copy" << std::endl;
+
+    graphCopy->edges = std::vector<std::pair<std::string, std::string>>((int) edges.size());
+    for(int i = 0; i < (int) edges.size(); ++i)
+    {
+        std::string firstVertex = edges[i].first;
+        std::string secondVertex = edges[i].second;
+        graphCopy->edges[i] = std::pair<std::string, std::string>({firstVertex, secondVertex});
+    }
+
+    //std::cout << "#starting initVertexReferences" << std::endl;
+    graphCopy->initVertexReferences(); // sets vertex references and the adj_maps
+    //std::cout << "#starting initBucketQueue" << std::endl;
+    graphCopy->initBucketQueue(); // initialise bucket queue
+    //std::cout << "#starting initMatching" << std::endl;
+    graphCopy->initMatching(); // LP Bound matching fields
+    //std::cout << "#starting initUnconfined" << std::endl;
+    graphCopy->initUnconfined(); // Unconfined optimisation fields
+    graphCopy->reductions = new Reductions();
+    //std::cout << "#returning" << std::endl;
+
+    return graphCopy;
+}
+
 /*----------------------------------------------------------*/
 /*-------------------   Graph Utility   --------------------*/
 /*----------------------------------------------------------*/
@@ -723,10 +760,14 @@ bool BucketGraph::vertexHasEdgeTo(int vertex, int secondVertex)
 void BucketGraph::removeFromBucketQueue(int vertex)
 {
     int degree = vertexReferences[vertex]->degree;
+    //std::cout << "removeFromBucketQueue: before bucket removal" << std::endl;
     bucketReferences[degree]->remove(vertexReferences[vertex]->bucketVertex);
+    //std::cout << "removeFromBucketQueue: after bucket removal" << std::endl;
     if(bucketReferences[degree]->vertices.size() == 0) {
+        //std::cout << "removeFromBucketQueue: before iterator updates" << std::endl;
         if(degree == stable_bucketQueue_inc_iterator->degree) { ++stable_bucketQueue_inc_iterator; }
         if(degree == stable_bucketQueue_dec_iterator->degree) { --stable_bucketQueue_dec_iterator; }
+        //std::cout << "removeFromBucketQueue: before erase" << std::endl;
         bucketQueue.erase(bucketQueue.iterator_to(*bucketReferences[degree]));
     }
 }
@@ -1290,6 +1331,7 @@ void BucketGraph::preprocess(int* k, std::vector<bool>& rulesToApply, bool print
     }
 }
 
+void BucketGraph::printReductionStack() { reductions->printReductionStack(); }
 /*
  * 0: deg1, 1: deg2, 2: domination, 3: unconfined, 4: LP, 5: highDeg, 6: buss
 */
@@ -1323,7 +1365,6 @@ bool BucketGraph::dynamicReduce(int* k, int depth, bool printDebug)
                                 //  0     1     2     3     4     5     6      7    8     9    10  11
 //    reductions = std::vector<bool>{true, true, false, true, true, true, true, true, true, true, true};
     return reduce(k, depth, &reductions, printDebug);
-
 }
 
 /*
@@ -1430,6 +1471,7 @@ void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<
     while(!reductions->appliedRules->empty() && (*k < previousK || reductions->appliedRules->back()->kDecrement == 0))
     {
         Reduction* rule = reductions->appliedRules->back();
+        //std::cout << "unreduce: rule: " << rule->rule << ", depth: " << depth << ", rule->depth: " << rule->rDepth << std::endl;
         if(rule->rDepth != depth)
         {
             if(depth < rule->rDepth)
@@ -1446,14 +1488,6 @@ void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<
                 setActive(rule->deletedVertices);
                 break;
             case DEGREE_ONE:
-                if(deg3)
-                    std::cout << "UNREDUCE: Degree 1\n";
-//                for(int i = 0; i < (int) rule->deletedVCVertices->size(); i++)
-//                {
-//                    std::cout << "Vertex: " << rule->deletedVCVertices->at(i) << '\n';
-//                }
-//                std::cout << "-----------" << '\n';
-
                 *k = *k + rule->kDecrement;
                 setActive(rule->deletedVCVertices);
                 if(vc != nullptr)
@@ -1466,25 +1500,11 @@ void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<
                 }
                 break;
             case DEGREE_TWO:
-                if(deg3)
-                    std::cout << "UNREDUCE: Degree 2\n";
-//
-//                std::cout << "Degree 2 vertex: " << rule->deletedVertices->front() << '\n';
-//                std::cout << rule->deletedVCVertices->at(0) << ", " << rule->deletedVCVertices->at(1) << '\n';
-//
-//                std::cout << "VC: ";
-//                if( vc == nullptr)
-//                    std::cout << "Nullptr";
-//                else if (vc->empty())
-//                    std::cout << "Empty...";
-//                else
-//                    std::cout << " VC size: " << (int)vc->size() << '\n';
-//                std::cout << "-----------" << '\n';
-
+                //std::cout << "deg2 unreduce" << std::endl;
                 *k = *k + rule->kDecrement;
                 if(rule->mergeVertexInfo == nullptr) //didn't merge
                 {
-//                    std::cout << "deg2 non-merged" << std::endl;
+                    //std::cout << "deg2 non-merged" << std::endl;
                     for(int i = 0; i < (int) rule->deletedVCVertices->size(); i++)
                     {
                         setActive(rule->deletedVCVertices->at(i));
@@ -1502,10 +1522,11 @@ void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<
                 }
                 else
                 {
+                    //std::cout << "before unmerge" << std::endl;
                     int mergeVertex = std::get<0>(*rule->mergeVertexInfo);
-//                    std::cout << "deg2 merged" << std::endl;
+                    //std::cout << "deg2 merged" << std::endl;
                     unmerge(rule); //handles setting vertices back active
-//                    std::cout << "deg2 post unmerge" << std::endl;
+                    //std::cout << "deg2 post unmerge" << std::endl;
                     if(vc != nullptr)
                     {
                         //if vc contains vertex that was merged into, add neighbours of deg2 vertex to the solution
@@ -1524,17 +1545,8 @@ void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<
                         }
                     }
                 }
-//                std::cout << "UNREDUCE: Degree 2 FINISHED" << std::endl;
                 break;
             case HIGH_DEGREE:
-                if(deg3)
-                    std::cout << "UNREDUCE: HIGH Degree\n";
-//                for(int i = 0; i < (int) rule->deletedVCVertices->size(); i++)
-//                {
-//                    std::cout << "Vertex: " << rule->deletedVCVertices->at(i) << '\n';
-//                }
-//                std::cout << "-----------" << '\n';
-
                 *k = *k + rule->kDecrement;
                 setActive(rule->deletedVCVertices);
                 if(vc != nullptr)
@@ -1582,10 +1594,6 @@ void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<
             case UNCONFINED:
                 break;
             case LPFLOW:
-                if(deg3)
-                std::cout << "UNREDUCE: LPFlow\n";
-//                std::cout << "-----------" << '\n';
-
                 *k = *k + rule->kDecrement;
                 //std::cout << "Restoring component:";
                 setActive(rule->deletedVertices);
@@ -1622,8 +1630,6 @@ void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<
                     std::cout << "Recursion depth coincide => unreduce rule: Degree 3: Independent Set\n";
                     std::cout << depth << " == " << rule->rDepth << '\n';
                 }
-                if(deg3)
-                std::cout << "UNREDUCE: Degree 3: Ind\n";
 
                 unreduceDeg3Ind(rule, vc);
 
@@ -1631,11 +1637,6 @@ void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<
             }
             case DEGREE_THREE_CLIQ:
             {
-//                std::cout << "UNREDUCE: Deg 3 Clique" << std::endl;
-//                std::cout << "Degree 3 vertex: " << rule->deletedVertices->at(0) << '\n';
-//                std::cout << rule->deletedVCVertices->at(0) << ", " << rule->deletedVCVertices->at(1) << ", " << rule->deletedVCVertices->at(2) << '\n';
-//                std::cout << "-----------" << '\n';
-
                 if (depth != rule->rDepth)
                     return;
 
@@ -1645,9 +1646,6 @@ void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<
                     std::cout << depth << " == " << rule->rDepth << '\n';
                 }
                 *k = *k + rule->kDecrement;
-
-                if(deg3)
-                std::cout << "UNREDUCE: Degree 3: Clique\n";
 
                 unreduceDeg3Clique(rule, vc);
 
@@ -1664,9 +1662,6 @@ void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<
                     std::cout << depth << " == " << rule->rDepth << '\n';
                 }
                 *k = *k + rule->kDecrement;
-
-                if(deg3)
-                std::cout << "UNREDUCE: Degree 3: Dom\n";
 
                 unreduceDeg3Dom(rule, vc);
 
@@ -1708,6 +1703,7 @@ void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<
                 throw std::invalid_argument("unreduce error: unknown rule");
                 break;
         }
+        //std::cout << "unreduce: before delete" << std::endl;
         if (rule->deletedVCVertices != nullptr) delete rule->deletedVCVertices;
         if (rule->deletedVertices != nullptr) delete rule->deletedVertices;
         if(rule->addedEdges != nullptr) delete rule->addedEdges;
@@ -1718,8 +1714,6 @@ void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<
             throw std::invalid_argument("unreduce error: " + std::to_string(*k) + " > " + std::to_string(previousK) + ", stop coding garbage");
         }
     }
-    if(deg3ind)
-        std::cout << "# Unreduce: I am getting out of here!\n";
 }
 
 std::tuple<int, std::unordered_map<int, bool>*, std::vector<int>*>* BucketGraph::merge(int v0, int v1, int v2)
@@ -1859,7 +1853,7 @@ void BucketGraph::unmerge(Reduction* mergeRule)
     int v1 = mergeRule->deletedVCVertices->at(0);
     int v2 = mergeRule->deletedVCVertices->at(1);
     
-//    std::cout << cp::dye("unmerging vertex " + std::to_string(mergeVertex) + " --> " + std::to_string(v0) + ", " + std::to_string(v1) + ", " + std::to_string(v2), 'g') << std::endl;
+    //std::cout << cp::dye("unmerging vertex " + std::to_string(mergeVertex) + " --> " + std::to_string(v0) + ", " + std::to_string(v1) + ", " + std::to_string(v2), 'g') << std::endl;
 
     if(mergeVertex != v0) { setActive(v0); }
     if(mergeVertex != v1) { setActive(v1); }
@@ -1867,41 +1861,39 @@ void BucketGraph::unmerge(Reduction* mergeRule)
 
     //std::cout << "mergeVertex: " << mergeVertex << ", N's: " << v0 << ", " << v1 << ", " << v2 << std::endl;
 
-//    std::cout << "before remove from bucket queue" << std::endl;
+    //std::cout << "before remove from bucket queue" << std::endl;
     removeFromBucketQueue(mergeVertex);
-//    std::cout << "after remove from bucket queue" << std::endl;
+    //std::cout << "after remove from bucket queue" << std::endl;
     //delete merge vertex from adjacency lists of neighbours that he didn't have before merge
-//    std::cout << "unmerge_debug1" << '\n';
+    //std::cout << "unmerge_debug1" << '\n';
     std::vector<int>* added_vertices = std::get<2>(*mergeRule->mergeVertexInfo);
     for(int i = 0; i < (int) added_vertices->size(); i++)
     {
         numEdges--;
         //std::cout << "deg2 post adj pop" << std::endl;
         vertexReferences[mergeVertex]->degree--;
-        //std::cout << "after pop" << '\n';
+        //std::cout << "after pop" << std::endl;
         vertexReferences[added_vertices->at(i)]->adj_map->erase(mergeVertex);
         //vertexReferences[added_vertices->at(i)]->adj_map->erase(vertexReferences[added_vertices->at(i)]->adj_map->find(mergeVertex));
-        //std::cout << "after adj map" << '\n';
+        //std::cout << "after adj map" << std::endl;
         vertexReferences[added_vertices->at(i)]->degree--;
-        //std::cout << "moving vertex " << added_vertices->at(i) << " with deg=" << vertexReferences[added_vertices->at(i)]->degree+1 << " to smaller bucket" << '\n';
+        //std::cout << "moving vertex " << added_vertices->at(i) << " with deg=" << vertexReferences[added_vertices->at(i)]->degree+1 << " to smaller bucket" << std::endl;
         /* print();
         printBucketQueue(); */
         if(vertexReferences[added_vertices->at(i)]->isActive) { moveToSmallerBucket(vertexReferences[added_vertices->at(i)]->degree+1, added_vertices->at(i)); }
-        if(!vertexReferences[added_vertices->at(i)]->isActive) { std::cout << cp::dye("inconsistency, should be active while unmerging: ", 'r') << added_vertices->at(i) << '\n'; }
-        //std::cout << "after move to smaller bucket" << '\n';
+        if(!vertexReferences[added_vertices->at(i)]->isActive) { std::cout << cp::dye("inconsistency, should be active while unmerging: ", 'r') << added_vertices->at(i) << std::endl; }
+        //std::cout << "after move to smaller bucket" << std::endl;
         //moving to smaller bucket not needed because still inactive
     }
-    //if(mergeVertex == 21) { std::cout << "mergeVertex degree " << vertexReferences[mergeVertex]->degree << '\n'; }
-//    std::cout << "after added vertices edge decrement" << '\n';
+    //std::cout << "after added vertices edge decrement" << '\n';
     //std::cout << "mergevertex adj size:" << vertexReferences[mergeVertex]->degree << '\n';
     delete vertexReferences[mergeVertex]->adj_map;
     vertexReferences[mergeVertex]->adj_map = std::get<1>(*mergeRule->mergeVertexInfo);
     //std::cout << "mergevertex saved adj size:" << vertexReferences[mergeVertex]->degree << '\n';
 
-//    std::cout << "after mergevertex reset" << '\n';
-//    std::cout << "unmerge_debug2" << '\n';
+    //std::cout << "after mergevertex reset" << std::endl;
     addToBucketQueue(mergeVertex);
-    //std::cout << "after add to bucket queue" << '\n';
+    //std::cout << "after add to bucket queue" << std::endl;
     //std::cout << "mergeVertex: " << mergeVertex << ", N's: " << v0 << ", " << v1 << ", " << v2 << '\n';
     if(LP_INITIALISED)
     {
@@ -2639,7 +2631,7 @@ void BucketGraph::unreduceDeg3Clique(Reduction *rule, std::unordered_map<int, bo
     int c2 = rule->deletedVCVertices->at(2);
 
     if(deg3clique) {
-        std::cout << "-----------" << '\n';
+        std::cout << "Unreduce: Deg3 Clique" << '\n';
         std::cout << "Degree 3 vertex: " << vDeg3 << '\n';
         std::cout << c11 << ", " << c12 << ", " << c2 << '\n';
     }
