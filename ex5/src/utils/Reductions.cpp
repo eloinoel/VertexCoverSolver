@@ -178,15 +178,18 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeTwo(BucketGraph* G, int* k, int d
 //            std::cout << " | merging into " << std::get<0>(*delVer->mergeVertexInfo) << '\n';
             //G->print();
             //G->printBucketQueue();
+            /* if(std::get<0>(*delVer->mergeVertexInfo) == 33) {
+                G->print();
+                std::cout << "reducing mergeVertex " << 33 << std::endl;
+            } */
         }
         appliedRules->push_back(delVer);
         //std::cout << "---------" << '\n';
     }
     auto stopDeg2 = std::chrono::high_resolution_clock::now();
     double Deg2 = (std::chrono::duration_cast<std::chrono::microseconds>(stopDeg2 - startDeg2).count() /  1000) / (double) 1000;
-//    if (printDebug)
-//        std::cout << "#Reduced " << numberOfReducedVertices << " Deg2 vertices in " << Deg2 << " seconds" << std::endl;
-
+    if (printDebug)
+        std::cout << "#Reduced " << numberOfReducedVertices << " Deg2 vertices in " << Deg2 << " seconds" << std::endl;
 //    std::cout << "----end----" << '\n';
     return APPLICABLE;
 }
@@ -2400,6 +2403,10 @@ RULE_APPLICATION_RESULT Reductions::rule_Unconfined(BucketGraph* G, int* k, int 
                     reduction->kDecrement++;
                     (*k) = (*k) - 1;
                     G->setInactive(vertex->getIndex());
+                    /* if(vertex->getIndex() == 33) {
+                        G->print();
+                        std::cout << "unconfined reducing Vertex " << 33 << std::endl;
+                    } */
                     break;
                 }
                 if(bestOutsideNeighbour != -1)

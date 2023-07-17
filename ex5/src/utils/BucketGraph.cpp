@@ -1298,19 +1298,21 @@ void BucketGraph::preprocess(int* k, bool printDebug)
 }
 
 /*
- * 0: deg1,
- * 1: deg2,
- * 2: domination,
- * 3: unconfined,
- * 4: LP,
- * 5: highDeg (not in preprocessing),
- * 6: Buss (not in preprocessing),
- * 7: Deg3IndepentSet,
- * 8: Deg3Clique,
- * 9: Deg3Domination
+ *  0: deg1,
+ *  1: deg2,
+ *  2: domination,
+ *  3: unconfined,
+ *  4: LP,
+ *  5: highDeg (not in preprocessing),
+ *  6: Buss (not in preprocessing),
+ *  7: Deg3IndepentSet,
+ *  8: Deg3Clique,
+ *  9: Deg3Domination
+ * 10: Deg4Clique,
+ * 11: Deg4Domination
 */
 void BucketGraph::preprocess(int* k, std::vector<bool>& rulesToApply, bool printDebug)
-{
+ {
     while(true)
     {
         if(rulesToApply[0] && reductions->rule_DegreeOne(this, k, -1, false, printDebug) == APPLICABLE) continue;
@@ -1340,6 +1342,7 @@ bool BucketGraph::dynamicReduce(int* k, int depth, bool printDebug)
                                                     //  0     1     2     3     4     5     6      7    8     9
     //std::vector<bool> reductions = std::vector<bool>{true, true, false, false, false, true, true, false, false, true, false, false};
 std::vector<bool> reductions = std::vector<bool>{true, true, false, false, false, true, true, false, false, false, false, false};
+    //std::vector<bool> reductions = std::vector<bool>({true, true, false, false, false, true, true, false, false, true, true, true});
 
     if(depth % period_deg3 == 0){
         //reductions.at(7) = true; // Deg3 Ind
@@ -1373,22 +1376,24 @@ std::vector<bool> reductions = std::vector<bool>{true, true, false, false, false
 }
 
 /*
- * 0: deg1,
- * 1: deg2,
- * 2: domination,
- * 3: unconfined,
- * 4: LP,
- * 5: highDeg,
- * 6: Buss
- * 7: Deg3IndepentSet,
- * 8: Deg3Clique,
- * 9: Deg3Domination
+ *  0: deg1,
+ *  1: deg2,
+ *  2: domination,
+ *  3: unconfined,
+ *  4: LP,
+ *  5: highDeg (not in preprocessing),
+ *  6: Buss (not in preprocessing),
+ *  7: Deg3IndepentSet,
+ *  8: Deg3Clique,
+ *  9: Deg3Domination
+ * 10: Deg4Clique,
+ * 11: Deg4Domination
 */
 bool BucketGraph::reduce(int* k, int depth, std::vector<bool>* rulesToApply, bool printDebug)
 {
     if(rulesToApply == nullptr) {
                                     //  0     1       2       3    4      5      6   7       8   9
-        rulesToApply = new std::vector{true, true, false, true, true, true, true, true, false, false};
+        rulesToApply = new std::vector<bool>({true, true, false, false, false, true, true, false, false, true, true, true});
 //        rulesToApply = new std::vector{true, true, true, true, true, true, true, true};
     }
     //initialisise
@@ -1407,56 +1412,64 @@ bool BucketGraph::reduce(int* k, int depth, std::vector<bool>* rulesToApply, boo
 
     while(true)
     {
-//        std::cout << "highdeg " << '\n';
+        //std::cout << "highdeg" << std::endl;
         if(rulesToApply->at(5)) { highDegreeResult = reductions->rule_HighDegree(this, k, depth); }
         if(highDegreeResult == APPLICABLE) continue;
         if(highDegreeResult == INSUFFICIENT_BUDGET) return true;
-
+        
+        //std::cout << "buss" << std::endl;
         if(rulesToApply->at(6) && reductions->rule_Buss(this, k, getNumConnectedVertices(), getNumEdges()) == APPLICABLE) return true;
 
+        //std::cout << "deg1" << std::endl;
         if(rulesToApply->at(0)) { degreeOneResult = reductions->rule_DegreeOne(this, k, depth, true, printDebug); }
         if(degreeOneResult == APPLICABLE) continue;
         if(degreeOneResult == INSUFFICIENT_BUDGET) return true;
 
-        //std::cout << "deg2 " << '\n';
+        //std::cout << "deg2 " << std::endl;
 //        if(rulesToApply->at(1)) { degreeTwoResult = reductions->rule_DegreeTwo_Simple_Case(this, k, depth, true, printDebug); }
         if(rulesToApply->at(1)) { degreeTwoResult = reductions->rule_DegreeTwo(this, k, depth, true, printDebug ); }
         if(degreeTwoResult == APPLICABLE) continue;
         if(degreeTwoResult == INSUFFICIENT_BUDGET) return true;
 
-        if(rulesToApply->at(2)) { dominationResult = reductions->rule_Domination(this, k, depth, true); }
-
+        //std::cout << "deg3dom" << std::endl;
         if (rulesToApply->at(9)) { degreeThreeDomResult = reductions->rule_DegreeThree_Domination(this, k, depth, false, true, deg3dom);}
         if (degreeThreeDomResult == INSUFFICIENT_BUDGET) return true;
         if (degreeThreeDomResult == APPLICABLE) continue;
-        if (rulesToApply->at(8)) { degreeThreeCliqResult = reductions->rule_DegreeThree_Clique(this, k, depth, true, printDebug); }
+        //std::cout << "deg3cli" << std::endl;
+        /* if (rulesToApply->at(8)) { degreeThreeCliqResult = reductions->rule_DegreeThree_Clique(this, k, depth, true, printDebug); }
         if (degreeThreeCliqResult == INSUFFICIENT_BUDGET) return true;
-        if (degreeThreeCliqResult == APPLICABLE) continue;
-        if (rulesToApply->at(7)) { degreeThreeIndResult = reductions->rule_DegreeThree_Independent(this, depth, printDebug); }
+        if (degreeThreeCliqResult == APPLICABLE) continue; */
+        //std::cout << "deg3ind" << std::endl;
+        /* if (rulesToApply->at(7)) { degreeThreeIndResult = reductions->rule_DegreeThree_Independent(this, depth, printDebug); }
         if (degreeThreeIndResult == INSUFFICIENT_BUDGET) return true;
-        if (degreeThreeIndResult == APPLICABLE) continue;
+        if (degreeThreeIndResult == APPLICABLE) continue; */
 
-        if (rulesToApply->at(10)) { degreeFourCliqResult = reductions->rule_DegreeFour_Clique(this, k, depth, true, printDebug); }
+        //std::cout << "deg4cli" << std::endl;
+        /* if (rulesToApply->at(10)) { degreeFourCliqResult = reductions->rule_DegreeFour_Clique(this, k, depth, true, printDebug); }
         if (degreeFourCliqResult == INSUFFICIENT_BUDGET) return true;
-        if (degreeFourCliqResult == APPLICABLE) continue;
-        if (rulesToApply->at(11)) { degreeFourDomResult = reductions->rule_DegreeFour_Domination(this, k, depth, true, printDebug); }
+        if (degreeFourCliqResult == APPLICABLE) continue; */
+        //std::cout << "deg4dom" << std::endl;
+        /* if (rulesToApply->at(11)) { degreeFourDomResult = reductions->rule_DegreeFour_Domination(this, k, depth, true, printDebug); }
         if (degreeFourDomResult == INSUFFICIENT_BUDGET) return true;
-        if (degreeFourDomResult == APPLICABLE) continue;
+        if (degreeFourDomResult == APPLICABLE) continue; */
 
-//        if(rulesToApply->at(7) && rulesToApply->at(8) && rulesToApply->at(9) && getBucketSize(3) != 0)
-//            throw std::invalid_argument("reduce error: There shouldn't be any degree 3 vertices left");
-
+        //std::cout << "dom" << std::endl;
         if(rulesToApply->at(2)) { dominationResult = reductions->rule_Domination(this, k, depth, true); }
         if(dominationResult == APPLICABLE) continue;
         if(dominationResult == INSUFFICIENT_BUDGET) return true;
 
+        //std::cout << "unc" << std::endl;
         if(rulesToApply->at(3)) { unconfinedResult = reductions->rule_Unconfined(this, k, depth, true, printDebug); }
         if(unconfinedResult == APPLICABLE) continue;
         if(unconfinedResult == INSUFFICIENT_BUDGET) return true;
 
+        //std::cout << "lp" << std::endl;
         if(rulesToApply->at(4)) { LPFlowResult = reductions->rule_LPFlow(this, k, depth, true, printDebug); }
         if(LPFlowResult == APPLICABLE) continue;
         if(LPFlowResult == INSUFFICIENT_BUDGET) return true;
+
+//        if(rulesToApply->at(7) && rulesToApply->at(8) && rulesToApply->at(9) && getBucketSize(3) != 0)
+//            throw std::invalid_argument("reduce error: There shouldn't be any degree 3 vertices left");
 
         return false;
     }
@@ -1529,6 +1542,14 @@ void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<
                 {
                     //std::cout << "before unmerge" << std::endl;
                     int mergeVertex = std::get<0>(*rule->mergeVertexInfo);
+                    /* if(mergeVertex == 33) {
+                        std::cout << "unreducing mergeVertex " << mergeVertex << std::endl;
+                    } */
+                    if(!isActive(mergeVertex)) {
+                        print();
+                        printReductionStack();
+                        std::cout << "tried to unreduce mergeVertex " << mergeVertex << " that is inactive" << std::endl;
+                    }
                     //std::cout << "deg2 merged" << std::endl;
                     unmerge(rule); //handles setting vertices back active
                     //std::cout << "deg2 post unmerge" << std::endl;
@@ -2311,11 +2332,17 @@ void BucketGraph::setBipartMatchingFlowComponentsInactive(std::vector<int>* L, s
         {
             setInactive(componentL[j]);
             L->push_back(componentL[j]);
+            /* if(componentL[j] == 33) {
+                std::cout << "lp reducing Vertex " << 33 << std::endl;
+            } */
         }
         for (int j=0; j<(int) componentR.size(); j++)
         {
             setInactive(componentR[j]);
             R->push_back(componentR[j]);
+            /* if(componentL[j] == 33) {
+                std::cout << "lp reducing Vertex " << 33 << std::endl;
+            } */
         }
         //std::cout << "}" << '\n';
         if(componentL.size() != componentR.size()) { throw std::invalid_argument( "component sizes not equal!!!" ); }
