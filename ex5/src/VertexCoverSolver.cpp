@@ -126,6 +126,7 @@ std::unordered_map<int, bool>* vcVertexBranchingRecursive(BucketGraph* G, int k,
     //cout << "prec " << '\n';
 	if (S != nullptr)
 	{
+
         //revert changes for multiple executions of the algorithm
         G->setActive(neighbours);
         for (int i = 0; i < (int) neighbours->size(); i++)
@@ -150,7 +151,6 @@ std::unordered_map<int, bool>* vcVertexBranchingRecursive(BucketGraph* G, int k,
     delete neighbours;
 
     G->initRulePeriods();
-//    G->resetRulePeriods(depth);
 
     G->unreduce(&k, previousK, depth);
     return nullptr;
@@ -174,7 +174,10 @@ std::unordered_map<int, bool>* vcSolverRecursive(BucketGraph* G, int* numRec, bo
     
     auto startLowerBound = std::chrono::high_resolution_clock::now();
     k = G->getLowerBoundVC();
-    G->upperBound = 2* k;
+    G->upperBound = 2 * k;
+    G->initRulePeriods();
+//    std::cout << "# k =" << k << '\n';
+
 
     auto endLowerBound = std::chrono::high_resolution_clock::now();
     double lowerBoundDuration = (std::chrono::duration_cast<std::chrono::microseconds>(endLowerBound - startLowerBound).count() /  1000) / (double) 1000;
@@ -187,7 +190,7 @@ std::unordered_map<int, bool>* vcSolverRecursive(BucketGraph* G, int* numRec, bo
     auto startBranching = std::chrono::high_resolution_clock::now();
 	while (true)
 	{
-
+//        std::cout << "# Trying k =" << k << '\n';
         // Begin Branching
 		vc = vcVertexBranchingRecursive(G, k, 0, numRec, printDebug);
 		if (vc != nullptr)

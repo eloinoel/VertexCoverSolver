@@ -1340,38 +1340,33 @@ void BucketGraph::printReductionStack() { reductions->printReductionStack(); }
 bool BucketGraph::dynamicReduce(int* k, int depth, bool printDebug)
 {
                                                     //  0     1     2     3     4     5     6      7    8     9
-    //std::vector<bool> reductions = std::vector<bool>{true, true, false, false, false, true, true, false, false, true, false, false};
-std::vector<bool> reductions = std::vector<bool>{true, true, false, false, false, true, true, false, false, false, false, false};
-    //std::vector<bool> reductions = std::vector<bool>({true, true, false, false, false, true, true, false, false, true, true, true});
+    std::vector<bool> reductions = std::vector<bool>{true, true, false, false, false, true, true, false, false, true, false, true};
 
     if(depth % period_deg3 == 0){
-        //reductions.at(7) = true; // Deg3 Ind
-        //reductions.at(8) = true; // Deg3 2-Clique
-        if(period_deg3 > 1) period_deg3--;
+        reductions.at(7) = true; // Deg4 Ind
+        reductions.at(8) = true; // Deg4 2-Clique
+        if(period_deg3 > min_period) period_deg3--;
+        else
+            period_deg3 = min_period;
     }
-    if(depth % 10 == 0)
-    //if(depth % period_unc == 0)
+    if(depth % period_unc == 0)
     {
         // + unconfined
-//        reductions = std::vector<bool>{true, true, true, false && true && UNCONFINED_INITIALISED, true && LP_INITIALISED, true, true, true, true};
-        reductions.at(3) = UNCONFINED_INITIALISED;
-//        reductions.at(10) = true; // Deg4 2-Clique
-        if(period_unc > 1) period_unc--;
-
+        reductions.at(4) = UNCONFINED_INITIALISED;
+        if(period_unc > min_period) period_unc--;
+        else
+            period_unc = min_period;
     }
-    if(depth % 10 == 0)
-    //if(depth % period_lp == 0)
+    if(depth % period_lp == 0)
     {
         // + LP
-//        reductions.at(7) = true; // Deg4 Ind
-//        reductions.at(8) = true; // Deg4 2-Clique
         reductions.at(4) = LP_INITIALISED;
-        //reductions.at(10) = true; // Deg4 2-Clique
-        if(period_lp > 1) period_lp--;
+        reductions.at(10) = true; // Deg4 2-Clique
+        if(period_lp > min_period) period_lp--;
+        else
+            period_lp = min_period;
     }
 
-    //TODO: delete debug constellation
-    //reductions = std::vector<bool>{true, true, false, true, true, true, true, false, false, false, false, false};
     return reduce(k, depth, &reductions, printDebug);
 }
 
@@ -1393,7 +1388,7 @@ bool BucketGraph::reduce(int* k, int depth, std::vector<bool>* rulesToApply, boo
 {
     if(rulesToApply == nullptr) {
                                     //  0     1       2       3    4      5      6   7       8   9
-        rulesToApply = new std::vector<bool>({true, true, false, false, false, true, true, false, false, true, true, true});
+        rulesToApply = new std::vector{true, true, false, true, true, true, true, true, false, false};
 //        rulesToApply = new std::vector{true, true, true, true, true, true, true, true};
     }
     //initialisise
@@ -1416,7 +1411,7 @@ bool BucketGraph::reduce(int* k, int depth, std::vector<bool>* rulesToApply, boo
         if(rulesToApply->at(5)) { highDegreeResult = reductions->rule_HighDegree(this, k, depth); }
         if(highDegreeResult == APPLICABLE) continue;
         if(highDegreeResult == INSUFFICIENT_BUDGET) return true;
-        
+
         //std::cout << "buss" << std::endl;
         if(rulesToApply->at(6) && reductions->rule_Buss(this, k, getNumConnectedVertices(), getNumEdges()) == APPLICABLE) return true;
 
