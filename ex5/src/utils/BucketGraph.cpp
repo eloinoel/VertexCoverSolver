@@ -1899,8 +1899,8 @@ void BucketGraph::unmerge(Reduction* mergeRule)
         //std::cout << "deg2 post adj pop" << std::endl;
         vertexReferences[mergeVertex]->degree--;
         //std::cout << "after pop" << std::endl;
-        vertexReferences[added_vertices->at(i)]->adj_map->erase(mergeVertex);
-        //vertexReferences[added_vertices->at(i)]->adj_map->erase(vertexReferences[added_vertices->at(i)]->adj_map->find(mergeVertex));
+        //vertexReferences[added_vertices->at(i)]->adj_map->erase(mergeVertex);
+        vertexReferences[added_vertices->at(i)]->adj_map->erase(vertexReferences[added_vertices->at(i)]->adj_map->find(mergeVertex));
         //std::cout << "after adj map" << std::endl;
         vertexReferences[added_vertices->at(i)]->degree--;
         //std::cout << "moving vertex " << added_vertices->at(i) << " with deg=" << vertexReferences[added_vertices->at(i)]->degree+1 << " to smaller bucket" << std::endl;
