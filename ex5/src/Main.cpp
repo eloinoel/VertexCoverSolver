@@ -239,6 +239,51 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
         if(vc) { delete vc; }
         if(G) { delete G; }
     }
+    // Bruno's Constrained Solver
+    else if(version == 3)
+    {
+
+
+        auto startGraph = std::chrono::high_resolution_clock::now();
+        BucketGraph* G = BucketGraph::readStandardInput();
+        auto endGraph = std::chrono::high_resolution_clock::now();
+        double graphConstructionDuration = (std::chrono::duration_cast<std::chrono::microseconds>(endGraph - startGraph).count() /  1000) / (double) 1000;
+        if(printDebug)
+            std::cout << "#Constructed Graph of size n=" << G->getTotalNumVertices() << ", m=" << G->getNumEdges() << " in " << graphConstructionDuration << " seconds" << std::endl;
+        if (G == nullptr)
+            throw invalid_argument("Error constructing graph from input file.");
+        if (printGraph)
+        {
+            G->print();
+            //G->printActiveList();
+//            G->printBucketQueue();
+//            G->printBucketSizes();
+        }
+        unordered_map<int, bool>* vc = nullptr;
+
+        if(printVC)
+        {
+            int numRecursiveSteps = 0;
+            vc = vcSolverConstrainedB(G, &numRecursiveSteps, printDebug);
+            G->printVertices(vc);
+            cout << "#recursive steps: " << numRecursiveSteps << endl;
+
+            if(printVCSize)
+            {
+                cout << "#vc size: " << vc->size() << endl;
+            }
+        }
+
+        if(printBounds)
+        {
+            int bound = G->getLowerBoundVC();
+            cout << "#recursive steps: " << bound << endl;
+        }
+
+        //free pointers
+        if(vc) { delete vc; }
+        if(G) { delete G; }
+    }
     else if(version == 5)
     {
         printReductionDiff = true;
@@ -289,7 +334,8 @@ int main(int argc, char* argv[]) {
 	{
         //TODO: disable printDebug for final submission
         //chooseImplementationAndOutput(1, false, false, false, false, true, false);
-        chooseImplementationAndOutput(1, false, false, false, true, true, false);
+        //chooseImplementationAndOutput(1, false, false, false, true, true, false);
+        chooseImplementationAndOutput(3, false, false, true, true, true, false);
         //chooseImplementationAndOutput(2, true, false, false, true, true, false); //print alot
         //chooseImplementationAndOutput(5, false, false, false, false, true, false);
     }
