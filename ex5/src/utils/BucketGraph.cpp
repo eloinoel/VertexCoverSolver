@@ -1340,28 +1340,29 @@ void BucketGraph::printReductionStack() { reductions->printReductionStack(); }
 bool BucketGraph::dynamicReduce(int* k, int depth, bool printDebug)
 {
                                                     //  0     1     2     3     4     5     6      7    8     9
-    std::vector<bool> reductions = std::vector<bool>{true, true, false, false, false, true, true, false, false, true, false, true};
+    //std::vector<bool> reductions = std::vector<bool>{true, true, false, false, false, true, true, false, false, true, false, true};
+    std::vector<bool> reductions = std::vector<bool>{true, true, false, false, false, true, true, false, false, false, false, false};
 
-    if(depth % period_deg3 == 0){
+    /* if(depth % period_deg3 == 0){
         reductions.at(7) = true; // Deg4 Ind
         reductions.at(8) = true; // Deg4 2-Clique
         if(period_deg3 > min_period) period_deg3--;
         else
             period_deg3 = min_period;
-    }
-    if(depth % period_unc == 0)
+    } */
+    if(depth % 10 == 0)
     {
         // + unconfined
-        reductions.at(4) = UNCONFINED_INITIALISED;
+        reductions.at(3) = UNCONFINED_INITIALISED;
         if(period_unc > min_period) period_unc--;
         else
             period_unc = min_period;
     }
-    if(depth % period_lp == 0)
+    if(depth % 10 == 0)
     {
         // + LP
         reductions.at(4) = LP_INITIALISED;
-        reductions.at(10) = true; // Deg4 2-Clique
+        //reductions.at(10) = true; // Deg4 2-Clique
         if(period_lp > min_period) period_lp--;
         else
             period_lp = min_period;
@@ -1431,22 +1432,22 @@ bool BucketGraph::reduce(int* k, int depth, std::vector<bool>* rulesToApply, boo
         if (degreeThreeDomResult == INSUFFICIENT_BUDGET) return true;
         if (degreeThreeDomResult == APPLICABLE) continue;
         //std::cout << "deg3cli" << std::endl;
-        /* if (rulesToApply->at(8)) { degreeThreeCliqResult = reductions->rule_DegreeThree_Clique(this, k, depth, true, printDebug); }
+        if (rulesToApply->at(8)) { degreeThreeCliqResult = reductions->rule_DegreeThree_Clique(this, k, depth, true, printDebug); }
         if (degreeThreeCliqResult == INSUFFICIENT_BUDGET) return true;
-        if (degreeThreeCliqResult == APPLICABLE) continue; */
+        if (degreeThreeCliqResult == APPLICABLE) continue;
         //std::cout << "deg3ind" << std::endl;
-        /* if (rulesToApply->at(7)) { degreeThreeIndResult = reductions->rule_DegreeThree_Independent(this, depth, printDebug); }
+        if (rulesToApply->at(7)) { degreeThreeIndResult = reductions->rule_DegreeThree_Independent(this, depth, printDebug); }
         if (degreeThreeIndResult == INSUFFICIENT_BUDGET) return true;
-        if (degreeThreeIndResult == APPLICABLE) continue; */
+        if (degreeThreeIndResult == APPLICABLE) continue;
 
         //std::cout << "deg4cli" << std::endl;
-        /* if (rulesToApply->at(10)) { degreeFourCliqResult = reductions->rule_DegreeFour_Clique(this, k, depth, true, printDebug); }
+        if (rulesToApply->at(10)) { degreeFourCliqResult = reductions->rule_DegreeFour_Clique(this, k, depth, true, printDebug); }
         if (degreeFourCliqResult == INSUFFICIENT_BUDGET) return true;
-        if (degreeFourCliqResult == APPLICABLE) continue; */
+        if (degreeFourCliqResult == APPLICABLE) continue;
         //std::cout << "deg4dom" << std::endl;
-        /* if (rulesToApply->at(11)) { degreeFourDomResult = reductions->rule_DegreeFour_Domination(this, k, depth, true, printDebug); }
+        if (rulesToApply->at(11)) { degreeFourDomResult = reductions->rule_DegreeFour_Domination(this, k, depth, true, printDebug); }
         if (degreeFourDomResult == INSUFFICIENT_BUDGET) return true;
-        if (degreeFourDomResult == APPLICABLE) continue; */
+        if (degreeFourDomResult == APPLICABLE) continue;
 
         //std::cout << "dom" << std::endl;
         if(rulesToApply->at(2)) { dominationResult = reductions->rule_Domination(this, k, depth, true); }
@@ -1894,8 +1895,8 @@ void BucketGraph::unmerge(Reduction* mergeRule)
         //std::cout << "deg2 post adj pop" << std::endl;
         vertexReferences[mergeVertex]->degree--;
         //std::cout << "after pop" << std::endl;
-        vertexReferences[added_vertices->at(i)]->adj_map->erase(mergeVertex);
-        //vertexReferences[added_vertices->at(i)]->adj_map->erase(vertexReferences[added_vertices->at(i)]->adj_map->find(mergeVertex));
+        //vertexReferences[added_vertices->at(i)]->adj_map->erase(mergeVertex);
+        vertexReferences[added_vertices->at(i)]->adj_map->erase(vertexReferences[added_vertices->at(i)]->adj_map->find(mergeVertex));
         //std::cout << "after adj map" << std::endl;
         vertexReferences[added_vertices->at(i)]->degree--;
         //std::cout << "moving vertex " << added_vertices->at(i) << " with deg=" << vertexReferences[added_vertices->at(i)]->degree+1 << " to smaller bucket" << std::endl;

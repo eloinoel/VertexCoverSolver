@@ -61,7 +61,7 @@ void my_sig_handler(sig_atomic_t s)
  * 0: Heuristic Solver
  * 1: Recursive Solver
  * 2: Constrained Solver
- * 
+ * 3: Brunos Constrained Solver //TODO: doesn't work
  * 4: Constrained Solver (Version Eloi) //TODO: doesn't work
 
  * 5: (b) apply data reduction and output smaller graph and diff in vc size
