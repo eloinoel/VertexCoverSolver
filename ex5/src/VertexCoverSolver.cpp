@@ -164,7 +164,7 @@ std::unordered_map<int, bool>* vcSolverRecursive(BucketGraph* G, int* numRec, bo
     // Apply Reduction Rules for the first time
     auto startPreprocess = std::chrono::high_resolution_clock::now();
                                                     //    0    1     2     3     4    5       6       7     8     9     10   11
-    std::vector<bool> rulesToApply = std::vector<bool>{true, true, false, true, true, false, false, true, true, true, true, true};
+    std::vector<bool> rulesToApply = std::vector<bool>{true, true, false, true, true, false, false, true, true, true, false, false};
     G->preprocess(&numPreprocessingVCVertices, rulesToApply, printDebug);
     numPreprocessingVCVertices = -numPreprocessingVCVertices;
     auto endPreprocess = std::chrono::high_resolution_clock::now();
@@ -237,7 +237,9 @@ std::unordered_map<int, bool>* maxHeuristicSolver(BucketGraph* G, int* numRec, b
     int numPreprocessingVCVertices = 0;
     if(applyReductions)
     {
-        std::vector<bool> rulesToApply = std::vector<bool> ({true, true, true, false, false, false , false , false , false, false});
+                                                            //    0    1     2     3     4    5       6       7     8     9     10   11
+        //std::vector<bool> rulesToApply = std::vector<bool>{true, true, false, true, true, false, false, true, true, true, true, true};
+        std::vector<bool> rulesToApply = std::vector<bool> ({true, true, true, false, false, false , false , false , false, false, true, true});
         G->preprocess(&numPreprocessingVCVertices, rulesToApply);
         numPreprocessingVCVertices = -numPreprocessingVCVertices;
     }
@@ -698,6 +700,84 @@ int getUpperBoundFromRandomHeuristic(BucketGraph* graphCopy, BucketGraph* G, int
     return currentBestVCSize;
 }
 
+/*
+    G should be preprocessed
+*/
+std::unordered_map<int, bool>* getUpperBoundFromRandomHeuristicVC(BucketGraph* graphCopy, BucketGraph* G, int numPreprocessingVCVertices, double timeoutSoftCap)
+{
+    int vcNumRec = 0;
+    std::unordered_map<int, bool>* currentBestVC = nullptr;
+    int currentBestVCSize = INT_MAX;
+    bool currentBestVCIsPreprocessed = true;
+    bool randomVCIsPreprocessed = false;
+
+    // preprocessing
+    int k = 0;
+    BucketGraph* GC = graphCopy->copy();
+    GC->preprocess(&k);
+
+    //start generating solutions
+    auto startTime = std::chrono::high_resolution_clock::now();
+    currentBestVC = maxHeuristicSolver(G, &vcNumRec);
+    currentBestVCSize = (int)currentBestVC->size() + numPreprocessingVCVertices;
+
+    if(outOfTime(startTime, timeoutSoftCap)) {
+        if(currentBestVCIsPreprocessed)
+        {
+            GC->unreduce(&k, 0, -1, currentBestVC);
+        }
+        return currentBestVC;
+    }
+
+    //selecting random max degree vertices
+    std::unordered_map<int, bool>* vcRandom = nullptr;
+    for(int i = 0; i < INT_MAX; ++i)
+    {
+        vcNumRec = 0;
+        int vcSize = INT_MAX;
+        if(i % 3 == 1) //every third random iteration doesn't use preprocessed graph
+        {
+            vcRandom = maxHeuristicSolver(graphCopy, &vcNumRec, false, true);
+            vcSize = vcRandom->size();
+            randomVCIsPreprocessed = false;
+        }
+        else
+        {
+            //graph with preprocessing is used
+            vcRandom = maxHeuristicSolver(GC, &vcNumRec, false, true);
+            vcSize = vcRandom->size() + numPreprocessingVCVertices;
+            randomVCIsPreprocessed = true;
+            GC->preprocess(&k);
+        }
+
+        if(vcSize < currentBestVCSize)
+        {
+            delete currentBestVC;
+            currentBestVC = vcRandom;
+            currentBestVCSize = vcSize;
+            currentBestVCIsPreprocessed = randomVCIsPreprocessed;
+        }
+        else
+        {
+            delete vcRandom;
+        }
+
+        if(outOfTime(startTime, timeoutSoftCap)) {
+            if(currentBestVCIsPreprocessed)
+            {
+                GC->unreduce(&k, 0, -1, currentBestVC);
+            }
+            return currentBestVC;
+        }
+    }
+
+    if(currentBestVCIsPreprocessed)
+    {
+        GC->unreduce(&k, 0, -1, currentBestVC);
+    }
+    return currentBestVC;
+}
+
 /* G should already be preprocessed */
 int getUpperBound(BucketGraph* graphCopy, BucketGraph* G, int numPreprocessingVCVertices, double timeCap, bool printDebug)
 {
@@ -744,6 +824,63 @@ int getUpperBound(BucketGraph* graphCopy, BucketGraph* G, int numPreprocessingVC
     delete heuristicVC;
     delete localSearchVC;
     return currentBestVCSize;
+}
+
+/* G should already be preprocessed */
+std::unordered_map<int, bool>* getUpperBoundVC(BucketGraph* graphCopy, BucketGraph* G, int numPreprocessingVCVertices, double timeCap, bool printDebug)
+{
+    const double MAX_TIME_BUDGET = timeCap;
+    const double HEUR_INITIAL_SOLUTION_TIME_CAP = (MAX_TIME_BUDGET*2)/3; //in seconds
+
+    auto startHeuristicWrapper = std::chrono::high_resolution_clock::now();
+
+    //first generate a fast heuristic solution
+    int heuristicNumRecursions = 0;
+    std::unordered_map<int, bool>* heuristicVC = maxHeuristicSolver(graphCopy, &heuristicNumRecursions, false, false);
+    int heuristicVCSize = heuristicVC->size();
+    int currentBestVCSize = heuristicVC->size();
+    std::unordered_map<int, bool>* currentBestVC = heuristicVC;
+
+    if(printDebug) { std::cout << "#getUpperBound: initial heuristical solution size: " << heuristicVCSize << std::endl; }
+
+    //see if we can find a better heuristical solution
+    std::unordered_map<int, bool>* randomHeurVC = getUpperBoundFromRandomHeuristicVC(graphCopy, G, numPreprocessingVCVertices, HEUR_INITIAL_SOLUTION_TIME_CAP);
+    int randomHeurVCSize = randomHeurVC->size();
+    if(randomHeurVCSize < currentBestVCSize) {
+        delete currentBestVC;
+        currentBestVCSize = randomHeurVCSize;
+        currentBestVC = randomHeurVC;
+    }
+    auto endHeuristicWrapper = std::chrono::high_resolution_clock::now();
+    double heuristicWrapperDuration = (std::chrono::duration_cast<std::chrono::microseconds>(endHeuristicWrapper - startHeuristicWrapper).count() /  1000) / (double) 1000;
+
+    if(printDebug) { std::cout << "#getUpperBound: initial best heuristical solution size: " << randomHeurVCSize << std::endl; }
+
+    //set graph to state that it is in when vc vertices are inactive --> for fastVC() method
+    for(auto it = currentBestVC->begin(); it != currentBestVC->end(); ++it)
+    {
+        graphCopy->setInactive(it->first);
+    }
+    const int LOCAL_SEARCH_TIME_CAP = MAX_TIME_BUDGET - heuristicWrapperDuration;
+
+    auto localSearchVC = fastVC(graphCopy, currentBestVC, &heuristicNumRecursions, LOCAL_SEARCH_TIME_CAP);
+    int localSearchVCSize = localSearchVC->size();
+    if(localSearchVCSize < currentBestVCSize) {
+        delete currentBestVC;
+        currentBestVCSize = localSearchVCSize;
+        currentBestVC = localSearchVC;
+    }
+
+    /* //no need because graphcopy
+     for(auto it = localSearchVC->begin(); it != localSearchVC->end(); ++it)
+    {
+        if(G->isActive(it->first)) { continue; }
+        G->setActive(it->first);
+    } */
+
+    if(printDebug) { std::cout << "#getUpperBound: fast vc solution size: " << localSearchVCSize << std::endl; }
+
+    return currentBestVC;
 }
 
 std::pair<int, std::unordered_map<int, bool>*> vcVertexBranchingConstrained(BucketGraph* G, int k, int c, int u, int depth, int* numRec,
@@ -875,7 +1012,7 @@ std::pair<int, std::unordered_map<int, bool>*> vcVertexBranchingConstrained(Buck
     // free neighbours
     delete neighbours;
 
-    if(firstSolution.first <= secondSolution.first)
+    if(firstSolution.second != nullptr && firstSolution.first <= secondSolution.first)
     {
         if(secondSolution.second != nullptr) { delete secondSolution.second; }
         G->unreduce(&k, previousK, depth, firstSolution.second);
@@ -890,10 +1027,9 @@ std::pair<int, std::unordered_map<int, bool>*> vcVertexBranchingConstrained(Buck
 }
 
 
-
 std::unordered_map<int, bool>* vcSolverConstrained(BucketGraph* G, int* numRec, bool printDebug)
 {
-    std::vector<bool> rulesToApply = std::vector<bool>{true, true, false, true, true, false, false, false, false, false};
+    std::vector<bool> rulesToApply = std::vector<bool>{true, true, false, true, true, false, false, false, false, false, true, true};
     BucketGraph* graphCopy = G->copy();
     BucketGraph* graphCopyForPre = G->copy();
 
@@ -901,7 +1037,7 @@ std::unordered_map<int, bool>* vcSolverConstrained(BucketGraph* G, int* numRec, 
     graphCopyForPre->preprocess(&numPreprocessingVCVerticesCopy, rulesToApply, printDebug);
     numPreprocessingVCVerticesCopy = -numPreprocessingVCVerticesCopy;
 
-    double UPPER_BOUND_TIME_CAP = 1.f; //in seconds
+    double UPPER_BOUND_TIME_CAP = 0.1; //in seconds
 
     /* auto startUpper = std::chrono::high_resolution_clock::now();
     int numHeurRecursions = 0;
@@ -927,7 +1063,7 @@ std::unordered_map<int, bool>* vcSolverConstrained(BucketGraph* G, int* numRec, 
 
     //get upper bound
     auto startUpper = std::chrono::high_resolution_clock::now();
-    int u = getUpperBound(graphCopy, graphCopyForPre, numPreprocessingVCVerticesCopy, UPPER_BOUND_TIME_CAP, printDebug) + 1;
+    int u = getUpperBound(graphCopy, graphCopyForPre, numPreprocessingVCVerticesCopy, UPPER_BOUND_TIME_CAP, printDebug);
     auto endUpper = std::chrono::high_resolution_clock::now();
     double upperBoundDuration = (std::chrono::duration_cast<std::chrono::microseconds>(endUpper - startUpper).count() /  1000) / (double) 1000;
     if(printDebug)
@@ -958,4 +1094,688 @@ std::unordered_map<int, bool>* vcSolverConstrained(BucketGraph* G, int* numRec, 
     if(printDebug)
         std::cout << "#Finished branching in " << branchingDuration << " seconds" << std::endl;
     return vc;
+}
+
+std::pair<int, std::unordered_map<int, bool>*> vcVertexBranchingConstrainedB(BucketGraph* G, int k, int c, int u, int depth, int* numRec,
+    Packing* constraints = nullptr, bool printDebug = false)
+{
+    (*numRec)++;
+    int previousK = k;
+    bool cut = false;
+    //G->printReductionStack();
+    //std::cout << "preReduce" << std::endl;
+    //G->print();
+    cut = G->dynamicReduce(&k, depth, printDebug);
+    int dataredK = k;
+    //std::cout << "postReduce" << std::endl;
+    //G->print();
+    if(cut)
+    {
+        //std::cout << "Cutting through data reductions" << std::endl;
+        //std::cout << cp::dye("data reduction cutoff unreduce: ", 'y') << std::endl;
+        G->unreduce(&k, previousK, depth);
+        //std::cout << "postUnreduce" << std::endl;
+        //G->print();
+        return std::pair<int, std::unordered_map<int, bool>*>(u, nullptr);
+    }
+    c += previousK - k;
+
+    if (c + G->getLPBound() >= u) {
+        //std::cout << "Cutting through at least as good initial solution" << std::endl;
+        //std::cout << cp::dye("constrained cutoff unreduce: ", 'y') << std::endl;
+        G->unreduce(&k, previousK, depth);
+        return std::pair<int, std::unordered_map<int, bool>*>(u, nullptr);
+    }
+
+	int vertex = G->getMaxDegreeVertex();
+    //no vertices left
+    if (vertex == -1)
+    {
+        //std::cout << "Found through no vertex" << std::endl;
+        //std::cout << cp::dye("no vertex unreduce: ", 'y') << vertex << std::endl;
+        std::unordered_map<int, bool>* vc = new std::unordered_map<int, bool>();
+        G->unreduce(&k, previousK, depth, vc);
+        return std::pair<int, std::unordered_map<int, bool>*>(c, vc);
+    }
+    int vertexDeg = G->getVertexDegree(vertex);
+    //G->print();
+	//graph has no edges left
+	if (vertexDeg == 0)
+	{
+        //std::cout << "Found through deg0 vertex" << std::endl;
+        //std::cout << cp::dye("deg0 unreduce: ", 'y') << vertex << std::endl;
+        std::unordered_map<int, bool>* vc = new std::unordered_map<int, bool>();
+        G->unreduce(&k, previousK, depth, vc);
+        return std::pair<int, std::unordered_map<int, bool>*>(c, vc);
+	}
+
+    std::pair<int, std::unordered_map<int, bool>*> firstSolution = std::pair<int, std::unordered_map<int, bool>*>(u, nullptr);
+    std::pair<int, std::unordered_map<int, bool>*> secondSolution = std::pair<int, std::unordered_map<int, bool>*>(u, nullptr);
+
+    std::pair<int, std::unordered_map<int, bool>*> results;
+    std::unordered_map<int, bool>* vc = nullptr;
+    if(constraints->checkNeighbourhoodConstraints(vertex, G))
+    {
+        //std::cout << "MaxDeg Branching" << std::endl;
+        //if(vertex == 33) { std::cout << "Setting vertex 33 inactive during branching" << std::endl; }
+        //delete first vertex from graph and explore solution
+        G->setInactive(vertex);
+        results = vcVertexBranchingConstrainedB(G, u - c/* k - 1 */, c + 1, u, depth+1, numRec);
+        //std::cout << "After MaxDeg Branching" << std::endl;
+        if(u > results.first) {
+            /* k = k - u + results.first;
+            previousK = previousK - u + results.first; */
+            u = results.first;
+            /* u = results.first;
+            previousK = previousK - k + u - c;
+            k = u - c; */
+        }
+        vc = results.second;
+        //if(vertex == 33) { std::cout << "Setting vertex 33 active after branching" << std::endl; }
+        if (vc != nullptr)
+        {
+            //revert changes for multiple executions of the algorithm
+            vc->insert(std::pair(vertex, true));
+            G->setActive(vertex);
+            //G->unreduce(&k, previousK, vc); //unreduce needs correct vc für unmerge of deg2rule
+            //G->printVC(vc);
+            firstSolution = std::pair<int, std::unordered_map<int, bool>*>(u, vc);
+        }
+        else
+        {
+            //revert changes to graph
+            G->setActive(vertex);
+            //constraints->undoNeighbourhoodConstraints(vertex, G);
+            //G->unreduce(&k, previousK);
+            firstSolution = std::pair<int, std::unordered_map<int, bool>*>(u, nullptr);
+        }
+        //cout << cp::dye("restoring vertex: ", 'g') << vertex << endl;
+    }
+
+    //std::cout << "before cannot explore neighbours cutoff" << std::endl;
+	//cannot fully explore neighbours
+    if (vertexDeg > u)
+    {
+        //std::cout << cp::dye("explore neighbours unreduce: ", 'y') << vertex << std::endl;
+        //std::cout << "Cutting through Neighbourhood bigger than upper bound" << std::endl;
+        if(firstSolution.second != nullptr) {
+            G->unreduce(&k, previousK, depth, firstSolution.second);
+        }
+        else { 
+            /* G->printReductionStack();
+            G->print();
+            std::cout << std::endl; */
+            G->unreduce(&k, previousK, depth); }
+        return firstSolution;
+    }
+
+    //std::cout << "Neighbourhood Branching" << std::endl;
+    //std::cout << "deleting neighbourhood of vertex " << vertex << ": " << std::endl;
+    std::vector<int>* neighbours = G->getNeighbours(vertex);
+    /* std::cout << cp::dye("branching: choosing neighbours of vertex " + std::to_string(vertex) + ": ", 'b');
+    for(int i = 0; i < (int) neighbours->size(); i++)
+    {
+        std::cout <<  cp::dye(std::to_string(neighbours->at(i)) + ", ", 'b');
+    }
+    std::cout << std::endl; */
+    //if(G->vertexHasEdgeTo(vertex, 33)) { std::cout << "Setting vertex 33 inactive during neighbour branching" << std::endl; }
+    G->setInactive(neighbours);
+    //std::cout << "prebranch k=" << k << std::endl;
+	results = vcVertexBranchingConstrainedB(G, u - c/* k - neighbours->size() */, c + neighbours->size(), u, depth+1, numRec);
+    //std::cout << "after neighbour branching" << std::endl;
+    if(u > results.first) {
+        //k = k - u + results.first;
+        //previousK = previousK - u + results.first;
+        u = results.first;
+    }
+    vc = results.second;
+    //std::cout << "postbranch k=" << k << '\n';
+    //cout << "prec " << '\n';
+    //if(G->vertexHasEdgeTo(vertex, 33)) { std::cout << "Setting vertex 33 active after neighbour branching" << std::endl; }
+	if (vc != nullptr)
+	{
+        //revert changes for multiple executions of the algorithm
+        G->setActive(neighbours);
+        for(int i = 0; i < (int) neighbours->size(); i++)
+        {
+            vc->insert(std::pair(neighbours->at(i), true));
+        }
+        //G->printVC(vc);
+        //G->unreduce(&k, previousK, vc); //unreduce needs correct vc für unmerge of deg2rule
+        secondSolution = std::pair<int, std::unordered_map<int, bool>*>(u, vc);
+	}
+	else
+	{
+		//revert changes to graph
+		G->setActive(neighbours);
+        //G->unreduce(&k, previousK);
+        secondSolution = std::pair<int, std::unordered_map<int, bool>*>(u, nullptr);
+	}
+    //G->print();
+    /* cout << "restoring neighbourhood of vertex " << vertex << ": ";
+    for(int i = 0; i < (int) neighbours->size(); i++)
+    {
+        cout << neighbours->at(i) << ", ";
+    }
+    cout << endl; */
+    // free neighbours
+    delete neighbours;
+
+    if(firstSolution.second != nullptr && firstSolution.first <= secondSolution.first)
+    {
+        if(secondSolution.second != nullptr) { delete secondSolution.second; }
+        //std::cout << cp::dye("chose first solution unreduce: ", 'y') << vertex << std::endl;
+        if(firstSolution.second != nullptr) { G->unreduce(&k, previousK, depth, firstSolution.second); }
+        else { G->unreduce(&k, previousK, depth); }
+        return firstSolution;
+    }
+    else
+    {
+        if(firstSolution.second != nullptr) { delete firstSolution.second; }
+        //std::cout << cp::dye("chose secondsolution unreduce: ", 'y') << vertex << std::endl;
+        if(secondSolution.second != nullptr) { G->unreduce(&k, previousK, depth, secondSolution.second); }
+        else { G->unreduce(&k, previousK, depth); }
+        return secondSolution;
+    }
+}
+
+std::unordered_map<int, bool>* vcSolverConstrainedB(BucketGraph* G, int* numRec, bool printDebug)
+{
+    std::vector<bool> rulesToApply = std::vector<bool>{true, true, false, true, true, false, false, false, false, false, true, true};
+    BucketGraph* graphCopy = G->copy();
+    BucketGraph* graphCopyForPre = G->copy();
+
+    int numPreprocessingVCVerticesCopy = 0;
+    graphCopyForPre->preprocess(&numPreprocessingVCVerticesCopy, rulesToApply, printDebug);
+    numPreprocessingVCVerticesCopy = -numPreprocessingVCVerticesCopy;
+
+    double UPPER_BOUND_TIME_CAP = 0.1f;//1.f; //in seconds
+
+    /* auto startUpper = std::chrono::high_resolution_clock::now();
+    int numHeurRecursions = 0;
+    std::unordered_map<int, bool>* heuristicVC = maxHeuristicSolver(G, &numHeurRecursions, false, false);
+    int upperBound = heuristicVC->size();
+    delete heuristicVC;
+    //int u = 15000;//1730;//getUpperBound(G, 5);
+    auto endUpper = std::chrono::high_resolution_clock::now();
+    double upperBoundDuration = (std::chrono::duration_cast<std::chrono::microseconds>(endUpper - startUpper).count() /  1000) / (double) 1000;
+ */
+    //preprocessing
+    int numPreprocessingVCVertices = 0;
+	int k = 0;
+    auto startPreprocess = std::chrono::high_resolution_clock::now();
+
+    G->preprocess(&numPreprocessingVCVertices, rulesToApply, printDebug);
+    numPreprocessingVCVertices = -numPreprocessingVCVertices;
+    auto endPreprocess = std::chrono::high_resolution_clock::now();
+    double preprocessDuration = (std::chrono::duration_cast<std::chrono::microseconds>(endPreprocess - startPreprocess).count() /  1000) / (double) 1000;
+    if(printDebug) {
+        std::cout << "#Preprocessed Graph to size n=" << G->getNumVertices() << ", m=" << G->getNumEdges() << " in " << preprocessDuration << " seconds" << " (reduced by " << numPreprocessingVCVertices << " vertices)" << std::endl;
+    }
+
+    //get upper bound
+    auto startUpper = std::chrono::high_resolution_clock::now();
+    std::unordered_map<int, bool>* heuristicVC = getUpperBoundVC(graphCopy, graphCopyForPre, numPreprocessingVCVerticesCopy, UPPER_BOUND_TIME_CAP, printDebug);
+    int u = heuristicVC->size();
+    auto endUpper = std::chrono::high_resolution_clock::now();
+    double upperBoundDuration = (std::chrono::duration_cast<std::chrono::microseconds>(endUpper - startUpper).count() /  1000) / (double) 1000;
+    if(printDebug)
+    {
+        std::cout << "#Calculated upper Bound u=" << u << " in " << upperBoundDuration << " seconds" << std::endl;
+    }
+
+    //G->print();
+    /* G->printReductionStack();
+    std::cout << std::endl; */
+
+    //init packing
+    Packing* packingConstraints = new Packing(G->getVertexReferencesSize());
+
+	std::unordered_map<int, bool>* vc;
+    auto startBranching = std::chrono::high_resolution_clock::now();
+    auto results = vcVertexBranchingConstrainedB(G, u, 0, u, 0, numRec, packingConstraints, true || printDebug);
+    vc = results.second;
+
+    bool wasNullptr = false;
+    if(vc == nullptr)
+    {
+        wasNullptr = true;
+        vc = new std::unordered_map<int, bool>();
+    }
+    // Add Reduced Vertices to Vertex Cover
+    G->unreduce(&k, vc->size()+numPreprocessingVCVertices, -1, vc);
+    if(G->getReductionStackSize() > 0)
+    {
+        throw std::invalid_argument("vcSolverRecursive: reduction rule stack isn't fully popped after final unreduce");
+    }
+    auto endBranching = std::chrono::high_resolution_clock::now();
+    double branchingDuration = (std::chrono::duration_cast<std::chrono::microseconds>(endBranching - startPreprocess).count() /  1000) / (double) 1000;
+    if(printDebug)
+        std::cout << "#Finished branching in " << branchingDuration << " seconds" << std::endl;
+    if(vc->size() == 0 && wasNullptr)
+    {
+        // TODO: if no solution found
+        return heuristicVC;
+    }
+    return vc;
+}
+
+std::pair<int, std::unordered_map<int, bool>*> vcVertexBranchingConstrainedEloi(BucketGraph* G, int c, int u, int depth, std::unordered_map<int, bool>* u_solution, 
+ int* numRec, bool printDebug = false)
+{
+    if(printDebug)
+        std::cout << "#-->Branching: c=" << c << ", u=" << u << ", depth=" << depth << std::endl;
+
+    (*numRec)++;
+    int k = u - c;
+    int previousK = k;
+    bool cut = false;
+    cut = G->dynamicReduce(&k, depth, printDebug);
+
+    if(printDebug)
+        std::cout << "#After reduce: kDecrement=" << previousK - k << std::endl;
+
+    //insufficient budget
+    if(cut)
+    {
+        if(printDebug)
+            std::cout << "#reduction cut: insufficient budget"<< std::endl;
+
+        G->unreduce(&k, previousK, depth);
+        return std::pair<int, std::unordered_map<int, bool>*>(u, u_solution);
+    }
+    c += previousK - k;
+
+    int lowerBound = G->getLPBound();
+    if(printDebug)
+        std::cout << "#Before upper bound cut: lp=" << lowerBound << ", c=" << c << std::endl;
+
+    //cannot find better solution in this branch ---> cut
+    if (c + lowerBound >= u) {
+        if(printDebug)
+            std::cout << "#upper bound cut"<< std::endl;
+        G->unreduce(&k, previousK, depth);
+        return std::pair<int, std::unordered_map<int, bool>*>(u, u_solution);
+    }
+
+    int vertex = G->getMaxDegreeVertex();
+    //no vertices left
+    if (vertex == -1)
+    {
+        if(printDebug)
+            std::cout << "#no vertices left, return"<< std::endl;
+
+        std::unordered_map<int, bool>* vc = new std::unordered_map<int, bool>();
+        G->unreduce(&k, previousK, depth, vc);
+        return std::pair<int, std::unordered_map<int, bool>*>(c, vc);
+    }
+    int vertexDeg = G->getVertexDegree(vertex);
+
+	//graph has no edges left
+	if (vertexDeg == 0)
+	{
+        if(printDebug)
+            std::cout << "#no edges left, return"<< std::endl;
+
+        std::unordered_map<int, bool>* vc = new std::unordered_map<int, bool>();
+        G->unreduce(&k, previousK, depth, vc);
+        return std::pair<int, std::unordered_map<int, bool>*>(c, vc);
+	}
+
+    if(printDebug)
+        std::cout << "#Before branching on vertex=" << vertex << std::endl;
+
+    std::pair<int, std::unordered_map<int, bool>*> firstSolution = std::pair<int, std::unordered_map<int, bool>*>(u, nullptr);
+    std::pair<int, std::unordered_map<int, bool>*> secondSolution = std::pair<int, std::unordered_map<int, bool>*>(u, nullptr);
+
+    G->setInactive(vertex);
+    firstSolution = vcVertexBranchingConstrainedEloi(G, c + 1, u, depth+1, u_solution, numRec, printDebug);
+    bool firstWasImprovement = false;
+
+    if(printDebug)
+            std::cout << "#After branching on vertex=" << vertex << std::endl;
+    //found better solution, construct it in back propagation
+    if(firstSolution.first < u)
+    {
+        firstSolution.second->insert(std::pair(vertex, true));
+        //u = firstSolution.first; //TODO: reenable
+        firstWasImprovement = true;
+        G->setActive(vertex);
+    }
+    else //just revert graph
+    {
+        G->setActive(vertex);
+    }
+
+    if(printDebug)
+        std::cout << "#before cannot explore neighbours cutoff" << std::endl;
+	//no budget, cannot fully explore neighbours
+    /* if (vertexDeg > k)
+    {
+        if(firstWasImprovement)
+        {
+            G->unreduce(&k, previousK, depth, firstSolution.second);
+            return firstSolution;
+        }
+        else
+        {
+            G->unreduce(&k, previousK, depth);
+            return std::pair<int, std::unordered_map<int, bool>*>(u, u_solution);
+        }
+    } */
+
+    if(printDebug)
+        std::cout << "#Before branching on neighbours of v=" << vertex << std::endl;
+    //std::cout << "deleting neighbourhood of vertex " << vertex << ": " << std::endl;
+
+    std::vector<int>* neighbours = G->getNeighbours(vertex);
+    G->setInactive(neighbours);
+	secondSolution = vcVertexBranchingConstrainedEloi(G, c + neighbours->size(), u, depth+1, u_solution, numRec, printDebug);
+    bool secondWasImprovement = false;
+
+    //found better solution, construct it in back propagation
+	if (secondSolution.first < u)
+	{
+        for(int i = 0; i < (int) neighbours->size(); i++)
+        {
+            secondSolution.second->insert(std::pair(neighbours->at(i), true));
+        }
+        u = secondSolution.first;
+        secondWasImprovement = true;
+        //revert changes for multiple executions of the algorithm
+        G->setActive(neighbours);
+	}
+	else
+	{
+		//revert changes to graph
+		G->setActive(neighbours);
+	}
+
+    if(printDebug)
+        std::cout << "#After branching on neighbours of vertex=" << vertex << std::endl;
+
+    // free neighbours
+    delete neighbours;
+
+    //decide which solution to pass back
+    if(firstSolution.first <= secondSolution.first)
+    {
+        if(printDebug)
+            std::cout << "#Passing back first solution with u=" << firstSolution.first << std::endl;
+        if(firstSolution.second != nullptr && secondWasImprovement) { delete secondSolution.second; }
+        G->unreduce(&k, previousK, depth, firstSolution.second);
+        return firstSolution;
+    }
+    else
+    {
+        if(printDebug)
+            std::cout << "#Passing back second solution with u=" << secondSolution.first << std::endl;
+        if(firstSolution.second != nullptr && firstWasImprovement) { delete firstSolution.second; }
+        G->unreduce(&k, previousK, depth, secondSolution.second);
+        return secondSolution;
+    }
+}
+
+
+std::unordered_map<int, bool>* vcSolverConstrainedEloi(BucketGraph* G, int* numRec, bool printDebug)
+{
+    double UPPER_BOUND_TIME_CAP = 0.1; //in seconds
+        //                                                  0     1      2      3    4      5      6      7      8      9      10     11
+    //std::vector<bool> rulesToApply = std::vector<bool>{true, true, false, true, true, false, false, false, false, false, false, false};
+    std::vector<bool> rulesToApply = std::vector<bool>{true, false, false, true, true, false, false, true, true, true, false, false};
+
+    BucketGraph* graphCopy = G->copy();
+    BucketGraph* graphCopyWithPre = G->copy();
+
+    //preprocessing for heuristic graph
+    int numPreprocessingVCVerticesCopy = 0;
+    graphCopyWithPre->preprocess(&numPreprocessingVCVerticesCopy, rulesToApply, printDebug);
+    numPreprocessingVCVerticesCopy = -numPreprocessingVCVerticesCopy;
+
+    //preprocessing for branch graph
+    int numPreprocessingVCVertices = 0;
+	int k = 0;
+    auto startPreprocess = std::chrono::high_resolution_clock::now();
+
+    G->preprocess(&numPreprocessingVCVertices, rulesToApply, printDebug);
+    numPreprocessingVCVertices = -numPreprocessingVCVertices;
+    auto endPreprocess = std::chrono::high_resolution_clock::now();
+    double preprocessDuration = (std::chrono::duration_cast<std::chrono::microseconds>(endPreprocess - startPreprocess).count() /  1000) / (double) 1000;
+    if(printDebug) {
+        std::cout << "#Preprocessed Graph to size n=" << G->getNumVertices() << ", m=" << G->getNumEdges() << " in " << preprocessDuration << " seconds" << " (reduced by " << numPreprocessingVCVertices << " vertices)" << std::endl;
+    }
+
+    //get upper bound
+    //first generate a fast heuristic solution
+    int heuristicNumRecursions = 0;
+    std::unordered_map<int, bool>* heuristicVC = maxHeuristicSolver(G, &heuristicNumRecursions, false, false);
+    int u = heuristicVC->size();
+    if(printDebug)
+    {
+        std::cout << "#Calculated upper Bound u=" << u << std::endl;
+    }
+
+/*  TODO: doesnt work yet because need initial solution, not just bound
+    auto startUpper = std::chrono::high_resolution_clock::now();
+    int u = getUpperBound(graphCopy, graphCopyWithPre, numPreprocessingVCVerticesCopy, UPPER_BOUND_TIME_CAP, printDebug);
+    auto endUpper = std::chrono::high_resolution_clock::now();
+    double upperBoundDuration = (std::chrono::duration_cast<std::chrono::microseconds>(endUpper - startUpper).count() /  1000) / (double) 1000;
+    if(printDebug)
+    {
+        std::cout << "#Calculated upper Bound u=" << u << " in " << upperBoundDuration << " seconds" << std::endl;
+    } */
+
+
+    auto startBranching = std::chrono::high_resolution_clock::now();
+    auto results = vcVertexBranchingConstrainedEloi(G, 0, u, 0, heuristicVC, numRec, false);
+    std::unordered_map<int, bool>* vc = results.second;
+
+    if(printDebug)
+        std::cout << "#Finished branching with u = " << u << ", vc without pre = " << results.first << std::endl;
+
+    // Add Reduced Vertices to Vertex Cover
+    G->unreduce(&k, vc->size()+numPreprocessingVCVertices, -1, vc);
+    if(G->getReductionStackSize() > 0)
+    {
+        throw std::invalid_argument("vcSolverRecursive: reduction rule stack isn't fully popped after final unreduce");
+    }
+    auto endBranching = std::chrono::high_resolution_clock::now();
+    double branchingDuration = (std::chrono::duration_cast<std::chrono::microseconds>(endBranching - startPreprocess).count() /  1000) / (double) 1000;
+    if(printDebug)
+        std::cout << "#Finished branching and unreducing preprocessing in " << branchingDuration << " seconds, u = " << u << ", vc without pre = " << results.first << ", vc size: " << vc->size() << std::endl;
+    return vc;
+}
+
+int determineOptimalSolutionSizeBranching(BucketGraph* G, int c, int u, int depth, int* numRec, bool printDebug = false)
+{
+    if(printDebug)
+        std::cout << "#-->Branching: c=" << c << ", u=" << u << ", depth=" << depth << std::endl;
+
+    (*numRec)++;
+    int k = u - c;
+    int previousK = k;
+    bool cut = false;
+    cut = G->dynamicReduce(&k, depth, printDebug);
+    int numReduced = previousK - k;
+
+    if(printDebug)
+        std::cout << "#After reduce: kDecrement=" << previousK - k << std::endl;
+
+    //insufficient budget
+    if(cut)
+    {
+        if(printDebug)
+            std::cout << "#reduction cut: insufficient budget"<< std::endl;
+
+        G->unreduce(&k, previousK, depth);
+        return u;
+    }
+    c += numReduced;
+
+    int lowerBound = G->getLPBound();
+    if(printDebug)
+        std::cout << "#Before upper bound cut: lp=" << lowerBound << ", c=" << c << std::endl;
+
+    //cannot find better solution in this branch ---> cut
+    if (c + lowerBound >= u) {
+        if(printDebug)
+            std::cout << "#upper bound cut"<< std::endl;
+        G->unreduce(&k, previousK, depth);
+        return u;
+    }
+
+    int vertex = G->getMaxDegreeVertex();
+    //no vertices left
+    if (vertex == -1)
+    {
+        if(printDebug)
+            std::cout << "#no vertices left, return"<< std::endl;
+
+        G->unreduce(&k, previousK, depth);
+        return c;
+    }
+    int vertexDeg = G->getVertexDegree(vertex);
+
+	//graph has no edges left
+	if (vertexDeg == 0)
+	{
+        if(printDebug)
+            std::cout << "#no edges left, return"<< std::endl;
+
+        G->unreduce(&k, previousK, depth);
+        return c;
+	}
+
+    if(printDebug)
+        std::cout << "#Before branching on vertex=" << vertex << std::endl;
+
+    G->setInactive(vertex);
+    int firstU = determineOptimalSolutionSizeBranching(G, c + 1, u, depth+1, numRec, printDebug);
+
+    if(printDebug)
+            std::cout << "#After branching on vertex=" << vertex << std::endl;
+    //found better solution, construct it in back propagation
+    if(firstU < u)
+    {
+        u = firstU;
+        G->setActive(vertex);
+    }
+    else //just revert graph
+    {
+        G->setActive(vertex);
+    }
+
+    if(printDebug)
+        std::cout << "#before cannot explore neighbours cutoff" << std::endl;
+	//no budget, cannot fully explore neighbours
+    /* if (vertexDeg > k)
+    {
+        if(firstWasImprovement)
+        {
+            G->unreduce(&k, previousK, depth, firstSolution.second);
+            return firstSolution;
+        }
+        else
+        {
+            G->unreduce(&k, previousK, depth);
+            return std::pair<int, std::unordered_map<int, bool>*>(u, u_solution);
+        }
+    } */
+
+    if(printDebug)
+        std::cout << "#Before branching on neighbours of v=" << vertex << std::endl;
+    //std::cout << "deleting neighbourhood of vertex " << vertex << ": " << std::endl;
+
+    std::vector<int>* neighbours = G->getNeighbours(vertex);
+    G->setInactive(neighbours);
+	int secondU = determineOptimalSolutionSizeBranching(G, c + neighbours->size(), u, depth+1, numRec, printDebug);
+
+    //found better solution, construct it in back propagation
+	if (secondU < u)
+	{
+        u = secondU;
+        G->setActive(neighbours);
+	}
+	else
+	{
+		//revert changes to graph
+		G->setActive(neighbours);
+	}
+
+    if(printDebug)
+        std::cout << "#After branching on neighbours of vertex=" << vertex << std::endl;
+
+    // free neighbours
+    delete neighbours;
+
+    G->unreduce(&k, previousK, depth);
+    return u + numReduced;
+}
+
+int determineOptimalSolutionSize(BucketGraph* G, int* numRec, bool printDebug)
+{
+    double UPPER_BOUND_TIME_CAP = 0.1; //in seconds
+        //                                                  0     1      2      3    4      5      6      7      8      9      10     11
+    //std::vector<bool> rulesToApply = std::vector<bool>{true, true, false, true, true, false, false, false, false, false, false, false};
+    std::vector<bool> rulesToApply = std::vector<bool>{true, false, false, true, true, false, false, true, true, true, false, false};
+
+    //BucketGraph* graphCopy = G->copy();
+    //BucketGraph* graphCopyWithPre = G->copy();
+
+    //preprocessing for heuristic graph
+    /* int numPreprocessingVCVerticesCopy = 0;
+    graphCopyWithPre->preprocess(&numPreprocessingVCVerticesCopy, rulesToApply, printDebug);
+    numPreprocessingVCVerticesCopy = -numPreprocessingVCVerticesCopy; */
+
+    //preprocessing for branch graph
+    int numPreprocessingVCVertices = 0;
+	int k = 0;
+    auto startPreprocess = std::chrono::high_resolution_clock::now();
+
+    G->preprocess(&numPreprocessingVCVertices, rulesToApply, printDebug);
+    numPreprocessingVCVertices = -numPreprocessingVCVertices;
+    auto endPreprocess = std::chrono::high_resolution_clock::now();
+    double preprocessDuration = (std::chrono::duration_cast<std::chrono::microseconds>(endPreprocess - startPreprocess).count() /  1000) / (double) 1000;
+    if(printDebug) {
+        std::cout << "#Preprocessed Graph to size n=" << G->getNumVertices() << ", m=" << G->getNumEdges() << " in " << preprocessDuration << " seconds" << " (reduced by " << numPreprocessingVCVertices << " vertices)" << std::endl;
+    }
+
+    //get upper bound
+    //first generate a fast heuristic solution
+    int heuristicNumRecursions = 0;
+    std::unordered_map<int, bool>* heuristicVC = maxHeuristicSolver(G, &heuristicNumRecursions, false, false);
+    int u = heuristicVC->size();
+    if(printDebug)
+    {
+        std::cout << "#Calculated upper Bound u=" << u << std::endl;
+    }
+
+/*  TODO: doesnt work yet because need initial solution, not just bound
+    auto startUpper = std::chrono::high_resolution_clock::now();
+    int u = getUpperBound(graphCopy, graphCopyWithPre, numPreprocessingVCVerticesCopy, UPPER_BOUND_TIME_CAP, printDebug);
+    auto endUpper = std::chrono::high_resolution_clock::now();
+    double upperBoundDuration = (std::chrono::duration_cast<std::chrono::microseconds>(endUpper - startUpper).count() /  1000) / (double) 1000;
+    if(printDebug)
+    {
+        std::cout << "#Calculated upper Bound u=" << u << " in " << upperBoundDuration << " seconds" << std::endl;
+    } */
+
+
+    auto startBranching = std::chrono::high_resolution_clock::now();
+    int result = determineOptimalSolutionSizeBranching(G, 0, u, 0, numRec, false);
+
+    if(printDebug)
+        std::cout << "#Finished branching with u = " << u << ", vc without pre = " << result << std::endl;
+
+    // Add Reduced Vertices to Vertex Cover
+    G->unreduce(&k, result+numPreprocessingVCVertices, -1);
+    if(G->getReductionStackSize() > 0)
+    {
+        throw std::invalid_argument("vcSolverRecursive: reduction rule stack isn't fully popped after final unreduce");
+    }
+    auto endBranching = std::chrono::high_resolution_clock::now();
+    double branchingDuration = (std::chrono::duration_cast<std::chrono::microseconds>(endBranching - startPreprocess).count() /  1000) / (double) 1000;
+    if(printDebug)
+        std::cout << "#Finished branching and unreducing preprocessing in " << branchingDuration << " seconds, u = " << u << ", vc without pre = " << result << ", vc size: " << result + numPreprocessingVCVertices << std::endl;
+    return result + numPreprocessingVCVertices;
 }
