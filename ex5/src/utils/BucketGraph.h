@@ -139,7 +139,8 @@ public:
     bool deg3clique = false;
     bool deg3dom = false;
     bool deg3 = false;
-    bool deg4clique = true;
+    bool deg4clique = false;
+    bool deg4dom = false;
 
     bool deg3domDeg2 = false;
 
@@ -147,6 +148,7 @@ public:
     int cntDeg3Clique = 0;
     int cntDeg3Dom1 = 0;
     int cntDeg3Dom2 = 0;
+    int cntDeg4Clique = 0;
 
     bool LP_INITIALISED = false;
     bool UNCONFINED_INITIALISED = false;
@@ -325,6 +327,10 @@ public:
     void unreduceDeg3Ind(Reduction* rule, std::unordered_map<int, bool>* vc = nullptr);
     void unreduceDeg3Clique(Reduction* rule, std::unordered_map<int, bool>* vc = nullptr);
     void unreduceDeg3Dom(Reduction* rule, std::unordered_map<int, bool>* vc = nullptr);
+
+    void unreduceDeg4Clique(Reduction* rule, int* k, std::unordered_map<int, bool>* vc = nullptr);
+    void unreduceDeg4Dom(Reduction* rule, int* k, std::unordered_map<int, bool>* vc = nullptr);
+
 private:
 
     //------------------------ Graph Construction ------------------------

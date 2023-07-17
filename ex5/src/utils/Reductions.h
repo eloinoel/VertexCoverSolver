@@ -16,8 +16,9 @@ enum RULE
     LPFLOW,             // = 6
     DEGREE_THREE_IND,    // = 7
     DEGREE_THREE_CLIQ,  // = 8
-    DEGREE_THREE_DOM//,  // = 9
-//    DEGREE_FOUR_CLIQUE  // = 9
+    DEGREE_THREE_DOM,  // = 9
+    DEGREE_FOUR_CLIQUE,  // = 10
+    DEGREE_FOUR_DOM  // = 11
 };
 
 enum RULE_APPLICATION_RESULT
@@ -114,7 +115,8 @@ public:
 //    RULE_APPLICATION_RESULT rule_DegreeThree_Clique_Better(BucketGraph* G, int depth, bool printDebug = false);
     RULE_APPLICATION_RESULT rule_DegreeThree_Domination(BucketGraph* G, int* k, int depth, bool deg2inc, bool checkBudget, bool printDebug = false);
 
-//    RULE_APPLICATION_RESULT rule_DegreeFour_Clique(BucketGraph* G, int* k, int depth, bool checkBudget, bool printDebug = false);
+    RULE_APPLICATION_RESULT rule_DegreeFour_Clique(BucketGraph* G, int* k, int depth, bool checkBudget, bool printDebug = false);
+    RULE_APPLICATION_RESULT rule_DegreeFour_Domination(BucketGraph* G, int* k, int depth, bool checkBudget, bool printDebug = false);
 
     //rules return true if they were applicable
     RULE_APPLICATION_RESULT rule_HighDegree(BucketGraph* G, int* k, int depth);
@@ -129,6 +131,7 @@ public:
     RULE_APPLICATION_RESULT rule_LPFlow(BucketGraph* G, int* k, int depth, bool checkBudget, bool printDebug = false);
     
     RULE_APPLICATION_RESULT rule_Domination(BucketGraph* G, int* k, int depth, bool checkBudget);
+//    RULE_APPLICATION_RESULT rule_Domination(BucketGraph* G, int* k, int depth, bool checkBudget);
 
     RULE_APPLICATION_RESULT rule_Domination_BE(BucketGraph* G, int* k, int depth, bool checkBudget);
 

@@ -218,6 +218,8 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
         {
             int numRecursiveSteps = 0;
             vc = vcSolverConstrained(G, &numRecursiveSteps, printDebug);
+            std::cout << "#Deg3 Dom-No-Clique: " << G->cntDeg3Dom1 << '\n';
+            std::cout << "#Deg3 Dom-Clique: " << G->cntDeg3Dom2 << '\n';
             G->printVertices(vc);
             cout << "#recursive steps: " << numRecursiveSteps << endl;
 
@@ -287,8 +289,8 @@ int main(int argc, char* argv[]) {
 	{
         //TODO: disable printDebug for final submission
         //chooseImplementationAndOutput(1, false, false, false, false, true, false);
-        chooseImplementationAndOutput(1, false, false, true, true, true, false);
-        //chooseImplementationAndOutput(1, true, false, false, true, true, false); //print alot
+//        chooseImplementationAndOutput(2, false, false, true, true, true, false);
+        chooseImplementationAndOutput(1, false, false, false, true, true, false); //print alot
         //chooseImplementationAndOutput(5, false, false, false, false, true, false);
     }
 	catch (const exception& e)

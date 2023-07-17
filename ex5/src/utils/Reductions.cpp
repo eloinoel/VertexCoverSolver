@@ -27,6 +27,11 @@ RULE_APPLICATION_RESULT Reductions::rule_HighDegree(BucketGraph* G, int* k, int 
         int maxDegVertex = G->getMaxDegreeVertex();
         reduction->kDecrement++;
         reduction->deletedVCVertices->push_back(maxDegVertex);
+
+//        std::cout << "REDUCE: High Degree" << std::endl;
+//        std::cout << "Vertex: " << maxDegVertex << '\n';
+//        std::cout << "-----------" << '\n';
+
         *k = *k - 1;
         G->setInactive(maxDegVertex);
         //std::cout << maxDegVertex << ", " << '\n';
@@ -72,12 +77,20 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeOne(BucketGraph* G, int* k, int d
             freeReductionRule(reduction, false);
             return INSUFFICIENT_BUDGET;
         } //cannot delete more vertices, no possible vertex cover exists
+
+
+
         auto it = degOneBucket->begin();
         int neighbourToDelete = G->getNthActiveNeighbour(it->index, 0);
         reduction->deletedVCVertices->push_back(neighbourToDelete);
         reduction->kDecrement++;
         *k = *k - 1;
         G->setInactive(neighbourToDelete);
+
+//        std::cout << "REDUCE: Deg 1" << std::endl;
+//        std::cout << "Degree 1 vertex: " << it->index << '\n';
+//        std::cout << neighbourToDelete << '\n';
+//        std::cout << "-----------" << '\n';
         //std::cout << neighbourToDelete << ", ";
     }
     auto stopDeg1 = std::chrono::high_resolution_clock::now();
@@ -106,6 +119,12 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeTwo(BucketGraph* G, int* k, int d
         auto it = degTwoBucket->begin();
 
         std::pair<int, int> neighbours = G->getFirstTwoActiveNeighbours(it->index); //should always return valid vertices
+
+//        std::cout << "REDUCE: Deg 2" << std::endl;
+//        std::cout << "Degree 2 vertex: " << it->index << '\n';
+//        std::cout << neighbours.first << ", " << neighbours.second << '\n';
+//        std::cout << "-----------" << '\n';
+
         if(neighbours.first == -1 || neighbours.second == -1)
         {
             G->print();
@@ -678,6 +697,11 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeThree_Clique(BucketGraph* G, int*
             continue;
         }
 
+//        std::cout << "REDUCE: Deg 3 Clique" << std::endl;
+//        std::cout << "Degree 3 vertex: " << v << '\n';
+//        std::cout << c11 << ", " << c12 << ", " << c2 << '\n';
+//        std::cout << "-----------" << '\n';
+
         if(G->deg3clique) {
             std::cout << ColorPrint::dye(lineDelimiter, 'y');
             std::cout << "VALID = " << cnt+1 << '\n';
@@ -787,6 +811,11 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeThree_Clique(BucketGraph* G, int*
         edgeCnt += (int)edgeToC11.size();
         edgeCnt += (int)edgeToC12.size();
 
+//        std::cout << "REDUCE: Deg 3 Clique" << std::endl;
+//        std::cout << "Degree 3 vertex: " << delVer->deletedVertices->at(0) << '\n';
+//        std::cout << delVer->deletedVCVertices->at(0) << ", " << delVer->deletedVCVertices->at(1) << ", " << delVer->deletedVCVertices->at(2) << '\n';
+//        std::cout << "-----------" << '\n';
+
         if(G->deg3clique) {
             std::cout << "\nApplying rule to v = " << v << '\n';
             std::cout << "i = " << i << '\n';
@@ -821,6 +850,8 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeThree_Domination(BucketGraph* G, 
 {
     list<BucketVertex>* degThreeBucket = G->getVerticesOfDegree(3);
 
+
+
     if(degThreeBucket == nullptr || degThreeBucket->empty()) {
         if(G->deg3dom)
             std::cout << "\nNo degree 3 Vertex!" << '\n';
@@ -828,6 +859,7 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeThree_Domination(BucketGraph* G, 
 
     if(G->deg3dom) {
         std::cout << "\nRule: Degree 3: Domination" << '\n';
+        std::cout << "degThreeBucket: " << degThreeBucket << '\n';
         std::cout << "Deg 3 Bucket of size: " << (int)degThreeBucket->size() << '\n';
         std::cout << "---------" << '\n';
     }
@@ -1127,235 +1159,460 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeThree_Domination(BucketGraph* G, 
     return APPLICABLE;
 }
 
-//RULE_APPLICATION_RESULT rule_DegreeFour_Clique(BucketGraph* G, int* k, int depth, bool checkBudget, bool printDebug = false)
-//{
-//    list<BucketVertex>* degFourBucket = G->getVerticesOfDegree(4);
-//
-//    if(degFourBucket == nullptr || degFourBucket->empty()) {
-////        if(G->deg3clique)
-////            std::cout << "\nNo degree 3 Vertex!" << '\n';
-//        return INAPPLICABLE; }
-//
-//    if(G->deg4clique) {
-//        std::cout << "\nRule: Degree 4: 2-Clique-Neighborhood" << '\n';
-////        std::cout << "Deg 3 Bucket of size: " << (int)degThreeBucket->size() << '\n';
-//        std::cout << "---------" << '\n';
-//    }
-//
-//    auto startDeg4clique = std::chrono::high_resolution_clock::now();
-//
-//    int cnt = 0;
-//
-//    std::vector<int> tempDeleted;
-//    std::vector<int> tempNeighbours;
-//    std::unordered_map<int, int> alreadyInactive;
-//    std::vector<std::vector<int>> tempAddedEdges;
-//
-//    for(auto it = degThreeBucket->begin(); it != degThreeBucket->end(); it++)
-//    {
-//        if(*k - cnt < 1 && checkBudget)
-//            return INSUFFICIENT_BUDGET;
-//
-//        int v = it->index;
-//
-//        if(!G->isActive(v)) {
-//            continue;
-//        }
-//
-//        std::vector<int>* neighbours = G->getNeighbours(v);
-//
-//        int a = neighbours->at(0);
-//        int b = neighbours->at(1);
-//        int c = neighbours->at(2);
-//        int d = neighbours->at(3);
-//
-//        if(!G->isActive(a) || !G->isActive(b) || !G->isActive(c) || !G->isActive(d)) {
-//            delete neighbours;
-//            continue;
-//        }
-//
-//        if(alreadyInactive[v] == 1 || alreadyInactive[a] == 1 || alreadyInactive[b] == 1 || alreadyInactive[c] == 1 || alreadyInactive[d] == 1)
-//        {
-////            if(G->deg3clique) {
-////                std::cout << "Already treated: " << v << ", maybe next round!\n";
-////                std::cout << a << ", " << b << ", " << c << '\n';
-////                std::cout << "---------" << '\n';
-////            }
-//            delete neighbours;
-//            continue;
-//        }
-//
-////        int c11;
-////        int c12;
-////        int c2;
-//        int connections = 0;
-//        int relations[6] = {0, 0, 0, 0, 0, 0};
-//
-//        bool connectionAB = G->vertexHasEdgeTo(a, b);
-//        bool connectionAC = G->vertexHasEdgeTo(a, c);
-//        bool connectionAD = G->vertexHasEdgeTo(a, d);
-//        bool connectionBC = G->vertexHasEdgeTo(b, c);
-//        bool connectionBD = G->vertexHasEdgeTo(b, d);
-//        bool connectionCD = G->vertexHasEdgeTo(c, d);
-//
-//        if(connectionAB) { relations[0] = 1; connections++; }
-//        if(connectionAC) { relations[1] = 1; connections++; }
-//        if(connectionAD) { relations[2] = 1; connections++; }
-//        if(connectionBC) { relations[3] = 1; connections++; }
-//        if(connectionBD) { relations[4] = 1; connections++; }
-//        if(connectionCD) { relations[5] = 1; connections++; }
-//
-//        if(connections == 3)
-//
-//
-//        // C1: a-b, C2: c
-//        if (connectionAB && !connectionAC && !connectionBC)
-//        {
-//            c11 = a;
-//            c12 = b;
-//            c2 = c;
-//        }// C1: a-c, C2: b
-//        else if (!connectionAB && connectionAC && !connectionBC)
-//        {
-//            c11 = a;
-//            c12 = c;
-//            c2 = b;
-//        }// C1: b-c, C2: a
-//        else if (!connectionAB && !connectionAC && connectionBC)
-//        {
-//            c11 = b;
-//            c12 = c;
-//            c2 = a;
-//        }
-//        else{
-////            if(!connectionAB && !connectionAC && !connectionBC) {
-////                if(G->deg3clique) {
-////                    std::cout << "Neighbours are independent!\n";
-////                    std::cout << a << ", " << b << ", " << c << '\n';
-////                    std::cout << "---------" << '\n';
-////                }
-////            }
-////            else{
-////                if(G->deg3clique) {
-////                    std::cout << "Neighbours dominate: " << v << '\n';
-////                    std::cout << a << ", " << b << ", " << c << '\n';
-////                    std::cout << "---------" << '\n';
-////                }
-////            }
-//            delete neighbours;
-//            continue;
-//        }
-//
-//        if(G->deg3clique) {
-//            std::cout << ColorPrint::dye(lineDelimiter, 'y');
-//            std::cout << "VALID = " << cnt+1 << '\n';
-//            std::string foundV = "Found vertex: " + std::to_string(v) + '\n';
-//            std::cout << "2-CLIQUE!" << '\n';
-//            std::cout << ColorPrint::dye(foundV, 'y');
-//            std::cout << c11 << ", " << c12 << ", " << c2 << '\n';
-//            std::cout << ColorPrint::dye(lineDelimiter, 'y');
-//        }
-//
-//        std::vector<int>* nC2 = G->getNeighbours(c2);
-//
-//        std::vector<int> addedEdgesToC11;
-//        std::vector<int> addedEdgesToC12;
-//
-//        if(!isTouchable(G, nC2, alreadyInactive))
-//        {
-//            delete nC2;
-//            delete neighbours;
-//            continue;
-//        }
-//
-////        std::cout << "C2: " << c2 << " with deg(c2): " << G->getVertexDegree(c2) << '\n';
-//        // Adding edges to N(C2)
-//        for (int i = 0; i < (int)nC2->size(); ++i) {
-//
-//            if(G->isActive(nC2->at(i))){ // && G->getVertexDegree(nC2->at(i)) > 0){
-//                // Edges {C11, N(C2)}
-//                if(!G->vertexHasEdgeTo(c11, nC2->at(i)))
-//                    addedEdgesToC11.push_back(nC2->at(i));
-//                // Edges {C12, N(C2)}
-//                if(!G->vertexHasEdgeTo(c12, nC2->at(i)))
-//                    addedEdgesToC12.push_back(nC2->at(i));
-//            }
-//            else
-//                throw std::invalid_argument("There shouldn't be any inactive vertices here");
-//
-////            std::cout << "u in N(c2): " << nC2->at(i) << " with deg(u): " << G->getVertexDegree(nC2->at(i)) << '\n';
-//        }
-//
-//        alreadyInactive[v] = 1;
-//        alreadyInactive[c11] = 1;
-//        alreadyInactive[c12] = 1;
-//        alreadyInactive[c2] = 1;
-//
-//        tempDeleted.push_back(v);
-//        tempNeighbours.push_back(c11);
-//        tempNeighbours.push_back(c12);
-//        tempNeighbours.push_back(c2);
-//
-//        tempAddedEdges.push_back(addedEdgesToC11);
-//        tempAddedEdges.push_back(addedEdgesToC12);
-//
-//        cnt++;
-//
-//        delete nC2;
-//        delete neighbours;
-//    }
-//
-//    if(cnt == 0) {
+//using namespace std;
+
+RULE_APPLICATION_RESULT Reductions::rule_DegreeFour_Clique(BucketGraph* G, int* k, int depth, bool checkBudget, bool printDebug)
+{
+    list<BucketVertex>* degFourBucket = G->getVerticesOfDegree(4);
+
+    if(degFourBucket == nullptr || degFourBucket->empty()) {
 //        if(G->deg3clique)
-//            std::cout << "Nothing was applied\n";
+//            std::cout << "\nNo degree 3 Vertex!" << '\n';
+        return INAPPLICABLE; }
 //        return INAPPLICABLE;
-//    }
-//
-//    int edgeCnt = 0;
-//
-//    for (int i = 0; i < cnt; ++i) {
-//        Reduction* delVer = new Reduction(RULE::DEGREE_THREE_CLIQ, 0, new std::vector<int>(), new std::vector<int>());
-//        delVer->addedEdges = new std::vector<std::vector<int>>;
-//        delVer->rDepth = depth;
-//        delVer->kDecrement = 1;
-//
-//        (*k) = (*k) -1;
-//
-//        G->cntDeg3Clique++;
-//
-//        int v = tempDeleted.at(i);
-//
-//        int c11 = tempNeighbours.at(3*i + 0);
-//        int c12 = tempNeighbours.at(3*i + 1);
-//        int c2 = tempNeighbours.at(3*i + 2);
-//
-//        std::vector<int> edgeToC11 = tempAddedEdges.at(2*i+0);
-//        std::vector<int> edgeToC12 = tempAddedEdges.at(2*i+1);
-//
-//        for (int j = 0; j < (int)edgeToC11.size(); ++j) {
-//            if(G->getVertexDegree(edgeToC11.at(j)) > 0)
-//                G->addEdgeToVertex(c11, edgeToC11.at(j));
-//        }
-//        for (int j = 0; j < (int)edgeToC12.size(); ++j) {
-//            if(G->getVertexDegree(edgeToC12.at(j)) > 0)
-//                G->addEdgeToVertex(c12, edgeToC12.at(j));
-//        }
-//
-//        delVer->deletedVertices->push_back(v);
-//        delVer->deletedVCVertices->push_back(c11);
-//        delVer->deletedVCVertices->push_back(c12);
-//        delVer->deletedVCVertices->push_back(c2);
-//        delVer->addedEdges->push_back(edgeToC11);
-//        delVer->addedEdges->push_back(edgeToC12);
-//        appliedRules->push_back(delVer);
-//
-//        G->setInactive(v);
-//        G->setInactive(c2);
-//
-//        edgeCnt += (int)edgeToC11.size();
-//        edgeCnt += (int)edgeToC12.size();
-//
-//        if(G->deg3clique) {
+
+    if(G->deg4clique) {
+        std::cout << "\nRule: Degree 4: 2-Clique-Neighborhood" << '\n';
+        std::cout << "Deg 4 Bucket of size: " << (int)degFourBucket->size() << '\n';
+        std::cout << "---------" << '\n';
+    }
+
+    auto startDeg4clique = std::chrono::high_resolution_clock::now();
+
+    int cnt = 0;
+    int kDecrement = 0;
+
+    std::vector<int> tempDeleted;
+    std::vector<int> tempNeighbours;
+    std::vector<int> tempDecrement;
+    std::unordered_map<int, int> alreadyInactive;
+    std::vector<std::vector<int>> tempAddedEdges;
+
+    for(auto it = degFourBucket->begin(); it != degFourBucket->end(); it++)
+    {
+        if(*k - cnt < 1 && checkBudget)
+            return INSUFFICIENT_BUDGET;
+
+        int v = it->index;
+
+        if(!G->isActive(v)) {
+            continue;
+        }
+
+        std::vector<int>* neighbours = G->getNeighbours(v);
+
+        int a = neighbours->at(0);
+        int b = neighbours->at(1);
+        int c = neighbours->at(2);
+        int d = neighbours->at(3);
+
+        if(!G->isActive(a) || !G->isActive(b) || !G->isActive(c) || !G->isActive(d)) {
+            delete neighbours;
+            continue;
+        }
+
+        if(alreadyInactive[v] == 1 || alreadyInactive[a] == 1 || alreadyInactive[b] == 1 || alreadyInactive[c] == 1 || alreadyInactive[d] == 1)
+        {
+//            if(G->deg4clique) {
+//                std::cout << "Already treated: " << v << ", maybe next round!\n";
+//                std::cout << a << ", " << b << ", " << c << '\n';
+//                std::cout << "---------" << '\n';
+//            }
+            delete neighbours;
+            continue;
+        }
+
+        int connections = 0;
+        int nodesConnection[4] = {0, 0, 0, 0};
+
+        bool connectionAB = G->vertexHasEdgeTo(a, b);
+        bool connectionAC = G->vertexHasEdgeTo(a, c);
+        bool connectionAD = G->vertexHasEdgeTo(a, d);
+        bool connectionBC = G->vertexHasEdgeTo(b, c);
+        bool connectionBD = G->vertexHasEdgeTo(b, d);
+        bool connectionCD = G->vertexHasEdgeTo(c, d);
+
+        if(connectionAB) {nodesConnection[0]++; nodesConnection[1]++; connections++; if(G->deg4clique)std::cout << "CONNECTION AB\n";}
+        if(connectionAC) {nodesConnection[0]++; nodesConnection[2]++; connections++; if(G->deg4clique)std::cout << "CONNECTION AC\n";}
+        if(connectionAD) {nodesConnection[0]++; nodesConnection[3]++; connections++; if(G->deg4clique)std::cout << "CONNECTION AD\n";}
+        if(connectionBC) {nodesConnection[1]++; nodesConnection[2]++; connections++; if(G->deg4clique)std::cout << "CONNECTION BC\n";}
+        if(connectionBD) {nodesConnection[1]++; nodesConnection[3]++; connections++; if(G->deg4clique)std::cout << "CONNECTION BD\n";}
+        if(connectionCD) {nodesConnection[2]++; nodesConnection[3]++; connections++; if(G->deg4clique)std::cout << "CONNECTION CD\n";}
+
+        // Case |C1| > |C2|
+        if(connections == 3)
+        {
+            if(G->deg4clique)
+                std::cout << "Case 3\n";
+
+            bool cliquePresent = false;
+            for (int j = 0; j < 4; ++j)
+                if(nodesConnection[j] == 0)
+                    cliquePresent = true;
+
+            if(!cliquePresent)
+            {
+                if(G->deg4clique)
+                std::cout << "No clique present!\n";
+                delete neighbours;
+                continue;
+            }
+
+            int c2;
+            std::vector<int> C1;
+
+            for (int j = 0; j < 4; ++j) {
+                if(j == 0){
+                    if(nodesConnection[j] > 0)
+                        C1.push_back(a);
+                    else
+                        c2 = a;
+                }else if(j == 1){
+                    if(nodesConnection[j] > 0)
+                        C1.push_back(b);
+                    else
+                        c2 = b;
+                }else if(j == 2){
+                    if(nodesConnection[j] > 0)
+                        C1.push_back(c);
+                    else
+                        c2 = c;
+                }else if(j == 3){
+                    if(nodesConnection[j] > 0)
+                        C1.push_back(d);
+                    else
+                        c2 = d;
+                }
+            }
+            if((int)C1.size() != 3)
+                throw std::invalid_argument("Wrong thought process");
+
+            std::vector<int>* nC2 = G->getNeighbours(c2);
+
+            std::vector<int> addedEdgesToC11;
+            std::vector<int> addedEdgesToC12;
+            std::vector<int> addedEdgesToC13;
+
+            if(!isTouchable(G, nC2, alreadyInactive))
+            {
+                delete nC2;
+                delete neighbours;
+                continue;
+            }
+
+            // Adding edges to N(C2)
+            for (int i = 0; i < (int)nC2->size(); ++i) {
+
+                if(G->isActive(nC2->at(i))){ // && G->getVertexDegree(nC2->at(i)) > 0){
+                    // Edges {C11, N(C2)}
+                    if(!G->vertexHasEdgeTo(C1.at(0), nC2->at(i)))
+                        addedEdgesToC11.push_back(nC2->at(i));
+                    // Edges {C12, N(C2)}
+                    if(!G->vertexHasEdgeTo(C1.at(1), nC2->at(i)))
+                        addedEdgesToC12.push_back(nC2->at(i));
+                    // Edges {C13, N(C2)}
+                    if(!G->vertexHasEdgeTo(C1.at(2), nC2->at(i)))
+                        addedEdgesToC13.push_back(nC2->at(i));
+                }
+                else
+                    throw std::invalid_argument("There shouldn't be any inactive vertices here");
+
+//            std::cout << "u in N(c2): " << nC2->at(i) << " with deg(u): " << G->getVertexDegree(nC2->at(i)) << '\n';
+            }
+
+            kDecrement += 1;
+
+            tempNeighbours.push_back(C1.at(0));
+            tempNeighbours.push_back(C1.at(1));
+            tempNeighbours.push_back(C1.at(2));
+            tempNeighbours.push_back(c2);
+
+            tempAddedEdges.push_back(addedEdgesToC11);
+            tempAddedEdges.push_back(addedEdgesToC12);
+            tempAddedEdges.push_back(addedEdgesToC13);
+
+            tempDecrement.push_back(1);
+
+            delete nC2;
+        }
+        // Case |C1| = |C2|
+        else if(connections == 4)
+        {
+            if(G->deg4clique)
+                std::cout << "Case 4\n";
+
+            bool cliquePresent = true;
+            for (int j = 0; j < 4; ++j)
+                if(nodesConnection[j] == 3)
+                    cliquePresent = false;
+
+            // Case domination
+            if(!cliquePresent)
+            {
+                if(G->deg4clique)
+                std::cout << "No clique present!\n";
+                delete neighbours;
+                continue;
+            }
+
+            for (int j = 0; j < 4; ++j)
+                if(nodesConnection[j] != 2)
+                    throw std::invalid_argument("Wrong interpretation");
+
+            std::vector<int>* nA = G->getNeighbours(a);
+            std::vector<int>* nB = G->getNeighbours(b);
+            std::vector<int>* nC = G->getNeighbours(c);
+            std::vector<int>* nD = G->getNeighbours(d);
+
+            if(!isTouchable(G, nA, alreadyInactive)
+            || !isTouchable(G, nB, alreadyInactive)
+            || !isTouchable(G, nC, alreadyInactive)
+            || !isTouchable(G, nD, alreadyInactive))
+            {
+                delete nA;
+                delete nB;
+                delete nC;
+                delete nD;
+                delete neighbours;
+                continue;
+            }
+
+            std::vector<int> addedEdgesToC1_1;
+            std::vector<int> addedEdgesToC1_2;
+
+            int c1_1 = a;
+            int c1_2;
+            int c2_1;
+            int c2_2;
+
+            // Define cliques 1 and 2, c2_1 being the non edge to c1_1 and c2_2 to c1_2
+            if(connectionAB && connectionAC) {
+                c1_2 = b;
+                c2_1 = d;
+                c2_2 = c;
+            }
+            else if (connectionAB && connectionAD){
+                c1_2 = b;
+                c2_1 = c;
+                c2_2 = d;
+            }
+            else if (connectionAC && connectionAD){
+                c1_2 = c;
+                c2_1 = b;
+                c2_2 = d;
+            }
+            else
+                throw std::invalid_argument("Wrong connections");
+
+            if(G->deg4clique){
+                std::cout << "a = " << a << ", b = " << b << ", c = " << c << ", d = " << d << '\n';
+                std::cout << "c1_1 = " << c1_1 << '\n';
+                std::cout << "c1_2 = " << c1_2 << '\n';
+                std::cout << "c2_1 = " << c2_1 << '\n';
+                std::cout << "c2_2 = " << c2_2 << '\n';
+            }
+
+            // Neighbours of the non-edge partners
+            std::vector<int>* nC2_1;
+            std::vector<int>* nC2_2;
+
+            if(c2_1 == b) { nC2_1 = nB; nC2_2 = nD;}
+            else if(c2_1 == c) { nC2_1 = nC; nC2_2 = nD;}
+            else if(c2_1 == d) { nC2_1 = nD; nC2_2 = nC;}
+
+            // Adding edges to N(C2_1)
+            for (int i = 0; i < (int)nC2_1->size(); ++i) {
+                if(G->isActive(nC2_1->at(i))){ // && G->getVertexDegree(nC2->at(i)) > 0){
+                    // Edges {C11, N(C21)}
+                    if(!G->vertexHasEdgeTo(c1_1, nC2_1->at(i)))
+                        addedEdgesToC1_1.push_back(nC2_1->at(i));
+                }
+                else
+                    throw std::invalid_argument("There shouldn't be any inactive vertices here");
+            }
+            // Adding edges to N(C2_2)
+            for (int i = 0; i < (int)nC2_2->size(); ++i) {
+                if(G->isActive(nC2_2->at(i))){ // && G->getVertexDegree(nC2->at(i)) > 0){
+                    // Edges {C12, N(C22)}
+                    if(!G->vertexHasEdgeTo(c1_2, nC2_2->at(i)))
+                        addedEdgesToC1_2.push_back(nC2_2->at(i));
+                }
+                else
+                    throw std::invalid_argument("There shouldn't be any inactive vertices here");
+            }
+
+            kDecrement += 2;
+
+            tempNeighbours.push_back(c1_1);
+            tempNeighbours.push_back(c1_2);
+            tempNeighbours.push_back(c2_1);
+            tempNeighbours.push_back(c2_2);
+
+            tempAddedEdges.push_back(addedEdgesToC1_1);
+            tempAddedEdges.push_back(addedEdgesToC1_2);
+            tempAddedEdges.push_back({});
+
+            tempDecrement.push_back(2);
+
+            delete nA;
+            delete nB;
+            delete nC;
+            delete nD;
+        }
+        else
+        {
+            if(G->deg4clique) {
+                    std::cout << "This RULE doesn't apply, v = " << v << '\n';
+                    std::cout << a << ", " << b << ", " << c << ", " << d << '\n';
+                    std::cout << "---------" << '\n';
+            }
+            delete neighbours;
+            continue;
+        }
+
+        if(G->deg4clique) {
+            std::cout << ColorPrint::dye(lineDelimiter, 'y');
+            std::cout << "VALID = " << cnt+1 << '\n';
+            std::string foundV = "Found vertex: " + std::to_string(v) + '\n';
+            if(connections == 3)
+                std::cout << "CASE 3!" << '\n';
+            else
+                std::cout << "CASE 4!" << '\n';
+            std::cout << ColorPrint::dye(foundV, 'y');
+            std::cout << a << ", " << b << ", " << c << ", " << d << '\n';
+            std::cout << ColorPrint::dye(lineDelimiter, 'y');
+        }
+
+        alreadyInactive[v] = 1;
+        alreadyInactive[a] = 1;
+        alreadyInactive[b] = 1;
+        alreadyInactive[c] = 1;
+        alreadyInactive[d] = 1;
+
+        tempDeleted.push_back(v);
+
+        cnt++;
+
+        delete neighbours;
+    }
+
+    if(cnt == 0) {
+        if(G->deg4clique)
+            std::cout << "Nothing was applied\n";
+        return INAPPLICABLE;
+    }
+
+    if(G->deg4clique)
+        std::cout << "Found " << cnt << " instances!\n";
+
+
+    int edgeCnt = 0;
+
+    for (int i = 0; i < cnt; ++i) {
+        Reduction* delVer = new Reduction(RULE::DEGREE_FOUR_CLIQUE, 0, new std::vector<int>(), new std::vector<int>());
+        delVer->addedEdges = new std::vector<std::vector<int>>;
+        delVer->rDepth = depth;
+
+        if(G->deg4clique) {
+            std::cout << "Adding to applied rules \n";
+        }
+
+        G->cntDeg4Clique++;
+
+        int v = tempDeleted.at(i);
+
+        // Case 3 Connections
+        if(tempDecrement.at(i) == 1)
+        {
+            int c1_1 = tempNeighbours.at(4*i + 0);
+            int c1_2 = tempNeighbours.at(4*i + 1);
+            int c1_3 = tempNeighbours.at(4*i + 2);
+            int c2 = tempNeighbours.at(4*i + 3);
+
+            if(G->deg4clique) {
+                std::cout << "Case 3: The order is: \n";
+                std::cout << c1_1 << ", " << c1_2 << ", " << c1_3 << ", " << c2 << '\n';
+            }
+
+            std::vector<int> edgeToC1_1 = tempAddedEdges.at(3*i+0);
+            std::vector<int> edgeToC1_2 = tempAddedEdges.at(3*i+1);
+            std::vector<int> edgeToC1_3 = tempAddedEdges.at(3*i+2);
+
+            for (int j = 0; j < (int)edgeToC1_1.size(); ++j) {
+                if(G->getVertexDegree(edgeToC1_1.at(j)) > 0)
+                    G->addEdgeToVertex(c1_1, edgeToC1_1.at(j));
+            }
+            for (int j = 0; j < (int)edgeToC1_2.size(); ++j) {
+                if(G->getVertexDegree(edgeToC1_2.at(j)) > 0)
+                    G->addEdgeToVertex(c1_2, edgeToC1_2.at(j));
+            }
+            for (int j = 0; j < (int)edgeToC1_3.size(); ++j) {
+                if(G->getVertexDegree(edgeToC1_3.at(j)) > 0)
+                    G->addEdgeToVertex(c1_3, edgeToC1_3.at(j));
+            }
+
+            delVer->deletedVCVertices->push_back(c1_1);
+            delVer->deletedVCVertices->push_back(c1_2);
+            delVer->deletedVCVertices->push_back(c1_3);
+            delVer->deletedVCVertices->push_back(c2);
+            delVer->addedEdges->push_back(edgeToC1_1);
+            delVer->addedEdges->push_back(edgeToC1_2);
+            delVer->addedEdges->push_back(edgeToC1_3);
+            delVer->kDecrement = 1;
+            (*k) = (*k) -1;
+
+            G->setInactive(c2);
+        }
+        // Case 4 Connection
+        else if(tempDecrement.at(i) == 2){
+            int c1_1 = tempNeighbours.at(4*i + 0);
+            int c1_2 = tempNeighbours.at(4*i + 1);
+            int c2_1 = tempNeighbours.at(4*i + 2);
+            int c2_2 = tempNeighbours.at(4*i + 3);
+
+            if(G->deg4clique) {
+                std::cout << "Case 4: The order is: \n";
+                std::cout << c1_1 << ", " << c1_2 << ", " << c2_1 << ", " << c2_2 << '\n';
+            }
+
+            std::vector<int> edgeToC1_1 = tempAddedEdges.at(3*i+0);
+            std::vector<int> edgeToC1_2 = tempAddedEdges.at(3*i+1);
+
+            for (int j = 0; j < (int)edgeToC1_1.size(); ++j) {
+                if(G->getVertexDegree(edgeToC1_1.at(j)) > 0) {
+                    G->addEdgeToVertex(c1_1, edgeToC1_1.at(j));
+                }
+            }
+            for (int j = 0; j < (int)edgeToC1_2.size(); ++j) {
+                if(G->getVertexDegree(edgeToC1_2.at(j)) > 0) {
+                    G->addEdgeToVertex(c1_2, edgeToC1_2.at(j));
+                }
+            }
+
+
+
+            delVer->deletedVCVertices->push_back(c1_1);
+            delVer->deletedVCVertices->push_back(c1_2);
+            delVer->deletedVCVertices->push_back(c2_1);
+            delVer->deletedVCVertices->push_back(c2_2);
+            delVer->addedEdges->push_back(edgeToC1_1);
+            delVer->addedEdges->push_back(edgeToC1_2);
+//            delVer->addedEdges->push_back(edgeToC1_3);
+            delVer->kDecrement = 2;
+            (*k) = (*k) -2;
+
+
+            G->setInactive(c2_1);
+            G->setInactive(c2_2);
+        }
+
+
+        delVer->deletedVertices->push_back(v);
+        appliedRules->push_back(delVer);
+
+        G->setInactive(v);
+
+//        if(G->deg4clique) {
 //            std::cout << "\nApplying rule to v = " << v << '\n';
 //            std::cout << "i = " << i << '\n';
 //            std::cout << "At recursion = " << delVer->rDepth << '\n';
@@ -1370,20 +1627,258 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeThree_Domination(BucketGraph* G, 
 //                std::cout << edgeToC12.at(j) << '\n';
 //            }
 //        }
-//    }
+    }
+
+    auto stopDeg4clique = std::chrono::high_resolution_clock::now();
+    double Deg4clique = (std::chrono::duration_cast<std::chrono::microseconds>(stopDeg4clique - startDeg4clique).count() /  1000) / (double) 1000;
+
+    if (printDebug) {
+        std::string deg4clique = "Reduced "+ std::to_string(cnt) + " Deg3: 2-Clique-Neighbourhood: in ";
+        deg4clique += std::to_string(Deg4clique)+ " seconds at rec Depth " + std::to_string(depth) + '\n';
+        std::cout << '#' << deg4clique;
+    }
+
+    return APPLICABLE;
+}
+
+RULE_APPLICATION_RESULT Reductions::rule_DegreeFour_Domination(BucketGraph *G, int *k, int depth, bool checkBudget, bool printDebug) {
+    list<BucketVertex>* degFourBucket = G->getVerticesOfDegree(4);
+
+    if(degFourBucket == nullptr || degFourBucket->empty()) {
+//        if(G->deg3clique)
+//            std::cout << "\nNo degree 3 Vertex!" << '\n';
+        return INAPPLICABLE; }
+//        return INAPPLICABLE;
+
+    if(G->deg4dom) {
+        std::cout << "\nRule: Degree 4: 2-Clique-Neighborhood" << '\n';
+        std::cout << "Deg 4 Bucket of size: " << (int)degFourBucket->size() << '\n';
+        std::cout << "---------" << '\n';
+    }
+
+    auto startDeg4clique = std::chrono::high_resolution_clock::now();
+
+    int cnt = 0;
+    int kDecrement = 0;
+
+    std::vector<int> tempDeleted;
+    std::vector<int> tempNeighbours;
+    std::vector<int> tempDecrement;
+    std::vector<int> tempDoms;
+    std::unordered_map<int, int> alreadyInactive;
+
+    for(auto it = degFourBucket->begin(); it != degFourBucket->end(); it++)
+    {
+        if(*k - cnt < 1 && checkBudget)
+            return INSUFFICIENT_BUDGET;
+
+        int v = it->index;
+
+        if(!G->isActive(v)) {
+            continue;
+        }
+
+        std::vector<int>* neighbours = G->getNeighbours(v);
+
+        int a = neighbours->at(0);
+        int b = neighbours->at(1);
+        int c = neighbours->at(2);
+        int d = neighbours->at(3);
+
+        if(!G->isActive(a) || !G->isActive(b) || !G->isActive(c) || !G->isActive(d)) {
+            delete neighbours;
+            continue;
+        }
+
+        if(alreadyInactive[v] == 1 || alreadyInactive[a] == 1 || alreadyInactive[b] == 1 || alreadyInactive[c] == 1 || alreadyInactive[d] == 1)
+        {
+//            if(G->deg4clique) {
+//                std::cout << "Already treated: " << v << ", maybe next round!\n";
+//                std::cout << a << ", " << b << ", " << c << '\n';
+//                std::cout << "---------" << '\n';
+//            }
+            delete neighbours;
+            continue;
+        }
+
+        int connections = 0;
+        int nodesConnection[4] = {0, 0, 0, 0};
+
+        bool connectionAB = G->vertexHasEdgeTo(a, b);
+        bool connectionAC = G->vertexHasEdgeTo(a, c);
+        bool connectionAD = G->vertexHasEdgeTo(a, d);
+        bool connectionBC = G->vertexHasEdgeTo(b, c);
+        bool connectionBD = G->vertexHasEdgeTo(b, d);
+        bool connectionCD = G->vertexHasEdgeTo(c, d);
+
+        if(connectionAB) {nodesConnection[0]++; nodesConnection[1]++; connections++; if(G->deg4dom)std::cout << "CONNECTION AB\n";}
+        if(connectionAC) {nodesConnection[0]++; nodesConnection[2]++; connections++; if(G->deg4dom)std::cout << "CONNECTION AC\n";}
+        if(connectionAD) {nodesConnection[0]++; nodesConnection[3]++; connections++; if(G->deg4dom)std::cout << "CONNECTION AD\n";}
+        if(connectionBC) {nodesConnection[1]++; nodesConnection[2]++; connections++; if(G->deg4dom)std::cout << "CONNECTION BC\n";}
+        if(connectionBD) {nodesConnection[1]++; nodesConnection[3]++; connections++; if(G->deg4dom)std::cout << "CONNECTION BD\n";}
+        if(connectionCD) {nodesConnection[2]++; nodesConnection[3]++; connections++; if(G->deg4dom)std::cout << "CONNECTION CD\n";}
+
+        if(connections < 3){
+            if(G->deg4dom)
+                std::cout << "No dominator present!\n";
+            delete neighbours;
+            continue;
+        }
+
+        bool dominatorPresent = false;
+        std::vector<int> dominators;
+        std::vector<int> subs;
+
+        for (int j = 0; j < 4; ++j) {
+            int domIdx;
+            if(j == 0)
+                domIdx = a;
+            else if(j == 1)
+                domIdx = b;
+            else if(j == 2)
+                domIdx = c;
+            else if(j == 3)
+                domIdx = d;
+            else
+                throw std::invalid_argument("Wrong dom id");
+//            std::cout << domIdx << ": connections = " << nodesConnection[j] << "\n";
+
+            if (nodesConnection[j] == 3) {
+                dominatorPresent = true;
+                dominators.push_back(domIdx);
+            }
+            else
+                subs.push_back(domIdx);
+        }
+        if(!dominatorPresent)
+        {
+            if(G->deg4dom)
+                std::cout << "No dominator present!\n";
+            delete neighbours;
+            continue;
+        }
+
+        int numDoms = (int)dominators.size();
+        kDecrement += numDoms;
+
+
+        for (int j = 0; j < numDoms; ++j) {
+//            std::cout << dominators.at(j) <<  ": Dominator!\n";
+            tempDoms.push_back(dominators.at(j));
+        }
+        for (int j = 0; j < 4-numDoms; ++j) {
+//            std::cout << subs.at(j) <<  ": Sub!\n";
+            tempDoms.push_back(subs.at(j));
+        }
+
+        tempNeighbours.push_back(a);
+        tempNeighbours.push_back(b);
+        tempNeighbours.push_back(c);
+        tempNeighbours.push_back(d);
+
+        tempDeleted.push_back(v);
+        tempDecrement.push_back(numDoms);
+
+        alreadyInactive[v] = 1;
+        alreadyInactive[a] = 1;
+        alreadyInactive[b] = 1;
+        alreadyInactive[c] = 1;
+        alreadyInactive[d] = 1;
+
+
+
+        if(G->deg4dom) {
+            std::cout << ColorPrint::dye(lineDelimiter, 'y');
+            std::cout << "VALID = " << cnt+1 << '\n';
+            std::string foundV = "Found " + std::to_string(numDoms) + " dominators: " + std::to_string(v) + "\n";
+            for (int i = 0; i < numDoms; ++i) {
+                foundV += std::to_string(tempDoms.at(i)) + " ";
+            }
+            foundV += '\n';
+            std::cout << ColorPrint::dye(foundV, 'y');
+            std::cout << a << ", " << b << ", " << c << ", " << d << '\n';
+            std::cout << ColorPrint::dye(lineDelimiter, 'y');
+        }
+
+        cnt++;
+        delete neighbours;
+    }
+
+    if(cnt == 0) {
+        if(G->deg4clique)
+            std::cout << "Nothing was applied\n";
+        return INAPPLICABLE;
+    }
+
+    if(G->deg4clique)
+        std::cout << "Found " << cnt << " instances!\n";
+
+
+    int edgeCnt = 0;
+
+    for (int i = 0; i < cnt; ++i) {
+        Reduction* delVer = new Reduction(RULE::DEGREE_FOUR_DOM, 0, new std::vector<int>(), new std::vector<int>());
+        delVer->addedEdges = new std::vector<std::vector<int>>;
+        delVer->rDepth = depth;
+
+        if(G->deg4dom) {
+            std::cout << "Adding to applied rules \n";
+        }
+
+        G->cntDeg4Clique++;
+
+        int v = tempDeleted.at(i);
+
+        int numDoms = tempDecrement.at(i);
+
+//        std::cout << numDoms <<  " Dominators!\n";
+        for (int j = 0; j < 4; ++j) {
+            if(j < numDoms) {
+                G->setInactive(tempDoms.at(4*i + j));
+//                std::cout << " Dominators: " << tempDoms.at(4*i + j) << "\n";
+            }
+//            else
+//                std::cout << " Subs: " << tempDoms.at(4*i + j) << "\n";
+
+            delVer->deletedVCVertices->push_back(tempDoms.at(4*i + j));
+        }
+        if(numDoms == 4)
+            G->setInactive(v);
+
+        delVer->kDecrement = numDoms;
+        (*k) = (*k) -numDoms;
+
+        delVer->deletedVertices->push_back(v);
+        appliedRules->push_back(delVer);
+
+//        if(G->deg4clique) {
+//            std::cout << "\nApplying rule to v = " << v << '\n';
+//            std::cout << "i = " << i << '\n';
+//            std::cout << "At recursion = " << delVer->rDepth << '\n';
 //
-//    auto stopDeg3clique = std::chrono::high_resolution_clock::now();
-//    double Deg3clique = (std::chrono::duration_cast<std::chrono::microseconds>(stopDeg3clique - startDeg3clique).count() /  1000) / (double) 1000;
+//            std::cout << "Edge 1:" << c11 << " with Neighbour of C2:" << '\n';
+//            for (int j = 0; j < (int)edgeToC11.size(); ++j) {
+//                std::cout << edgeToC11.at(j) << '\n';
+//            }
 //
-//    if (printDebug) {
-//        std::string deg3cliqred = "Reduced "+ std::to_string(cnt) + " Deg3: 2-Clique-Neighbourhood: in ";
-//        deg3cliqred += std::to_string(Deg3clique)+ " seconds adding " + std::to_string(edgeCnt);
-//        deg3cliqred += " edges at rec Depth " + std::to_string(depth) + '\n';
-//        std::cout << '#' << deg3cliqred;
-//    }
-//
-//    return APPLICABLE;
-//}
+//            std::cout << "Edge 2:" << c12 << " with Neighbour of C2:" << '\n';
+//            for (int j = 0; j < (int)edgeToC12.size(); ++j) {
+//                std::cout << edgeToC12.at(j) << '\n';
+//            }
+//        }
+    }
+
+    auto stopDeg4clique = std::chrono::high_resolution_clock::now();
+    double Deg4clique = (std::chrono::duration_cast<std::chrono::microseconds>(stopDeg4clique - startDeg4clique).count() /  1000) / (double) 1000;
+
+    if (printDebug) {
+        std::string deg4clique = "Reduced "+ std::to_string(cnt) + " Deg4: Domination: in ";
+        deg4clique += std::to_string(Deg4clique)+ " seconds at rec Depth " + std::to_string(depth) + '\n';
+        std::cout << '#' << deg4clique;
+    }
+
+    return APPLICABLE;
+}
 
 RULE_APPLICATION_RESULT Reductions::rule_LPFlow(BucketGraph* G, int* k, int depth, bool checkBudget, bool printDebug)
 {

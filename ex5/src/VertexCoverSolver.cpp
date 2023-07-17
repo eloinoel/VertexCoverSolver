@@ -151,8 +151,8 @@ std::unordered_map<int, bool>* vcSolverRecursive(BucketGraph* G, int* numRec, bo
 
     // Apply Reduction Rules for the first time
     auto startPreprocess = std::chrono::high_resolution_clock::now();
-                                                    //    0    1     2     3     4    5     6      7    8     9
-    std::vector<bool> rulesToApply = std::vector<bool>{true, true, false, true, true, false, false, false, false, false};
+                                                    //    0    1     2     3     4    5     6      7    8     9     10
+    std::vector<bool> rulesToApply = std::vector<bool>{true, true, false, true, true, false, false, true, true, true, true, true};
     G->preprocess(&numPreprocessingVCVertices, rulesToApply, printDebug);
     numPreprocessingVCVertices = -numPreprocessingVCVertices;
     auto endPreprocess = std::chrono::high_resolution_clock::now();
@@ -690,45 +690,52 @@ int getUpperBound(BucketGraph* G, double timeCap)
     return localSearchVCSize;
 }
 
+using namespace std;
+
 std::pair<int, std::unordered_map<int, bool>*> vcVertexBranchingConstrained(BucketGraph* G, int k, int c, int u, int depth, int* numRec,
 Packing* constraints = nullptr, bool printDebug = false)
 {
     (*numRec)++;
+//    std::cout << "#> Number of Recursions: " << (*numRec) << '\n';
     int previousK = k;
     bool cut = false;
     //std::cout << "> cutting through data reductions " << '\n';
-    //std::cout << "> calculated LPBound: " << G->getLPBound() << " with c=" << u-k << " + k=" << k << " with u=" << u << '\n';
+    std::cout << "> calculated LPBound: " << G->getLPBound() << " with c=" << u-k << " + k=" << k << " with u=" << u << '\n';
+    int B = G->getLPBound();
     cut = G->dynamicReduce(&k, depth, printDebug);
     if(cut)
     {
-        //std::cout << "> cutting through data reductions " << '\n';
+        std::cout << "#> cutting through data reductions " << G->getLPBound() << " with c=" << c << " + k=" << k << " with u=" << u << " at recursion = " << depth  << '\n';
         G->unreduce(&k, previousK, depth);
         return std::pair<int, std::unordered_map<int, bool>*>(u, nullptr);
     }
     c += previousK - k;
 
-    //std::cout << "> calculated LPBound: " << G->getLPBound() << " with c=" << u-k << " + k=" << k << " with u=" << u << '\n';
     if (c + G->getLPBound() >= u) {
+        std::cout << "#> Upper Bound exceeded " << G->getLPBound() << " + c =" << c << " >= " << u << " at recursion = " << depth  << '\n';
         G->unreduce(&k, previousK, depth);
         return std::pair<int, std::unordered_map<int, bool>*>(u, nullptr);
     }
+    std::cout << "#> calculated LPBound: " << G->getLPBound() << " with c=" << c << " + k=" << k << " with u=" << u << " at recursion = " << depth << '\n';
 
-    //std::cout << "before getMaxDegreeVertex" << std::endl;
+    std::cout << "before getMaxDegreeVertex" << std::endl;
 	int vertex = G->getMaxDegreeVertex();
     //no vertices left
     if (vertex == -1)
     {
+        std::cout << "#> No Vertices Left at recursion = " << (*numRec)  << '\n';
         std::unordered_map<int, bool>* vc = new std::unordered_map<int, bool>();
         G->unreduce(&k, previousK, depth, vc);
         return std::pair<int, std::unordered_map<int, bool>*>(c, vc);
     }
-    //std::cout << "before getVertexDegree: " << vertex << std::endl;
+    std::cout << "before getVertexDegree: " << vertex << std::endl;
     int vertexDeg = G->getVertexDegree(vertex);
-    //std::cout << "got maxDegree vertex degree: " << vertexDeg << std::endl;
+    std::cout << "got maxDegree vertex degree: " << vertexDeg << std::endl;
     //G->print();
 	//graph has no edges left
 	if (vertexDeg == 0)
-	{
+    {
+        std::cout << "#> No Edges Left at recursion = " << (*numRec)  << '\n';
         std::unordered_map<int, bool>* vc = new std::unordered_map<int, bool>();
         G->unreduce(&k, previousK, depth, vc);
         //G->printVC(vc);
@@ -779,12 +786,12 @@ Packing* constraints = nullptr, bool printDebug = false)
         }
     }
  */
-    //std::cout << cp::dye("branching: choosing vertex: " + std::to_string(vertex), 'b') << std::endl;
+    std::cout << cp::dye("branching: choosing vertex: " + std::to_string(vertex), 'b') << std::endl;
 	//delete first vertex from graph and explore solution
     G->setInactive(vertex);
-    //cout << "before branching" << endl;
-	auto results = vcVertexBranchingConstrained(G, k - 1, c + 1, u, depth+1, numRec);
-    //std::cout << "after branching" << std::endl;
+//    std::cout << cp::dye("First branching", 'y') << std::endl;
+	auto results = vcVertexBranchingConstrained(G, k - 1, c + 1, u, depth+1, numRec, nullptr);//, printDebug);
+//    std::cout << "after branching" << std::endl;
     if(u > results.first) {
         k = k - u + results.first;
         previousK = previousK - u + results.first;
@@ -793,6 +800,8 @@ Packing* constraints = nullptr, bool printDebug = false)
     std::unordered_map<int, bool>* vc = results.second;
 	if (vc != nullptr)
 	{
+        std::cout << cp::dye("v in VC: " + std::to_string(vertex), 'g') << std::endl;
+
         //revert changes for multiple executions of the algorithm
         vc->insert(std::pair(vertex, true));
         G->setActive(vertex);
@@ -802,60 +811,77 @@ Packing* constraints = nullptr, bool printDebug = false)
 	}
 	else
 	{
-        //cout << "before setActive" << endl;
+//        std::cout << cp::dye("v not in VC: ", 'r') << std::endl;
+//        std::cout << "v not in VC\n";
+
+        cout << "before setActive" << endl;
 		//revert changes to graph
 		G->setActive(vertex);
         //G->unreduce(&k, previousK);
         firstSolution = std::pair<int, std::unordered_map<int, bool>*>(u, nullptr);
 	}
-    //cout << cp::dye("restoring vertex: ", 'g') << vertex << endl;
+//    std::cout << " At recursion = " << depth << '\n';
+
+    cout << cp::dye("restoring vertex: ", 'g') << vertex << endl;
 
 	//cannot fully explore neighbours
     if (vertexDeg > u)
     {
+        std::cout << "cannot fully explore neighbours" << k << '\n';
         G->unreduce(&k, previousK, depth, firstSolution.second);
         return firstSolution;
     }
 
-    //cout << "deleting neighbourhood of vertex " << vertex << ": ";
+    cout << "deleting neighbourhood of vertex " << vertex << "\n";
     std::vector<int>* neighbours = G->getNeighbours(vertex);
-    /* std::cout << cp::dye("branching: choosing neighbours of vertex " + std::to_string(vertex) + ": ", 'b');
-    for(int i = 0; i < (int) neighbours->size(); i++)
+//    std::cout << cp::dye("branching: choosing neighbours of vertex " + std::to_string(vertex) + ": ", 'b');
+    /*for(int i = 0; i < (int) neighbours->size(); i++)
     {
         std::cout <<  cp::dye(std::to_string(neighbours->at(i)) + ", ", 'b');
     }
     std::cout << std::endl; */
     G->setInactive(neighbours);
-    //std::cout << "prebranch k=" << k << '\n';
-	results = vcVertexBranchingConstrained(G, k - neighbours->size(), c + neighbours->size(), u, depth+1, numRec);
-    //std::cout << "after neighbour branching" << std::endl;
+    std::cout << "prebranch k=" << k << '\n';
+//    std::cout << cp::dye("Second branching", 'y') << std::endl;
+	results = vcVertexBranchingConstrained(G, k - neighbours->size(), c + neighbours->size(), u, depth+1, numRec,
+                                           nullptr);//, printDebug);
+    std::cout << "after neighbour branching" << std::endl;
     if(u > results.first) {
         //k = k - u + results.first;
         //previousK = previousK - u + results.first;
         u = results.first;
     }
     vc = results.second;
-    //std::cout << "postbranch k=" << k << '\n';
+    std::cout << "postbranch k=" << k << '\n';
     //cout << "prec " << '\n';
 	if (vc != nullptr)
 	{
+        std::cout << cp::dye("N(v) in VC: ", 'g') << std::endl;
+//        std::cout << " At recursion = " << depth << '\n';
+
         //revert changes for multiple executions of the algorithm
         G->setActive(neighbours);
         for(int i = 0; i < (int) neighbours->size(); i++)
         {
             vc->insert(std::pair(neighbours->at(i), true));
+//            std::cout  << neighbours->at(i) << "; ";
         }
+//        std::cout  << " at recursion = " << depth << '\n';
         //G->printVC(vc);
         //G->unreduce(&k, previousK, vc); //unreduce needs correct vc für unmerge of deg2rule
         secondSolution = std::pair<int, std::unordered_map<int, bool>*>(u, vc);
 	}
 	else
 	{
+        std::cout << cp::dye("N(v) not in VC: ", 'r') << std::endl;
+//        std::cout << "\n";
 		//revert changes to graph
 		G->setActive(neighbours);
         //G->unreduce(&k, previousK);
         secondSolution = std::pair<int, std::unordered_map<int, bool>*>(u, nullptr);
 	}
+//    std::cout << " At recursion = " << depth << '\n';
+
     /* cout << "restoring neighbourhood of vertex " << vertex << ": ";
     for(int i = 0; i < (int) neighbours->size(); i++)
     {
@@ -867,12 +893,15 @@ Packing* constraints = nullptr, bool printDebug = false)
 
     if(firstSolution.first <= secondSolution.first)
     {
+        cout << "First Solution\n";
         if(secondSolution.second != nullptr) { delete secondSolution.second; }
         G->unreduce(&k, previousK, depth, firstSolution.second);
         return firstSolution;
     }
     else
     {
+        cout << "Second Solution\n";
+
         if(firstSolution.second != nullptr) { delete firstSolution.second; }
         G->unreduce(&k, previousK, depth, secondSolution.second);
         return secondSolution;

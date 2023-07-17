@@ -1279,6 +1279,9 @@ void BucketGraph::preprocess(int* k, std::vector<bool>& rulesToApply, bool print
         if(rulesToApply[9] && reductions->rule_DegreeThree_Domination(this, k, -1, deg3domDeg2, false, printDebug) == APPLICABLE) continue;
         if(rulesToApply[8] && reductions->rule_DegreeThree_Clique(this, k, -1, false, printDebug) == APPLICABLE){ continue; }
         if(rulesToApply[7] && reductions->rule_DegreeThree_Independent(this, -1, printDebug) == APPLICABLE) continue;
+
+        if(rulesToApply[10] && reductions->rule_DegreeFour_Clique(this, k, -1, false, printDebug) == APPLICABLE) continue;
+        if(rulesToApply[11] && reductions->rule_DegreeFour_Domination(this, k, -1, false, printDebug) == APPLICABLE) continue;
         //TODO:
         if(rulesToApply[2] && reductions->rule_Domination(this, k, -1, false) == APPLICABLE) continue;
         if(rulesToApply[3] && reductions->rule_Unconfined(this, k, -1, false, printDebug) == APPLICABLE) continue;
@@ -1293,22 +1296,23 @@ void BucketGraph::preprocess(int* k, std::vector<bool>& rulesToApply, bool print
 bool BucketGraph::dynamicReduce(int* k, int depth, bool printDebug)
 {
                                                     //  0     1     2     3     4     5     6      7    8     9
-    std::vector<bool> reductions = std::vector<bool>{true, true, false, false, false, true, true, false, false, true};
+    std::vector<bool> reductions = std::vector<bool>{true, true, false, false, false, true, true, false, false, true, false, true};
 
     if(depth % 25 == 0)
     {
         // + unconfined
 //        reductions = std::vector<bool>{true, true, true, false && true && UNCONFINED_INITIALISED, true && LP_INITIALISED, true, true, true, true};
         reductions.at(4) = UNCONFINED_INITIALISED;
-
+//        reductions.at(10) = true; // Deg4 2-Clique
     }
     else if(depth % 10 == 0)
     {
         // + LP
 //        reductions = std::vector<bool>{true, true, false, false, true && LP_INITIALISED, true, true, true, true, false};
         reductions.at(4) = LP_INITIALISED;
-        reductions.at(7) = true;
-        reductions.at(8) = true;
+        reductions.at(7) = true; // Deg4 Ind
+        reductions.at(8) = true; // Deg4 2-Clique
+        reductions.at(10) = true; // Deg4 2-Clique
     }
 //    else
 //    {
@@ -1316,10 +1320,10 @@ bool BucketGraph::dynamicReduce(int* k, int depth, bool printDebug)
 //                                        //  0     1     2     3     4     5     6      7    8     9     10
 //        reductions = std::vector<bool>{true, true, false, false, false, true, true, true, true, true, false};
 //    }
-                                //  0     1     2     3     4     5     6      7    8     9     10
-//    reductions = std::vector<bool>{true, true, false, true, true, true, true, true, true, true, false};
-    reductions = std::vector<bool>{true, true, false, true, true, true, true, false, false, false};
+                                //  0     1     2     3     4     5     6      7    8     9    10  11
+//    reductions = std::vector<bool>{true, true, false, true, true, true, true, true, true, true, true};
     return reduce(k, depth, &reductions, printDebug);
+
 }
 
 /*
@@ -1352,6 +1356,8 @@ bool BucketGraph::reduce(int* k, int depth, std::vector<bool>* rulesToApply, boo
     RULE_APPLICATION_RESULT degreeThreeIndResult = INAPPLICABLE;
     RULE_APPLICATION_RESULT degreeThreeCliqResult = INAPPLICABLE;
     RULE_APPLICATION_RESULT degreeThreeDomResult = INAPPLICABLE;
+    RULE_APPLICATION_RESULT degreeFourCliqResult = INAPPLICABLE;
+    RULE_APPLICATION_RESULT degreeFourDomResult = INAPPLICABLE;
 
     while(true)
     {
@@ -1377,14 +1383,19 @@ bool BucketGraph::reduce(int* k, int depth, std::vector<bool>* rulesToApply, boo
         if (rulesToApply->at(9)) { degreeThreeDomResult = reductions->rule_DegreeThree_Domination(this, k, depth, false, true, deg3dom);}
         if (degreeThreeDomResult == INSUFFICIENT_BUDGET) return true;
         if (degreeThreeDomResult == APPLICABLE) continue;
-
         if (rulesToApply->at(8)) { degreeThreeCliqResult = reductions->rule_DegreeThree_Clique(this, k, depth, true, printDebug); }
         if (degreeThreeCliqResult == INSUFFICIENT_BUDGET) return true;
         if (degreeThreeCliqResult == APPLICABLE) continue;
-
         if (rulesToApply->at(7)) { degreeThreeIndResult = reductions->rule_DegreeThree_Independent(this, depth, printDebug); }
         if (degreeThreeIndResult == INSUFFICIENT_BUDGET) return true;
         if (degreeThreeIndResult == APPLICABLE) continue;
+
+        if (rulesToApply->at(10)) { degreeFourCliqResult = reductions->rule_DegreeFour_Clique(this, k, depth, true, printDebug); }
+        if (degreeFourCliqResult == INSUFFICIENT_BUDGET) return true;
+        if (degreeFourCliqResult == APPLICABLE) continue;
+        if (rulesToApply->at(11)) { degreeFourDomResult = reductions->rule_DegreeFour_Domination(this, k, depth, true, printDebug); }
+        if (degreeFourDomResult == INSUFFICIENT_BUDGET) return true;
+        if (degreeFourDomResult == APPLICABLE) continue;
 
 //        if(rulesToApply->at(7) && rulesToApply->at(8) && rulesToApply->at(9) && getBucketSize(3) != 0)
 //            throw std::invalid_argument("reduce error: There shouldn't be any degree 3 vertices left");
@@ -1414,7 +1425,6 @@ void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<
     if(reductions->appliedRules->empty())
         return;
 
-    bool printDebug;
 
     //pop rules
     while(!reductions->appliedRules->empty() && (*k < previousK || reductions->appliedRules->back()->kDecrement == 0))
@@ -1436,6 +1446,14 @@ void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<
                 setActive(rule->deletedVertices);
                 break;
             case DEGREE_ONE:
+                if(deg3)
+                    std::cout << "UNREDUCE: Degree 1\n";
+//                for(int i = 0; i < (int) rule->deletedVCVertices->size(); i++)
+//                {
+//                    std::cout << "Vertex: " << rule->deletedVCVertices->at(i) << '\n';
+//                }
+//                std::cout << "-----------" << '\n';
+
                 *k = *k + rule->kDecrement;
                 setActive(rule->deletedVCVertices);
                 if(vc != nullptr)
@@ -1448,11 +1466,25 @@ void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<
                 }
                 break;
             case DEGREE_TWO:
-                //std::cout << "deg2 unreduce" << std::endl;
+                if(deg3)
+                    std::cout << "UNREDUCE: Degree 2\n";
+//
+//                std::cout << "Degree 2 vertex: " << rule->deletedVertices->front() << '\n';
+//                std::cout << rule->deletedVCVertices->at(0) << ", " << rule->deletedVCVertices->at(1) << '\n';
+//
+//                std::cout << "VC: ";
+//                if( vc == nullptr)
+//                    std::cout << "Nullptr";
+//                else if (vc->empty())
+//                    std::cout << "Empty...";
+//                else
+//                    std::cout << " VC size: " << (int)vc->size() << '\n';
+//                std::cout << "-----------" << '\n';
+
                 *k = *k + rule->kDecrement;
                 if(rule->mergeVertexInfo == nullptr) //didn't merge
                 {
-                    //std::cout << "deg2 non-merged" << std::endl;
+//                    std::cout << "deg2 non-merged" << std::endl;
                     for(int i = 0; i < (int) rule->deletedVCVertices->size(); i++)
                     {
                         setActive(rule->deletedVCVertices->at(i));
@@ -1471,9 +1503,9 @@ void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<
                 else
                 {
                     int mergeVertex = std::get<0>(*rule->mergeVertexInfo);
-                    //std::cout << "deg2 merged" << std::endl;
+//                    std::cout << "deg2 merged" << std::endl;
                     unmerge(rule); //handles setting vertices back active
-                    //std::cout << "deg2 post unmerge" << std::endl;
+//                    std::cout << "deg2 post unmerge" << std::endl;
                     if(vc != nullptr)
                     {
                         //if vc contains vertex that was merged into, add neighbours of deg2 vertex to the solution
@@ -1492,8 +1524,17 @@ void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<
                         }
                     }
                 }
+//                std::cout << "UNREDUCE: Degree 2 FINISHED" << std::endl;
                 break;
             case HIGH_DEGREE:
+                if(deg3)
+                    std::cout << "UNREDUCE: HIGH Degree\n";
+//                for(int i = 0; i < (int) rule->deletedVCVertices->size(); i++)
+//                {
+//                    std::cout << "Vertex: " << rule->deletedVCVertices->at(i) << '\n';
+//                }
+//                std::cout << "-----------" << '\n';
+
                 *k = *k + rule->kDecrement;
                 setActive(rule->deletedVCVertices);
                 if(vc != nullptr)
@@ -1541,6 +1582,10 @@ void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<
             case UNCONFINED:
                 break;
             case LPFLOW:
+                if(deg3)
+                std::cout << "UNREDUCE: LPFlow\n";
+//                std::cout << "-----------" << '\n';
+
                 *k = *k + rule->kDecrement;
                 //std::cout << "Restoring component:";
                 setActive(rule->deletedVertices);
@@ -1577,6 +1622,8 @@ void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<
                     std::cout << "Recursion depth coincide => unreduce rule: Degree 3: Independent Set\n";
                     std::cout << depth << " == " << rule->rDepth << '\n';
                 }
+                if(deg3)
+                std::cout << "UNREDUCE: Degree 3: Ind\n";
 
                 unreduceDeg3Ind(rule, vc);
 
@@ -1584,6 +1631,11 @@ void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<
             }
             case DEGREE_THREE_CLIQ:
             {
+//                std::cout << "UNREDUCE: Deg 3 Clique" << std::endl;
+//                std::cout << "Degree 3 vertex: " << rule->deletedVertices->at(0) << '\n';
+//                std::cout << rule->deletedVCVertices->at(0) << ", " << rule->deletedVCVertices->at(1) << ", " << rule->deletedVCVertices->at(2) << '\n';
+//                std::cout << "-----------" << '\n';
+
                 if (depth != rule->rDepth)
                     return;
 
@@ -1593,6 +1645,9 @@ void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<
                     std::cout << depth << " == " << rule->rDepth << '\n';
                 }
                 *k = *k + rule->kDecrement;
+
+                if(deg3)
+                std::cout << "UNREDUCE: Degree 3: Clique\n";
 
                 unreduceDeg3Clique(rule, vc);
 
@@ -1610,7 +1665,42 @@ void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<
                 }
                 *k = *k + rule->kDecrement;
 
+                if(deg3)
+                std::cout << "UNREDUCE: Degree 3: Dom\n";
+
                 unreduceDeg3Dom(rule, vc);
+
+                break;
+            }
+            case DEGREE_FOUR_CLIQUE:
+            {
+                if (depth != rule->rDepth)
+                    return;
+
+                if(deg4clique) {
+                    std::cout << "\n";
+                    std::cout << "Recursion depth coincide => unreduce rule: Degree 4: Clique\n";
+                    std::cout << depth << " == " << rule->rDepth << '\n';
+                }
+                if(deg4clique)
+                    std::cout << "UNREDUCE: Degree 4: Clique\n";
+                unreduceDeg4Clique(rule, k, vc);
+
+                break;
+            }
+            case DEGREE_FOUR_DOM:
+            {
+                if (depth != rule->rDepth)
+                    return;
+
+                if(deg4dom) {
+                    std::cout << "\n";
+                    std::cout << "Recursion depth coincide => unreduce rule: Degree 4: Domination\n";
+                    std::cout << depth << " == " << rule->rDepth << '\n';
+                }
+                if(deg4dom)
+                    std::cout << "UNREDUCE: Degree 4: Domination\n";
+                unreduceDeg4Dom(rule, k, vc);
 
                 break;
             }
@@ -1628,6 +1718,8 @@ void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<
             throw std::invalid_argument("unreduce error: " + std::to_string(*k) + " > " + std::to_string(previousK) + ", stop coding garbage");
         }
     }
+    if(deg3ind)
+        std::cout << "# Unreduce: I am getting out of here!\n";
 }
 
 std::tuple<int, std::unordered_map<int, bool>*, std::vector<int>*>* BucketGraph::merge(int v0, int v1, int v2)
@@ -1767,7 +1859,7 @@ void BucketGraph::unmerge(Reduction* mergeRule)
     int v1 = mergeRule->deletedVCVertices->at(0);
     int v2 = mergeRule->deletedVCVertices->at(1);
     
-    //std::cout << cp::dye("unmerging vertex " + std::to_string(mergeVertex) + " --> " + std::to_string(v0) + ", " + std::to_string(v1) + ", " + std::to_string(v2), 'g') << std::endl;
+//    std::cout << cp::dye("unmerging vertex " + std::to_string(mergeVertex) + " --> " + std::to_string(v0) + ", " + std::to_string(v1) + ", " + std::to_string(v2), 'g') << std::endl;
 
     if(mergeVertex != v0) { setActive(v0); }
     if(mergeVertex != v1) { setActive(v1); }
@@ -1775,11 +1867,11 @@ void BucketGraph::unmerge(Reduction* mergeRule)
 
     //std::cout << "mergeVertex: " << mergeVertex << ", N's: " << v0 << ", " << v1 << ", " << v2 << std::endl;
 
-    //std::cout << "before remove from bucket queue" << std::endl;
+//    std::cout << "before remove from bucket queue" << std::endl;
     removeFromBucketQueue(mergeVertex);
-    //std::cout << "after remove from bucket queue" << std::endl;
+//    std::cout << "after remove from bucket queue" << std::endl;
     //delete merge vertex from adjacency lists of neighbours that he didn't have before merge
-    //std::cout << "unmerge_debug1" << '\n';
+//    std::cout << "unmerge_debug1" << '\n';
     std::vector<int>* added_vertices = std::get<2>(*mergeRule->mergeVertexInfo);
     for(int i = 0; i < (int) added_vertices->size(); i++)
     {
@@ -1800,14 +1892,14 @@ void BucketGraph::unmerge(Reduction* mergeRule)
         //moving to smaller bucket not needed because still inactive
     }
     //if(mergeVertex == 21) { std::cout << "mergeVertex degree " << vertexReferences[mergeVertex]->degree << '\n'; }
-    //std::cout << "after added vertices edge decrement" << '\n';
+//    std::cout << "after added vertices edge decrement" << '\n';
     //std::cout << "mergevertex adj size:" << vertexReferences[mergeVertex]->degree << '\n';
     delete vertexReferences[mergeVertex]->adj_map;
     vertexReferences[mergeVertex]->adj_map = std::get<1>(*mergeRule->mergeVertexInfo);
     //std::cout << "mergevertex saved adj size:" << vertexReferences[mergeVertex]->degree << '\n';
 
-    //std::cout << "after mergevertex reset" << '\n';
-    //std::cout << "unmerge_debug2" << '\n';
+//    std::cout << "after mergevertex reset" << '\n';
+//    std::cout << "unmerge_debug2" << '\n';
     addToBucketQueue(mergeVertex);
     //std::cout << "after add to bucket queue" << '\n';
     //std::cout << "mergeVertex: " << mergeVertex << ", N's: " << v0 << ", " << v1 << ", " << v2 << '\n';
@@ -2539,7 +2631,6 @@ void BucketGraph::unreduceDeg3Ind(Reduction *rule, std::unordered_map<int, bool>
 
 void BucketGraph::unreduceDeg3Clique(Reduction *rule, std::unordered_map<int, bool> *vc)
 {
-
     int vDeg3 = rule->deletedVertices->at(0);
 
     // 3 Case
@@ -2548,7 +2639,7 @@ void BucketGraph::unreduceDeg3Clique(Reduction *rule, std::unordered_map<int, bo
     int c2 = rule->deletedVCVertices->at(2);
 
     if(deg3clique) {
-        std::cout << "Unreduce: Deg3 Clique" << '\n';
+        std::cout << "-----------" << '\n';
         std::cout << "Degree 3 vertex: " << vDeg3 << '\n';
         std::cout << c11 << ", " << c12 << ", " << c2 << '\n';
     }
@@ -2784,6 +2875,189 @@ void BucketGraph::unreduceDeg3Dom(Reduction *rule, std::unordered_map<int, bool>
 //                            }
 //                        }
 //                    }
+        }
+    }
+}
+
+void BucketGraph::unreduceDeg4Clique(Reduction* rule, int* k, std::unordered_map<int, bool>* vc)
+{
+    int v = rule->deletedVertices->at(0);
+
+    int kDecrement = rule->kDecrement;
+
+    (*k) = (*k) + kDecrement;
+
+    // Case 3 Connections
+    int a = rule->deletedVCVertices->at(0);
+    int b = rule->deletedVCVertices->at(1);
+    int c = rule->deletedVCVertices->at(2);
+    int d = rule->deletedVCVertices->at(3);
+
+    if(deg4clique) {
+        std::cout << "Vertex: " << v << '\n';
+        std::cout << a << ", " << b << ", " << c << ", " << d << '\n';
+    }
+
+
+    // TODO: set the correct vertices active!
+    if(kDecrement == 1)
+    {
+        setActive(d);
+    }else
+    {
+        setActive(c);
+        setActive(d);
+    }
+    setActive(v);
+
+    if(vc != nullptr){
+        if(deg4clique) {
+            std::cout << "VC: ";
+            if (vc->empty())
+                std::cout << "empty...\n";
+            else
+                std::cout << "VC size = " << (int) vc->size() << '\n';
+        }
+
+        int commonSolution = 0;
+        int solutions[3] = {0, 0, 0};
+
+        auto itc1_1 = vc->find(a);
+        if (itc1_1 != vc->end()) {
+            commonSolution++;
+            solutions[0] = 1;
+        }
+        auto itc1_2 = vc->find(b);
+        if (itc1_2 != vc->end()) {
+            commonSolution++;
+            solutions[1] = 1;
+        }
+
+        if (kDecrement == 1) {
+
+            auto itc1_3 = vc->find(c);
+            if (itc1_3 != vc->end()) {
+                commonSolution++;
+                solutions[2] = 1;
+            }
+
+            if (commonSolution == 2) {
+                vc->insert({v, true});
+            } else if (commonSolution == 3) {
+                vc->insert({d, true});
+            } else if (commonSolution < 2)
+                throw std::invalid_argument(
+                        "unreduce error: deg4: 2-Clique: at least 2 Vertices in the common solution");
+            else
+                throw std::invalid_argument("unreduce error: deg4: 2-Clique: unknown case");
+        } else {
+            if (commonSolution == 1) {
+                vc->insert({v, true});
+                // c1_1(reduce) = a(unreduce) opposite vertex will be c(unreduce) = c2_1(reduce)
+                if (solutions[0] == 1) {
+                    vc->insert({c, true});
+                } else if (solutions[1] == 1)
+                    vc->insert({d, true});
+                else
+                    throw std::invalid_argument("unreduce error: deg4: 2-Clique: It should be a or b!");
+            } else if (commonSolution == 2) {
+                vc->insert({c, true});
+                vc->insert({d, true});
+            }
+        }
+    }
+    else {
+        if(deg4clique) {
+            std::cout << "Not a VC, deleting edges\n";
+            if(kDecrement == 1)
+                std::cout << "Case 3\n";
+            else
+                std::cout << "Case 4\n";
+        }
+        // Removing Edges!
+        std::vector<int> addedEdgesToC11 = rule->addedEdges->at(0);
+        std::vector<int> addedEdgesToC12 = rule->addedEdges->at(1);
+
+        if(deg4clique)
+            std::cout << "Removing Edge:" << a <<  " with:" << '\n';
+        for (int j = 0; j < (int)addedEdgesToC11.size(); ++j) {
+            if(deg4clique)
+                std::cout << addedEdgesToC11.at(j) << '\n';
+            if(vertexHasEdgeTo(a, addedEdgesToC11.at(j)))
+                removeEdgeFromVertex(a, addedEdgesToC11.at(j));
+        }
+        if(deg4clique)
+            std::cout << '\n';
+
+        if(deg4clique)
+            std::cout << "Removing Edge:" << b <<  " with:" << '\n';
+        for (int j = 0; j < (int)addedEdgesToC12.size(); ++j) {
+            if(deg4clique)
+                std::cout << addedEdgesToC12.at(j) << '\n';
+            if(vertexHasEdgeTo(b, addedEdgesToC12.at(j)))
+                removeEdgeFromVertex(b, addedEdgesToC12.at(j));
+        }
+        if(deg4clique)
+            std::cout << "\n";
+
+        if(kDecrement == 1)
+        {
+            std::vector<int> addedEdgesToC13 = rule->addedEdges->at(2);
+
+            if(deg4clique)
+                std::cout << "Removing Edge:" << c <<  " with:" << '\n';
+            for (int j = 0; j < (int)addedEdgesToC13.size(); ++j) {
+                if(deg4clique)
+                    std::cout << addedEdgesToC13.at(j) << '\n';
+                if(vertexHasEdgeTo(c, addedEdgesToC13.at(j)))
+                    removeEdgeFromVertex(c, addedEdgesToC13.at(j));
+            }
+            if(deg4clique)
+                std::cout << "\n";
+        }
+    }
+}
+
+void BucketGraph::unreduceDeg4Dom(Reduction *rule, int* k, std::unordered_map<int, bool> *vc)
+{
+    int v = rule->deletedVertices->at(0);
+
+//    if(deg3dom) {
+//        std::cout << "Unreduce: Deg3: Domination" << '\n';
+//        std::cout << "Degree 3 vertex: " << vDeg3 << '\n';
+//        std::cout << dom << ", " << c1 << ", " << c2 << '\n';
+//    }
+    int kDecrement = rule->kDecrement;
+
+    (*k) = (*k) + kDecrement;
+
+    if(kDecrement == 4)
+        setActive(v);
+
+    for (int i = 0; i < kDecrement; ++i) {
+        setActive(rule->deletedVCVertices->at(i));
+    }
+
+    // Solution S'
+    if (vc != nullptr)
+    {
+        if(deg4dom) {
+            std::cout << "VC: ";
+            if (vc->empty())
+                std::cout << "Empty...";
+            else
+                std::cout << "VC size = " << (int) vc->size() << '\n';
+        }
+
+        for (int i = 0; i < kDecrement; ++i) {
+            vc->insert({rule->deletedVCVertices->at(i), true});
+        }
+
+    }
+        // No vc
+    else {
+        if(deg4dom) {
+            std::cout << "Not a Solution!" << '\n';
         }
     }
 }
