@@ -1688,7 +1688,7 @@ int determineOptimalSolutionSizeBranching(BucketGraph* G, int c, int u, int dept
     int lowerBound = G->getLPBound();
     if(printDebug)
         std::cout << "#Before upper bound cut: lp=" << lowerBound << ", c=" << c << std::endl;
-    
+
     //cannot find better solution in this branch ---> cut
     if (c + lowerBound >= u) {
         if(printDebug)
@@ -1724,7 +1724,7 @@ int determineOptimalSolutionSizeBranching(BucketGraph* G, int c, int u, int dept
 
     G->setInactive(vertex);
     int firstU = determineOptimalSolutionSizeBranching(G, c + 1, u, depth+1, numRec, printDebug);
-    
+
     if(printDebug)
             std::cout << "#After branching on vertex=" << vertex << std::endl;
     //found better solution, construct it in back propagation
@@ -1785,3 +1785,70 @@ int determineOptimalSolutionSizeBranching(BucketGraph* G, int c, int u, int dept
     return u + numReduced;
 }
 
+int determineOptimalSolutionSize(BucketGraph* G, int* numRec, bool printDebug)
+{
+    double UPPER_BOUND_TIME_CAP = 0.1; //in seconds
+        //                                                  0     1      2      3    4      5      6      7      8      9      10     11
+    //std::vector<bool> rulesToApply = std::vector<bool>{true, true, false, true, true, false, false, false, false, false, false, false};
+    std::vector<bool> rulesToApply = std::vector<bool>{true, false, false, true, true, false, false, true, true, true, false, false};
+
+    //BucketGraph* graphCopy = G->copy();
+    //BucketGraph* graphCopyWithPre = G->copy();
+
+    //preprocessing for heuristic graph
+    /* int numPreprocessingVCVerticesCopy = 0;
+    graphCopyWithPre->preprocess(&numPreprocessingVCVerticesCopy, rulesToApply, printDebug);
+    numPreprocessingVCVerticesCopy = -numPreprocessingVCVerticesCopy; */
+
+    //preprocessing for branch graph
+    int numPreprocessingVCVertices = 0;
+	int k = 0;
+    auto startPreprocess = std::chrono::high_resolution_clock::now();
+
+    G->preprocess(&numPreprocessingVCVertices, rulesToApply, printDebug);
+    numPreprocessingVCVertices = -numPreprocessingVCVertices;
+    auto endPreprocess = std::chrono::high_resolution_clock::now();
+    double preprocessDuration = (std::chrono::duration_cast<std::chrono::microseconds>(endPreprocess - startPreprocess).count() /  1000) / (double) 1000;
+    if(printDebug) {
+        std::cout << "#Preprocessed Graph to size n=" << G->getNumVertices() << ", m=" << G->getNumEdges() << " in " << preprocessDuration << " seconds" << " (reduced by " << numPreprocessingVCVertices << " vertices)" << std::endl;
+    }
+
+    //get upper bound
+    //first generate a fast heuristic solution
+    int heuristicNumRecursions = 0;
+    std::unordered_map<int, bool>* heuristicVC = maxHeuristicSolver(G, &heuristicNumRecursions, false, false);
+    int u = heuristicVC->size();
+    if(printDebug)
+    {
+        std::cout << "#Calculated upper Bound u=" << u << std::endl;
+    }
+
+/*  TODO: doesnt work yet because need initial solution, not just bound
+    auto startUpper = std::chrono::high_resolution_clock::now();
+    int u = getUpperBound(graphCopy, graphCopyWithPre, numPreprocessingVCVerticesCopy, UPPER_BOUND_TIME_CAP, printDebug);
+    auto endUpper = std::chrono::high_resolution_clock::now();
+    double upperBoundDuration = (std::chrono::duration_cast<std::chrono::microseconds>(endUpper - startUpper).count() /  1000) / (double) 1000;
+    if(printDebug)
+    {
+        std::cout << "#Calculated upper Bound u=" << u << " in " << upperBoundDuration << " seconds" << std::endl;
+    } */
+
+
+    auto startBranching = std::chrono::high_resolution_clock::now();
+    int result = determineOptimalSolutionSizeBranching(G, 0, u, 0, numRec, false);
+
+    if(printDebug)
+        std::cout << "#Finished branching with u = " << u << ", vc without pre = " << result << std::endl;
+
+    // Add Reduced Vertices to Vertex Cover
+    G->unreduce(&k, result+numPreprocessingVCVertices, -1);
+    if(G->getReductionStackSize() > 0)
+    {
+        throw std::invalid_argument("vcSolverRecursive: reduction rule stack isn't fully popped after final unreduce");
+    }
+    auto endBranching = std::chrono::high_resolution_clock::now();
+    double branchingDuration = (std::chrono::duration_cast<std::chrono::microseconds>(endBranching - startPreprocess).count() /  1000) / (double) 1000;
+    if(printDebug)
+        std::cout << "#Finished branching and unreducing preprocessing in " << branchingDuration << " seconds, u = " << u << ", vc without pre = " << result << ", vc size: " << result + numPreprocessingVCVertices << std::endl;
+    return result + numPreprocessingVCVertices;
+}
