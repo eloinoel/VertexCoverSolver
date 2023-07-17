@@ -1338,22 +1338,22 @@ void BucketGraph::printReductionStack() { reductions->printReductionStack(); }
 bool BucketGraph::dynamicReduce(int* k, int depth, bool printDebug)
 {
                                                     //  0     1     2     3     4     5     6      7    8     9
-    std::vector<bool> reductions = std::vector<bool>{true, true, false, false, false, true, true, false, false, true, false, true};
+    std::vector<bool> reductions = std::vector<bool>{true, true, false, true, true, true, true, false, false, true, false, true};
 
-    if(depth % 25 == 0)
+    /* if(depth % 25 == 0)
     {
         // + unconfined
 //        reductions = std::vector<bool>{true, true, true, false && true && UNCONFINED_INITIALISED, true && LP_INITIALISED, true, true, true, true};
         reductions.at(4) = UNCONFINED_INITIALISED;
 //        reductions.at(10) = true; // Deg4 2-Clique
-    }
-    else if(depth % 10 == 0)
+    } */
+    if(depth % 10 == 0)
     {
         // + LP
 //        reductions = std::vector<bool>{true, true, false, false, true && LP_INITIALISED, true, true, true, true, false};
-        reductions.at(4) = LP_INITIALISED;
-        reductions.at(7) = true; // Deg4 Ind
-        reductions.at(8) = true; // Deg4 2-Clique
+        //reductions.at(4) = LP_INITIALISED;
+        reductions.at(7) = true; // Deg3 Ind
+        reductions.at(8) = true; // Deg3 2-Clique
         reductions.at(10) = true; // Deg4 2-Clique
     }
 //    else
@@ -1364,6 +1364,8 @@ bool BucketGraph::dynamicReduce(int* k, int depth, bool printDebug)
 //    }
                                 //  0     1     2     3     4     5     6      7    8     9    10  11
 //    reductions = std::vector<bool>{true, true, false, true, true, true, true, true, true, true, true};
+                                 //  0     1     2     3     4     5     6      7      8      9      10     11
+    //reductions = std::vector<bool>{true, true, false, true, true, true, true, true, true, true, true, true};
     return reduce(k, depth, &reductions, printDebug);
 }
 
