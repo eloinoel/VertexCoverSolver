@@ -808,7 +808,7 @@ int vcVertexBranchingConstrained(BucketGraph* G, std::unordered_map<int, bool>* 
     return u;
 }
 
-unordered_map<int, bool>* vcSolverConstrained(BucketGraph* G, int* numRec, bool printDebug)
+/* unordered_map<int, bool>* vcSolverConstrained(BucketGraph* G, int* numRec, bool printDebug)
 {
     int numPreprocessingVCVertices = 0;
 	int k = 0;
@@ -822,7 +822,8 @@ unordered_map<int, bool>* vcSolverConstrained(BucketGraph* G, int* numRec, bool 
         std::cout << "#Preprocessed Graph to size n=" << G->getNumVertices() << ", m=" << G->getNumEdges() << " in " << preprocessDuration << " seconds" << " (reduced by " << numPreprocessingVCVertices << " vertices)" << std::endl;
 
     // Get upper bound
-    int u = getUpperBound(5);
+    //int u = getUpperBound(5);
+    int u = 155000;
 
     bool foundVC = false;
 	unordered_map<int, bool>* vc = new unordered_map<int, bool>();
@@ -875,7 +876,7 @@ int getUpperBound(double timeCap)
     heuristicVC = localSearchVC;
     delete localSearchVC;
     return localSearchVCSize;
-}
+} */
 
 /*----------------------------------------------------------*/
 /*-----------------   Helper Functions   -------------------*/
@@ -1102,7 +1103,7 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
         if(printVC)
         {
             int numRecursiveSteps = 0;
-            vc = vcSolverConstrained(G, &numRecursiveSteps, printDebug);
+            //vc = vcSolverConstrained(G, &numRecursiveSteps, printDebug);
             G->printVertices(vc);
             cout << "#recursive steps: " << numRecursiveSteps << endl;
 
@@ -1292,7 +1293,7 @@ int main(int argc, char* argv[]) {
         //signal(SIGINT, my_sig_handler); //catches SIGINT to output anything
         //chooseImplementationAndOutput(0, false, false, false, false, true, false);
         //chooseImplementationAndOutput(1, false, false, false, true, true, false); //without print
-        chooseImplementationAndOutput(1, false, false, true, true, true, false); //print exec times
+        chooseImplementationAndOutput(1, false, false, false, false, true, false); //print exec times
         //chooseImplementationAndOutput(1, true, false, true, true, true, false); //print alot
         //chooseImplementationAndOutput(5, false, false, false, false, true, false);
         //chooseImplementationAndOutput(6, false, false, false, false, true, false);

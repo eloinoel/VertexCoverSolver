@@ -77,9 +77,9 @@ std::unordered_map<int, bool>* vcVertexBranchingRecursive(BucketGraph* G, int k,
 	//delete first vertex from graph and explore solution
     G->setInactive(vertex);
 
-    int pDeg3 = G->period_deg3;
-    int pUnc = G->period_unc;
-    int pLP = G->period_lp;
+    //int pDeg3 = G->period_deg3;
+    //int pUnc = G->period_unc;
+    //int pLP = G->period_lp;
 
     //cout << "before branching" << endl;
 	std::unordered_map<int, bool>* S = vcVertexBranchingRecursive(G, k - 1, depth+1, numRec);
@@ -100,9 +100,9 @@ std::unordered_map<int, bool>* vcVertexBranchingRecursive(BucketGraph* G, int k,
 	}
     //cout << cp::dye("restoring vertex: ", 'g') << vertex << endl;
 
-    G->period_deg3 = pDeg3;
-    G->period_unc = pUnc;
-    G->period_lp = pLP;
+    //G->period_deg3 = pDeg3;
+    //G->period_unc = pUnc;
+    //G->period_lp = pLP;
 
 	//cannot fully explore neighbours
     if (vertexDeg > k)
@@ -150,7 +150,7 @@ std::unordered_map<int, bool>* vcVertexBranchingRecursive(BucketGraph* G, int k,
     // free neighbours
     delete neighbours;
 
-    G->initRulePeriods();
+    //G->initRulePeriods();
 
     G->unreduce(&k, previousK, depth);
     return nullptr;
@@ -174,8 +174,8 @@ std::unordered_map<int, bool>* vcSolverRecursive(BucketGraph* G, int* numRec, bo
     
     auto startLowerBound = std::chrono::high_resolution_clock::now();
     k = G->getLowerBoundVC();
-    G->upperBound = 2 * k;
-    G->initRulePeriods();
+    //G->upperBound = 2 * k;
+    //G->initRulePeriods();
 //    std::cout << "# k =" << k << '\n';
 
 

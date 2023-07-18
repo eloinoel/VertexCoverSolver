@@ -1360,7 +1360,7 @@ void BucketGraph::preprocess(int* k, bool printDebug)
         if(reductions->rule_DegreeOne(this, k, false, printDebug) == APPLICABLE) continue;
         if(reductions->rule_DegreeTwo(this, k, false, printDebug) == APPLICABLE) continue;
         if(reductions->rule_Domination(this, k, false) == APPLICABLE) continue;
-        //if(reductions->rule_Unconfined(this, k, false, printDebug) == APPLICABLE) continue;
+        if(reductions->rule_Unconfined(this, k, false, printDebug) == APPLICABLE) continue;
         if(reductions->rule_LPFlow(this, k, false, printDebug) == APPLICABLE) continue;
         return;
     }
@@ -1402,8 +1402,12 @@ void BucketGraph::preprocessSAT(int* k, std::vector<bool>& rulesToApply)
 
 bool BucketGraph::dynamicReduce(int* k, int depth, bool printDebug)
 {
-    std::vector<bool> reductions;
-    if(depth % 25 == 0)
+    std::vector<bool> reductions = std::vector<bool>{true, true, false, false, false, true, true};
+    if(depth % 5 == 0)
+    {
+        std::vector<bool> reductions = std::vector<bool>{true, true, false, true, true, true, true};
+    }
+    /* if(depth % 25 == 0)
     {
         // + unconfined
         reductions = std::vector<bool>{true, true, true, false && true && UNCONFINED_INITIALISED, true && LP_INITIALISED, true, true};
@@ -1417,7 +1421,7 @@ bool BucketGraph::dynamicReduce(int* k, int depth, bool printDebug)
     {
         // deg1 + deg2 + highDeg + buss
         reductions = std::vector<bool>{true, true, false, false, false, true, true};
-    }
+    } */
     return reduce(k, &reductions, printDebug);
 }
 
