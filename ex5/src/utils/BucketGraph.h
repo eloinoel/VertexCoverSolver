@@ -153,8 +153,9 @@ public:
     int period_deg3 = 1;
     int period_unc = 3;
     int period_lp = 2;
-    int min_period = 4;
     bool changePeriodDeg3 = false;
+
+    int min_period = 1;
 
     int upperBound = 1;
     int upperBound1_4;
