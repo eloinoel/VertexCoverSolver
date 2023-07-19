@@ -1392,11 +1392,7 @@ void BucketGraph::preprocess(int* k, std::vector<bool>& rulesToApply, bool print
 {
     while(true)
     {
-/*         if(rulesToApply[0] && reductions->rule_DegreeOne(this, k, false) == APPLICABLE) continue;
-        if(rulesToApply[1] && reductions->rule_DegreeTwo(this, k, false) == APPLICABLE) continue;
-        if(rulesToApply[2] && reductions->rule_Domination(this, k, false) == APPLICABLE) continue;
-        if(rulesToApply[3] && reductions->rule_Unconfined(this, k, false) == APPLICABLE) continue;
-        if(rulesToApply[4] && reductions->rule_LPFlow(this, k, false) == APPLICABLE) continue; */
+        //TODO: insert deg3 + deg4 rules using depth -1
         if(rulesToApply[0] && reductions->rule_DegreeOne(this, k, -1, false, printDebug) == APPLICABLE) continue;
         if(rulesToApply[1] && reductions->rule_DegreeTwo(this, k, -1, false, printDebug) == APPLICABLE) continue;
         if(rulesToApply[2] && reductions->rule_Domination(this, k, -1, false) == APPLICABLE) continue;
@@ -1459,32 +1455,33 @@ bool BucketGraph::reduce(int* k, int depth, std::vector<bool>* rulesToApply, boo
     RULE_APPLICATION_RESULT LPFlowResult = INAPPLICABLE;
     while(true)
     {
-        //TODO: add depth to every rule
         //std::cout << "highdeg " << '\n';
-        if(rulesToApply->at(5)) { highDegreeResult = reductions->rule_HighDegree(this, k); }
+        if(rulesToApply->at(5)) { highDegreeResult = reductions->rule_HighDegree(this, k, depth); }
         if(highDegreeResult == APPLICABLE) continue;
         if(highDegreeResult == INSUFFICIENT_BUDGET) return true;
 
         if(rulesToApply->at(6) && reductions->rule_Buss(this, k, getNumConnectedVertices(), getNumEdges()) == APPLICABLE) return true;
 
-        if(rulesToApply->at(0)) { degreeOneResult = reductions->rule_DegreeOne(this, k, true, printDebug); }
+        if(rulesToApply->at(0)) { degreeOneResult = reductions->rule_DegreeOne(this, k, depth, true, printDebug); }
         if(degreeOneResult == APPLICABLE) continue;
         if(degreeOneResult == INSUFFICIENT_BUDGET) return true;
 
         //std::cout << "deg2 " << '\n';
-        if(rulesToApply->at(1)) { degreeTwoResult = reductions->rule_DegreeTwo(this, k, true, printDebug); }
+        if(rulesToApply->at(1)) { degreeTwoResult = reductions->rule_DegreeTwo(this, k, depth, true, printDebug); }
         if(degreeTwoResult == APPLICABLE) continue;
         if(degreeTwoResult == INSUFFICIENT_BUDGET) return true;
 
-        if(rulesToApply->at(2)) { dominationResult = reductions->rule_Domination(this, k, true); }
+        //TODO: insert deg3 and deg4 rules and also make it use depth
+
+        if(rulesToApply->at(2)) { dominationResult = reductions->rule_Domination(this, k, depth, true); }
         if(dominationResult == APPLICABLE) continue;
         if(dominationResult == INSUFFICIENT_BUDGET) return true;
 
-        if(rulesToApply->at(3)) { unconfinedResult = reductions->rule_Unconfined(this, k, true, printDebug); }
+        if(rulesToApply->at(3)) { unconfinedResult = reductions->rule_Unconfined(this, k, depth, true, printDebug); }
         if(unconfinedResult == APPLICABLE) continue;
         if(unconfinedResult == INSUFFICIENT_BUDGET) return true;
 
-        if(rulesToApply->at(4)) { LPFlowResult = reductions->rule_LPFlow(this, k, true, printDebug); }
+        if(rulesToApply->at(4)) { LPFlowResult = reductions->rule_LPFlow(this, k, depth, true, printDebug); }
         if(LPFlowResult == APPLICABLE) continue;
         if(LPFlowResult == INSUFFICIENT_BUDGET) return true;
         return false;

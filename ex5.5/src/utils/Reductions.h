@@ -89,13 +89,12 @@ public:
 
 public:
     void printReductionStack();
-    
+
     void freeReductions();
     void freeReductionRule(Reduction* reduction, bool freeMergeVertexInfoData);
 
     bool isDominated(BucketGraph* G, int dom, std::vector<bool>* pendingDeletions , bool printDebug);
     void initRuleCounter();
-    void initDominationVector(BucketGraph* G);
 
     void printReductionRules();
     void printCounters();
@@ -105,21 +104,21 @@ public:
     RULE_APPLICATION_RESULT rule_DegreeThree_Independent(BucketGraph* G, int* k);
 
     //rules return true if they were applicable
-    RULE_APPLICATION_RESULT rule_HighDegree(BucketGraph* G, int* k);
+    RULE_APPLICATION_RESULT rule_HighDegree(BucketGraph* G, int* k, int depth);
     /* only call if rule_HighDegree and rule_DegreeZero return false, returns true if no vertex cover of size k exists in graph */
     RULE_APPLICATION_RESULT rule_Buss(BucketGraph* G, int* k, int numVertices, int numEdges);
-    RULE_APPLICATION_RESULT rule_DegreeOne(BucketGraph* G, int* k, bool checkBudget, bool printDebug = false);
+    RULE_APPLICATION_RESULT rule_DegreeOne(BucketGraph* G, int* k, int depth, bool checkBudget, bool printDebug = false);
 
-    RULE_APPLICATION_RESULT rule_DegreeTwo(BucketGraph* G, int* k, bool checkBudget, bool printDebug = false);
+    RULE_APPLICATION_RESULT rule_DegreeTwo(BucketGraph* G, int* k, int depth, bool checkBudget, bool printDebug = false);
     RULE_APPLICATION_RESULT rule_DegreeTwo_Secure(BucketGraph* G, int* k);
 
-    RULE_APPLICATION_RESULT rule_LPFlow(BucketGraph* G, int* k, bool checkBudget, bool printDebug = false);
+    RULE_APPLICATION_RESULT rule_LPFlow(BucketGraph* G, int* k, int depth, bool checkBudget, bool printDebug = false);
     
-    RULE_APPLICATION_RESULT rule_Domination(BucketGraph* G, int* k, bool checkBudget);
+    RULE_APPLICATION_RESULT rule_Domination(BucketGraph* G, int* k, int depth, bool checkBudget);
 
-    RULE_APPLICATION_RESULT rule_Domination_BE(BucketGraph* G, int* k, bool checkBudget);
+    RULE_APPLICATION_RESULT rule_Domination_BE(BucketGraph* G, int* k, int depth, bool checkBudget);
 
-    RULE_APPLICATION_RESULT rule_Unconfined(BucketGraph* G, int* k, bool checkBudget, bool printDebug = false);
+    RULE_APPLICATION_RESULT rule_Unconfined(BucketGraph* G, int* k, int depth, bool checkBudget, bool printDebug = false);
 };
 
 #endif

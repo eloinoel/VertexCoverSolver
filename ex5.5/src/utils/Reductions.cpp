@@ -21,20 +21,26 @@ void Reductions::printReductionStack()
     }
 }
 
-RULE_APPLICATION_RESULT Reductions::rule_HighDegree(BucketGraph* G, int* k)
+RULE_APPLICATION_RESULT Reductions::rule_HighDegree(BucketGraph* G, int* k, int depth)
 {
     if(*k < 0) return INSUFFICIENT_BUDGET; //cannot delete more vertices, no possible vertex cover exists
     //std::cout << "HIGHDEG with maxdeg: " << G->getMaxDegree() << " and " << *k << '\n';
     if(!(G->getMaxDegree() > *k) ||*k == 0) return INAPPLICABLE; //cannot apply rule
     
     Reduction* reduction = new Reduction(RULE::HIGH_DEGREE, 0, nullptr, new std::vector<int>());
-    appliedRules->push_back(reduction);
+    reduction->rDepth = depth;
 
     //std::cout << "HIGHDEG Culling vertices: {" << '\n';
     //delete vertices that have to be in the vertex cover
     while(G->getMaxDegree() > *k)
     {
-        if(*k <= 0) return INSUFFICIENT_BUDGET; //cannot delete more vertices, no possible vertex cover exists
+        if(*k <= 0) //revert if no budget
+        {
+            G->setActive(reduction->deletedVCVertices);
+            *k = *k + reduction->kDecrement;
+            freeReductionRule(reduction, false);
+            return INSUFFICIENT_BUDGET; //cannot delete more vertices, no possible vertex cover exists
+        }
         int maxDegVertex = G->getMaxDegreeVertex();
         reduction->kDecrement++;
         reduction->deletedVCVertices->push_back(maxDegVertex);
@@ -43,6 +49,7 @@ RULE_APPLICATION_RESULT Reductions::rule_HighDegree(BucketGraph* G, int* k)
         //std::cout << maxDegVertex << ", " << '\n';
     }
     //std::cout << "}" << '\n';
+    appliedRules->push_back(reduction);
     return APPLICABLE;
 }
 
@@ -62,20 +69,26 @@ RULE_APPLICATION_RESULT Reductions::rule_Buss(BucketGraph* G, int* k, int numVer
     return INAPPLICABLE;
 }
 
-RULE_APPLICATION_RESULT Reductions::rule_DegreeOne(BucketGraph* G, int* k, bool checkBudget, bool printDebug)
+RULE_APPLICATION_RESULT Reductions::rule_DegreeOne(BucketGraph* G, int* k, int depth, bool checkBudget, bool printDebug)
 {
     list<BucketVertex>* degOneBucket = G->getVerticesOfDegree(1);
 
     if(degOneBucket == nullptr || degOneBucket->empty()) return INAPPLICABLE;
 
     Reduction* reduction = new Reduction(RULE::DEGREE_ONE, 0, nullptr, new std::vector<int>());
-    appliedRules->push_back(reduction);
+    reduction->rDepth = depth;
 
     //std::cout << "DEGONE Culling vertices: {";
     auto startDeg1 = std::chrono::high_resolution_clock::now();
     while(!degOneBucket->empty())
     {
-        if(*k == 0 && checkBudget) return INSUFFICIENT_BUDGET; //cannot delete more vertices, no possible vertex cover exists
+        if(*k == 0 && checkBudget)
+        {
+            G->setActive(reduction->deletedVCVertices);
+            *k = *k + reduction->kDecrement;
+            freeReductionRule(reduction, false);
+            return INSUFFICIENT_BUDGET; //cannot delete more vertices, no possible vertex cover exists
+        }
         auto it = degOneBucket->begin();
         int neighbourToDelete = G->getNthActiveNeighbour(it->index, 0);
         reduction->deletedVCVertices->push_back(neighbourToDelete);
@@ -89,10 +102,11 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeOne(BucketGraph* G, int* k, bool 
     if (printDebug)
         std::cout << "#Reduced " << reduction->deletedVCVertices->size() << " Deg1 neighbour vertices in " << Deg1 << " seconds" << std::endl;
 
+    appliedRules->push_back(reduction);
     return APPLICABLE;
 }
 
-RULE_APPLICATION_RESULT Reductions::rule_DegreeTwo(BucketGraph* G, int* k, bool checkBudget, bool printDebug)
+RULE_APPLICATION_RESULT Reductions::rule_DegreeTwo(BucketGraph* G, int* k, int depth, bool checkBudget, bool printDebug)
 {
     list<BucketVertex>* degTwoBucket = G->getVerticesOfDegree(2);
 
@@ -121,6 +135,7 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeTwo(BucketGraph* G, int* k, bool 
         //G->print();
         // save deleted vertex
         Reduction* delVer = new Reduction(RULE::DEGREE_TWO, 0, new std::vector<int>(), new std::vector<int>());
+        delVer->rDepth = depth;
 
         //if no merge, take neighbours, otherwise case destinction whether merged vertex is in vc
         delVer->deletedVCVertices->push_back(neighbours.first);
@@ -427,7 +442,7 @@ RULE_APPLICATION_RESULT Reductions::rule_DegreeThree_Independent(BucketGraph* G,
 //    return INAPPLICABLE;
 }
 
-RULE_APPLICATION_RESULT Reductions::rule_LPFlow(BucketGraph* G, int* k, bool checkBudget, bool printDebug)
+RULE_APPLICATION_RESULT Reductions::rule_LPFlow(BucketGraph* G, int* k, int depth, bool checkBudget, bool printDebug)
 {
     if(!G->LP_INITIALISED)
         throw std::invalid_argument("LP data structures not initialised");
@@ -445,34 +460,30 @@ RULE_APPLICATION_RESULT Reductions::rule_LPFlow(BucketGraph* G, int* k, bool che
         std::cout << "#Reduced " << delVertices->size() + delVCVertices->size() << " LP vertices (" << delVCVertices->size() << " VC / " << delVertices->size() << " non-VC) in " << Hop + Com << " seconds (HopcroftKarp: " << Hop << " + Connected Components: " << Com << ")" << '\n';
 
     Reduction* reduction = new Reduction(RULE::LPFLOW, delVCVertices->size(), delVertices, delVCVertices);
-    appliedRules->push_back(reduction);
-    *k = *k - delVCVertices->size();
+    reduction->rDepth = depth;
+
     if((int) delVCVertices->size() == 0 && (int) delVertices->size() == 0)
     {
         //std::cout << "LPFlow: INAPPLICABLE" << '\n';
+        delete delVertices;
+        delete delVCVertices;
+        delete reduction;
         return INAPPLICABLE;
     }
-    /* std::cout << "Deleted component: {";
-    for (int j=0; j<(int) delVertices->size(); j++)
-    {
-        std::cout << delVertices->at(j) << ", ";
-    }
-    std::cout << "} / ";
-    std::cout << "{";
-    for (int j=0; j<(int) delVCVertices->size(); j++)
-    {
-        std::cout << delVCVertices->at(j) << ", ";
-    }
-    std::cout << "}" << '\n'; */
-    if(*k < 0 && checkBudget)
+    if(*k - (int) delVCVertices->size() < 0 && checkBudget)
     {
         //std::cout << "LPFlow: INSUFFICIENT_BUDGET" << '\n';
+        delete delVertices;
+        delete delVCVertices;
+        delete reduction;
         return INSUFFICIENT_BUDGET;
     }
+    *k = *k - delVCVertices->size();
+    appliedRules->push_back(reduction);
     return APPLICABLE;
 }
 
-RULE_APPLICATION_RESULT Reductions::rule_Domination_BE(BucketGraph* G, int* k, bool checkBudget)
+RULE_APPLICATION_RESULT Reductions::rule_Domination_BE(BucketGraph* G, int* k, int depth, bool checkBudget)
 {
     //std::cout << "Domination start" << '\n';
     //G->print();
@@ -480,6 +491,7 @@ RULE_APPLICATION_RESULT Reductions::rule_Domination_BE(BucketGraph* G, int* k, b
     if(maxDeg <= 2) { return INAPPLICABLE; }
 
     Reduction* reduction = new Reduction(RULE::DEGREE_ONE, 0, nullptr, new std::vector<int>());
+    reduction->rDepth = depth;
 
     //loop through buckets in descending order
     for(int curDeg = maxDeg; curDeg > 2; curDeg--) //in each while loop, we look at --it, because we started with end()
@@ -695,7 +707,7 @@ RULE_APPLICATION_RESULT Reductions::rule_Domination_BE(BucketGraph* G, int* k, b
     return INAPPLICABLE;
 } */
 
-RULE_APPLICATION_RESULT Reductions::rule_Unconfined(BucketGraph* G, int* k, bool checkBudget, bool printDebug)
+RULE_APPLICATION_RESULT Reductions::rule_Unconfined(BucketGraph* G, int* k, int depth, bool checkBudget, bool printDebug)
 {
     auto startUnconfined = std::chrono::high_resolution_clock::now();
     int numCheckedVertices = 0;
@@ -706,6 +718,7 @@ RULE_APPLICATION_RESULT Reductions::rule_Unconfined(BucketGraph* G, int* k, bool
     std::unordered_map<int, bool> SNeighbours = std::unordered_map<int, bool>();
 
     Reduction* reduction = new Reduction(RULE::DEGREE_ONE, 0, nullptr, new std::vector<int>());
+    reduction->rDepth = depth;
     auto bucketQueue = G->getBucketQueue();
     //G->printBucketQueue();
     //for(auto b = G->getStableBucketQueueIncIterator(); (*b)->degree != bucketQueue->end()->degree; (*b) = ++(*b))
@@ -1171,7 +1184,7 @@ bool Reductions::isDominated(BucketGraph* G, int dom, std::vector<bool>* pending
     return true;
 }
 
-RULE_APPLICATION_RESULT Reductions::rule_Domination(BucketGraph* G, int* k, bool checkBudget)
+RULE_APPLICATION_RESULT Reductions::rule_Domination(BucketGraph* G, int* k, int depth, bool checkBudget)
 {
     //std::cout << "----------Domination Rule Start-----------" << '\n';
     int maxDeg = G->getMaxDegree();
@@ -1190,6 +1203,7 @@ RULE_APPLICATION_RESULT Reductions::rule_Domination(BucketGraph* G, int* k, bool
     for (int i=0; i<(int) pendingDeletions.size(); i++) { pendingDeletions[i] = false; }
 
     Reduction* reduction = new Reduction(RULE::DOMINATION, 0, nullptr, new std::vector<int>());
+    reduction->rDepth = depth;
 
 
     // While there are Nodes with at least Deg 3
