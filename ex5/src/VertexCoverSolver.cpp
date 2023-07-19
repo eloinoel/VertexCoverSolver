@@ -1281,7 +1281,7 @@ std::pair<int, std::unordered_map<int, bool>*> vcVertexBranchingConstrainedB(Buc
 
 std::unordered_map<int, bool>* vcSolverConstrainedB(BucketGraph* G, int* numRec, bool printDebug)
 {
-    std::vector<bool> rulesToApply = std::vector<bool>{true, true, false, true, true, false, false, false, false, false, true, true};
+    std::vector<bool> rulesToApply = std::vector<bool>{true, true, false, true, true, false, false, false, false, false, false, false};
     BucketGraph* graphCopy = G->copy();
     BucketGraph* graphCopyForPre = G->copy();
 
@@ -1289,7 +1289,7 @@ std::unordered_map<int, bool>* vcSolverConstrainedB(BucketGraph* G, int* numRec,
     graphCopyForPre->preprocess(&numPreprocessingVCVerticesCopy, rulesToApply, printDebug);
     numPreprocessingVCVerticesCopy = -numPreprocessingVCVerticesCopy;
 
-    double UPPER_BOUND_TIME_CAP = 0.1f;//1.f; //in seconds
+    double UPPER_BOUND_TIME_CAP = 0.1;//1.f; //in seconds
 
     /* auto startUpper = std::chrono::high_resolution_clock::now();
     int numHeurRecursions = 0;
@@ -1522,15 +1522,15 @@ std::unordered_map<int, bool>* vcSolverConstrainedEloi(BucketGraph* G, int* numR
     double UPPER_BOUND_TIME_CAP = 0.1; //in seconds
         //                                                  0     1      2      3    4      5      6      7      8      9      10     11
     //std::vector<bool> rulesToApply = std::vector<bool>{true, true, false, true, true, false, false, false, false, false, false, false};
-    std::vector<bool> rulesToApply = std::vector<bool>{true, false, false, true, true, false, false, true, true, true, false, false};
+    std::vector<bool> rulesToApply = std::vector<bool>{true, false, true, true, true, false, false, true, true, true, false, false};
 
-    BucketGraph* graphCopy = G->copy();
-    BucketGraph* graphCopyWithPre = G->copy();
+    //BucketGraph* graphCopy = G->copy();
+    //BucketGraph* graphCopyWithPre = G->copy();
 
     //preprocessing for heuristic graph
-    int numPreprocessingVCVerticesCopy = 0;
+    /* int numPreprocessingVCVerticesCopy = 0;
     graphCopyWithPre->preprocess(&numPreprocessingVCVerticesCopy, rulesToApply, printDebug);
-    numPreprocessingVCVerticesCopy = -numPreprocessingVCVerticesCopy;
+    numPreprocessingVCVerticesCopy = -numPreprocessingVCVerticesCopy; */
 
     //preprocessing for branch graph
     int numPreprocessingVCVertices = 0;

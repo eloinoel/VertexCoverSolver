@@ -11,7 +11,6 @@
 #include "utils/ColorPrint.h"
 #include "utils/BucketGraph.h"
 #include "VertexCoverSolver.h"
-#include "utils/Benchmark.h"
 
 using namespace std;
 typedef ColorPrint cp;
@@ -61,8 +60,6 @@ void my_sig_handler(sig_atomic_t s)
  * 0: Heuristic Solver
  * 1: Recursive Solver
  * 2: Constrained Solver
- * 3: Brunos Constrained Solver //TODO: doesn't work
- * 4: Constrained Solver (Version Eloi) //TODO: doesn't work
 
  * 5: (b) apply data reduction and output smaller graph and diff in vc size
  * 6: SAT Solver
@@ -98,7 +95,7 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
             //first generate a fast heuristic solution
             //cout << "before heuristic solver" << endl;
             heuristicVC = maxHeuristicSolver(bucketGraph, &heuristicNumRecursions, false, false);
-            //see if we can find a better initial solution
+            //see if we can find a better initial solution 
             heuristicVC = chooseSmallestHeuristicSolution(bucketGraph, &heuristicNumRecursions, &heuristicVC, true, true, NUM_RANDOM_SOLUTION_GENERATIONS, HEURISTIC_SOLVER_TIME_CAP);
             auto endHeuristicWrapper = std::chrono::high_resolution_clock::now();
             double heuristicWrapperDuration = (std::chrono::duration_cast<std::chrono::microseconds>(endHeuristicWrapper - startHeuristicWrapper).count() /  1000) / (double) 1000;
@@ -166,9 +163,9 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
             throw invalid_argument("Error constructing graph from input file.");
         if (printGraph)
         {
-//            G->print();
+            G->print();
             //G->printActiveList();
-            G->printBucketQueue();
+            //G->printBucketQueue();
         }
         unordered_map<int, bool>* vc = nullptr;
 
@@ -199,8 +196,6 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
     // Constrained Solver
     else if(version == 2)
     {
-
-
         auto startGraph = std::chrono::high_resolution_clock::now();
         BucketGraph* G = BucketGraph::readStandardInput();
         auto endGraph = std::chrono::high_resolution_clock::now();
@@ -222,94 +217,6 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
         {
             int numRecursiveSteps = 0;
             vc = vcSolverConstrained(G, &numRecursiveSteps, printDebug);
-            G->printVertices(vc);
-            cout << "#recursive steps: " << numRecursiveSteps << endl;
-
-            if(printVCSize)
-            {
-                cout << "#vc size: " << vc->size() << endl;
-            }
-        }
-
-        if(printBounds)
-        {
-            int bound = G->getLowerBoundVC();
-            cout << "#recursive steps: " << bound << endl;
-        }
-
-        //free pointers
-        if(vc) { delete vc; }
-        if(G) { delete G; }
-    }
-    // Bruno's Constrained Solver
-    else if(version == 3)
-    {
-
-
-        auto startGraph = std::chrono::high_resolution_clock::now();
-        BucketGraph* G = BucketGraph::readStandardInput();
-        auto endGraph = std::chrono::high_resolution_clock::now();
-        double graphConstructionDuration = (std::chrono::duration_cast<std::chrono::microseconds>(endGraph - startGraph).count() /  1000) / (double) 1000;
-        if(printDebug)
-            std::cout << "#Constructed Graph of size n=" << G->getTotalNumVertices() << ", m=" << G->getNumEdges() << " in " << graphConstructionDuration << " seconds" << std::endl;
-        if (G == nullptr)
-            throw invalid_argument("Error constructing graph from input file.");
-        if (printGraph)
-        {
-            G->print();
-            //G->printActiveList();
-//            G->printBucketQueue();
-//            G->printBucketSizes();
-        }
-        unordered_map<int, bool>* vc = nullptr;
-
-        if(printVC)
-        {
-            int numRecursiveSteps = 0;
-            vc = vcSolverConstrainedB(G, &numRecursiveSteps, printDebug);
-            G->printVertices(vc);
-            cout << "#recursive steps: " << numRecursiveSteps << endl;
-
-            if(printVCSize)
-            {
-                cout << "#vc size: " << vc->size() << endl;
-            }
-        }
-
-        if(printBounds)
-        {
-            int bound = G->getLowerBoundVC();
-            cout << "#recursive steps: " << bound << endl;
-        }
-
-        //free pointers
-        if(vc) { delete vc; }
-        if(G) { delete G; }
-    }
-    //Constrained Solver, Version Eloi
-    else if(version == 4)
-    {
-        auto startGraph = std::chrono::high_resolution_clock::now();
-        BucketGraph* G = BucketGraph::readStandardInput();
-        auto endGraph = std::chrono::high_resolution_clock::now();
-        double graphConstructionDuration = (std::chrono::duration_cast<std::chrono::microseconds>(endGraph - startGraph).count() /  1000) / (double) 1000;
-        if(printDebug)
-            std::cout << "#Constructed Graph of size n=" << G->getTotalNumVertices() << ", m=" << G->getNumEdges() << " in " << graphConstructionDuration << " seconds" << std::endl;
-        if (G == nullptr)
-            throw invalid_argument("Error constructing graph from input file.");
-        if (printGraph)
-        {
-            G->print();
-        }
-
-        unordered_map<int, bool>* vc = nullptr;
-        int numRecursiveSteps = 0;
-        vc = vcSolverConstrainedEloi(G, &numRecursiveSteps, printDebug);
-        //int solutionSize = determineOptimalSolutionSize(G, &numRecursiveSteps, printDebug); //TODO: doesn't work
-        //cout << "#recursive steps: " << solutionSize << endl;
-        
-        if(printVC && vc != nullptr)
-        {
             G->printVertices(vc);
             cout << "#recursive steps: " << numRecursiveSteps << endl;
 
@@ -375,12 +282,12 @@ bool printDebug = false, bool printVCSize = false, bool printVC = true, bool pri
 int main(int argc, char* argv[]) {
     //By default, cin/cout waste time synchronizing themselves with the C library’s stdio buffers, so that you can freely intermix calls to scanf/printf with operations on cin/cout
     std::ios::sync_with_stdio(false);
+
 	try
 	{
-        //TODO: disable printDebug for final submission
         //chooseImplementationAndOutput(1, false, false, false, false, true, false);
         chooseImplementationAndOutput(1, false, false, false, false, true, false);
-        //chooseImplementationAndOutput(2, true, false, false, true, true, false); //print alot
+        //chooseImplementationAndOutput(1, true, false, false, true, true, false); //print alot
         //chooseImplementationAndOutput(5, false, false, false, false, true, false);
     }
 	catch (const exception& e)

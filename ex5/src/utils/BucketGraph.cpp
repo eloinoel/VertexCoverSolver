@@ -1541,11 +1541,11 @@ void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<
                     /* if(mergeVertex == 33) {
                         std::cout << "unreducing mergeVertex " << mergeVertex << std::endl;
                     } */
-                    if(!isActive(mergeVertex)) {
+                    /* if(!isActive(mergeVertex)) {
                         print();
                         printReductionStack();
                         std::cout << "tried to unreduce mergeVertex " << mergeVertex << " that is inactive" << std::endl;
-                    }
+                    } */
                     //std::cout << "deg2 merged" << std::endl;
                     unmerge(rule); //handles setting vertices back active
                     //std::cout << "deg2 post unmerge" << std::endl;
