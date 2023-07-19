@@ -956,6 +956,7 @@ std::pair<int, std::unordered_map<int, bool>*> vcVertexBranchingConstrained(Buck
         //cout << cp::dye("restoring vertex: ", 'g') << vertex << endl;
     }
     
+    //TODO: replace u by k
     //std::cout << "before cannot explore neighbours cutoff" << std::endl;
 	//cannot fully explore neighbours
     if (vertexDeg > u)
@@ -1192,6 +1193,7 @@ std::pair<int, std::unordered_map<int, bool>*> vcVertexBranchingConstrainedB(Buc
         //cout << cp::dye("restoring vertex: ", 'g') << vertex << endl;
     }
 
+//TODO: replace u by k
     //std::cout << "before cannot explore neighbours cutoff" << std::endl;
 	//cannot fully explore neighbours
     if (vertexDeg > u)

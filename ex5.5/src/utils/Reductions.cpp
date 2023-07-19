@@ -9,6 +9,18 @@
 using namespace boost::intrusive;
 typedef ColorPrint cp;
 
+void Reductions::printReductionStack()
+{
+    if(appliedRules == nullptr) { std::cout << "< nullptr >\n"; return; }
+    std::cout << "--------- Reduction Stack ---------\n";
+    if(appliedRules->empty()) { std::cout << "< empty >\n"; return; }
+
+    for(auto it = appliedRules->begin(); it != appliedRules->end(); ++it)
+    {
+        std::cout << "rule: " << (*it)->rule << ", depth: " << (*it)->rDepth << ", kDecrement: " << (*it)->kDecrement << "\n";
+    }
+}
+
 RULE_APPLICATION_RESULT Reductions::rule_HighDegree(BucketGraph* G, int* k)
 {
     if(*k < 0) return INSUFFICIENT_BUDGET; //cannot delete more vertices, no possible vertex cover exists

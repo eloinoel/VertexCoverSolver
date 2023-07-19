@@ -499,6 +499,43 @@ void BucketGraph::freeGraph()
     }
 }
 
+/* copies originalVertexNames and edges (deep copy) to a new graph and inits the graph from there*/
+BucketGraph* BucketGraph::copy()
+{
+    BucketGraph* graphCopy = new BucketGraph();//TODO:
+    /*
+    //std::cout << "#starting copy" << std::endl;
+    graphCopy->originalVertexNames = std::unordered_map<std::string, std::pair<int, int>>();
+    for(auto it = originalVertexNames.begin(); it != originalVertexNames.end(); ++it)
+    {
+        std::string originalName = it->first;
+        graphCopy->originalVertexNames.insert({originalName, std::pair<int, int>({it->second.first, it->second.second})});
+    }
+
+    //std::cout << "#starting edges copy" << std::endl;
+
+    graphCopy->edges = std::vector<std::pair<std::string, std::string>>((int) edges.size());
+    for(int i = 0; i < (int) edges.size(); ++i)
+    {
+        std::string firstVertex = edges[i].first;
+        std::string secondVertex = edges[i].second;
+        graphCopy->edges[i] = std::pair<std::string, std::string>({firstVertex, secondVertex});
+    }
+
+    //std::cout << "#starting initVertexReferences" << std::endl;
+    graphCopy->initVertexReferences(); // sets vertex references and the adj_maps
+    //std::cout << "#starting initBucketQueue" << std::endl;
+    graphCopy->initBucketQueue(); // initialise bucket queue
+    //std::cout << "#starting initMatching" << std::endl;
+    graphCopy->initMatching(); // LP Bound matching fields
+    //std::cout << "#starting initUnconfined" << std::endl;
+    graphCopy->initUnconfined(); // Unconfined optimisation fields
+    graphCopy->reductions = new Reductions();
+    //std::cout << "#returning" << std::endl; */
+
+    return graphCopy;
+}
+
 /*----------------------------------------------------------*/
 /*-------------------   Graph Utility   --------------------*/
 /*----------------------------------------------------------*/
@@ -1335,11 +1372,11 @@ void BucketGraph::preprocess(int* k, bool printDebug)
 {
     while(true)
     {
-        if(reductions->rule_DegreeOne(this, k, false, printDebug) == APPLICABLE) continue;
-        if(reductions->rule_DegreeTwo(this, k, false, printDebug) == APPLICABLE) continue;
-        //if(reductions->rule_Domination(this, k, false) == APPLICABLE) continue;
-        if(reductions->rule_Unconfined(this, k, false, printDebug) == APPLICABLE) continue;
-        if(reductions->rule_LPFlow(this, k, false, printDebug) == APPLICABLE) continue;
+        if(reductions->rule_DegreeOne(this, k, -1, false, printDebug) == APPLICABLE) continue;
+        if(reductions->rule_DegreeTwo(this, k, -1, false, printDebug) == APPLICABLE) continue;
+        //if(reductions->rule_Domination(this, k, -1, false) == APPLICABLE) continue;
+        if(reductions->rule_Unconfined(this, k, -1, false, printDebug) == APPLICABLE) continue;
+        if(reductions->rule_LPFlow(this, k, -1, false, printDebug) == APPLICABLE) continue;
         return;
     }
 }
@@ -1351,32 +1388,24 @@ void BucketGraph::preprocess(int* k, bool printDebug)
  * 3: unconfined,
  * 4: LP
 */
-void BucketGraph::preprocess(int* k, std::vector<bool>& rulesToApply)
+void BucketGraph::preprocess(int* k, std::vector<bool>& rulesToApply, bool printDebug)
 {
     while(true)
     {
-        if(rulesToApply[0] && reductions->rule_DegreeOne(this, k, false) == APPLICABLE) continue;
+/*         if(rulesToApply[0] && reductions->rule_DegreeOne(this, k, false) == APPLICABLE) continue;
         if(rulesToApply[1] && reductions->rule_DegreeTwo(this, k, false) == APPLICABLE) continue;
         if(rulesToApply[2] && reductions->rule_Domination(this, k, false) == APPLICABLE) continue;
         if(rulesToApply[3] && reductions->rule_Unconfined(this, k, false) == APPLICABLE) continue;
-        if(rulesToApply[4] && reductions->rule_LPFlow(this, k, false) == APPLICABLE) continue;
+        if(rulesToApply[4] && reductions->rule_LPFlow(this, k, false) == APPLICABLE) continue; */
+        if(rulesToApply[0] && reductions->rule_DegreeOne(this, k, -1, false, printDebug) == APPLICABLE) continue;
+        if(rulesToApply[1] && reductions->rule_DegreeTwo(this, k, -1, false, printDebug) == APPLICABLE) continue;
+        if(rulesToApply[2] && reductions->rule_Domination(this, k, -1, false) == APPLICABLE) continue;
+        if(rulesToApply[3] && reductions->rule_Unconfined(this, k, -1, false, printDebug) == APPLICABLE) continue;
+        if(rulesToApply[4] && reductions->rule_LPFlow(this, k, -1, false, printDebug) == APPLICABLE) continue;
         return;
     }
 }
 
-void BucketGraph::preprocessSAT(int* k, std::vector<bool>& rulesToApply)
-{
-//    std::cout << "Preprocessor Secure!" << '\n';
-    while(true)
-    {
-        if(rulesToApply[0] && reductions->rule_DegreeOne(this, k, false) == APPLICABLE) continue;
-        if(rulesToApply[1] && reductions->rule_DegreeTwo_Secure(this, k) == APPLICABLE) continue;
-        if(rulesToApply[2] && reductions->rule_Domination(this, k, false) == APPLICABLE) continue;
-        if(rulesToApply[3] && reductions->rule_Unconfined(this, k, false) == APPLICABLE) continue;
-        if(rulesToApply[4] && reductions->rule_LPFlow(this, k, false) == APPLICABLE) continue;
-        return;
-    }
-}
 
 bool BucketGraph::dynamicReduce(int* k, int depth, bool printDebug)
 {
@@ -1403,7 +1432,7 @@ bool BucketGraph::dynamicReduce(int* k, int depth, bool printDebug)
     } */
     //reductions = std::vector<bool>{true, true, false, true, true, true, true};
     //reductions = std::vector<bool>{true, true, false, false, false, false, false};
-    return reduce(k, &reductions, printDebug);
+    return reduce(k, depth, &reductions, printDebug);
 }
 
 /*
@@ -1415,7 +1444,7 @@ bool BucketGraph::dynamicReduce(int* k, int depth, bool printDebug)
  * 5: highDeg,
  * 6: Buss
 */
-bool BucketGraph::reduce(int* k, std::vector<bool>* rulesToApply, bool printDebug)
+bool BucketGraph::reduce(int* k, int depth, std::vector<bool>* rulesToApply, bool printDebug)
 {
     if(rulesToApply == nullptr) {
         rulesToApply = new std::vector{true, true, true, true, true, true, true};
@@ -1430,6 +1459,7 @@ bool BucketGraph::reduce(int* k, std::vector<bool>* rulesToApply, bool printDebu
     RULE_APPLICATION_RESULT LPFlowResult = INAPPLICABLE;
     while(true)
     {
+        //TODO: add depth to every rule
         //std::cout << "highdeg " << '\n';
         if(rulesToApply->at(5)) { highDegreeResult = reductions->rule_HighDegree(this, k); }
         if(highDegreeResult == APPLICABLE) continue;
@@ -1463,7 +1493,7 @@ bool BucketGraph::reduce(int* k, std::vector<bool>* rulesToApply, bool printDebu
     return false;
 }
 
-void BucketGraph::unreduce(int* k, int previousK, std::unordered_map<int, bool>* vc)
+void BucketGraph::unreduce(int* k, int previousK, int depth, std::unordered_map<int, bool>* vc)
 {
     if(reductions->appliedRules == nullptr)
         throw std::invalid_argument("unreduce: appliedRules is nullptr");
@@ -1474,6 +1504,15 @@ void BucketGraph::unreduce(int* k, int previousK, std::unordered_map<int, bool>*
     while(!reductions->appliedRules->empty() && (*k < previousK || reductions->appliedRules->back()->kDecrement == 0))
     {
         Reduction* rule = reductions->appliedRules->back();
+        if(rule->rDepth != depth) 
+        {
+            if(depth < rule->rDepth)
+            {
+                std::cout << "unreduce: rule: " << rule->rule << ", depth: " << depth << ", rule->depth: " << rule->rDepth << "\n";
+                throw std::invalid_argument("unreduce: attempted to unreduce rules of incorrect depth, unreducing is inconsistent with reducing"); 
+            }
+            break; 
+        }
         //std::cout << "> unreducing: ";
         switch(rule->rule)
         {
@@ -1910,6 +1949,14 @@ void BucketGraph::unmerge(Reduction* mergeRule)
     // TODO: free mergeVertexInfo members
     delete std::get<3>(*mergeRule->mergeVertexInfo);
     delete mergeRule->mergeVertexInfo;
+}
+
+int BucketGraph::getReductionStackSize()
+{
+    if(reductions != nullptr && reductions->appliedRules != nullptr)
+        return reductions->appliedRules->size();
+    else
+        return -1;
 }
 
 bool BucketGraph::addEdgeToVertex(int vertex, int edge)

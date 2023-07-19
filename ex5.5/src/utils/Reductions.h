@@ -31,6 +31,7 @@ class Reduction
 public:
     RULE rule;
     int kDecrement;
+    int rDepth = -2; //-2 if not set, -1 if preprocessing, 0, 1, 2 ... otherwise if in branching
     std::vector<int>* deletedVertices = nullptr; // First idx is always to add in VC if(rule!=0)
     std::vector<int>* deletedVCVertices = nullptr;
     std::vector<std::vector<int>>* addedEdges = nullptr;
@@ -51,6 +52,14 @@ public:
         this->kDecrement = kDecrement;
         this->deletedVertices = deletedVertices;
         this->deletedVCVertices = deletedVCVertices;
+    };
+    Reduction(RULE rule, int kDecrement, std::vector<int>* deletedVertices, std::vector<int>* deletedVCVertices, int recursionDepth)
+    {
+        this->rule = rule;
+        this->kDecrement = kDecrement;
+        this->deletedVertices = deletedVertices;
+        this->deletedVCVertices = deletedVCVertices;
+        this->rDepth = recursionDepth;
     };
 };
 
@@ -79,7 +88,8 @@ public:
     }
 
 public:
-
+    void printReductionStack();
+    
     void freeReductions();
     void freeReductionRule(Reduction* reduction, bool freeMergeVertexInfoData);
 
