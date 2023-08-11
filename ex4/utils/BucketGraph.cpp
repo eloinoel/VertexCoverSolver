@@ -1403,7 +1403,7 @@ void BucketGraph::preprocessSAT(int* k, std::vector<bool>& rulesToApply)
 bool BucketGraph::dynamicReduce(int* k, int depth, bool printDebug)
 {
     std::vector<bool> reductions = std::vector<bool>{true, true, false, false, false, true, true};
-    if(depth % 5 == 0)
+    if(depth % 10 == 0)
     {
         reductions.at(3) = true; //unconfined
         reductions.at(4) = true; //lp

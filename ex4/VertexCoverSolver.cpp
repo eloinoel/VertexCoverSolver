@@ -587,7 +587,7 @@ unordered_map<int, bool>* vcVertexBranchingRecursive(BucketGraph* G, int k, int 
         //cout << "before setActive" << endl;
 		//revert changes to graph
 		G->setActive(vertex);
-        G->unreduce(&k, previousK);
+        //G->unreduce(&k, previousK);
 	}
     //cout << cp::dye("restoring vertex: ", 'g') << vertex << endl;
 
@@ -627,7 +627,7 @@ unordered_map<int, bool>* vcVertexBranchingRecursive(BucketGraph* G, int k, int 
 	{
 		//revert changes to graph
 		G->setActive(neighbours);
-        G->unreduce(&k, previousK);
+        //G->unreduce(&k, previousK);
 	}
     /* cout << "restoring neighbourhood of vertex " << vertex << ": ";
     for(int i = 0; i < (int) neighbours->size(); i++)
